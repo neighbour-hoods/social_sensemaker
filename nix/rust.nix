@@ -9,4 +9,8 @@ let
     };
 in
 
-pkgs.latest.rustChannels.stable.rust
+pkgs.latest.rustChannels.stable.rust.override {
+  targets = [
+    "wasm32-unknown-unknown"
+  ];
+}

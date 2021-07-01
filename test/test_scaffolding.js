@@ -43,5 +43,3 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
   const result = await scaffoldingApp.call('interpreter', 'test_output')
   console.log('did a call!', result)
 })
-
-runner.run()

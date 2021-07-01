@@ -1,0 +1,8 @@
+manifest_version: "1"
+name: "rep_dsl_test_dna"
+uuid: ""
+properties: null
+zomes:
+  - name: interpreter
+    bundled: "../../target/wasm32-unknown-unknown/release/scaffolding.wasm"
+    #    properties:

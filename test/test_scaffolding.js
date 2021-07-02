@@ -15,7 +15,7 @@ const buildRunner = () => new Orchestrator({
 
 // DNA loader, to be used with `buildTestScenario` when constructing DNAs for testing
 const getDNA = ((dnas) => (name) => (dnas[name]))({
-  'scaffolding': path.resolve(__dirname, '../happs/scaffolding/scaffolding.dna'),
+  'scaffolding': path.resolve(__dirname, '../happs/scaffolding/rep_dsl_test_dna.dna'),
 })
 
 // temporary method for RSM until conductor can interpret consistency

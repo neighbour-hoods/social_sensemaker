@@ -1,14 +1,8 @@
 let
-  sources = import ./nix/sources.nix;
-  rust = import ./nix/rust.nix { inherit sources; };
+  src = builtins.fetchGit {
+    url = "git@github.com:holochain/holonix";
+    rev = "014d28000c8ed021eb84000edfe260c22e90af8c";
+  };
 in
 
-{ pkgs ? import sources.nixpkgs {}
-}:
-
-pkgs.mkShell {
-  buildInputs = with pkgs; [
-    nodejs_latest
-    rust
-  ];
-}
+import src {}

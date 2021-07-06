@@ -1,0 +1,9 @@
+== building & running
+
+[source]
+----
+npm run build
+
+cd test/
+npm test
+----

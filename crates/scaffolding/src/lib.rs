@@ -13,7 +13,7 @@ struct Params {
 }
 
 #[hdk_extern]
-fn test_output(Params { param }: Params) -> ExternResult<()> {
+fn test_output(Params { param }: Params) -> ExternResult<bool> {
     debug!("Got some param {:?}", param);
-    Ok(())
+    Ok(true)
 }

@@ -48,9 +48,11 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
   
   const scaffoldingApp = firstHapp.cells[0]
 
-  const result = await scaffoldingApp.call('interpreter', 'test_output')
+  const result = await scaffoldingApp.call('interpreter', 'test_output', { param: "thing" })
   await scenario.consistency()
   console.log('did a call!', result)
+
+  t.equal(result, true)
 })
 
 runner.run()

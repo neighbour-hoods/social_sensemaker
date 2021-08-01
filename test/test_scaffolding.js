@@ -37,13 +37,12 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
   shimConsistency(scenario)
 
   const [player] = await scenario.players([config])
-  const [[firstHapp]] = await player.installAgentsHapps(
-  [ // (don't quote me) agent key 1
-    [ // agent app bundle 1
-      [  // app bundle DNAs
-        getDNA('scaffolding'),
+  const [[firstHapp]] = await player.installAgentsHapps([
+    [ // agent 1
+      [  // hApp bundle 1
+        getDNA('scaffolding'),  // composed of these DNAs
       ]
-    ]
+    ],
   ])
 //  const appCellIds = firstHapp.cells.map(c => c.cellNick.match(/(\w+)\.dna$/)[1])
   

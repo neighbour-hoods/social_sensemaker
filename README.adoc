@@ -1,0 +1,20 @@
+= scaffolding
+
+\... for integrating `rep_lang` & Holochain.
+
+== entering dev environment
+
+[source]
+----
+nix-shell
+----
+
+alternately, use https://github.com/nix-community/lorri[`lorri`] and https://github.com/direnv/direnv[`direnv`] to manage tooling and shell environment transparently.
+
+== building & running
+
+[source]
+----
+npm run build
+npm run test
+----

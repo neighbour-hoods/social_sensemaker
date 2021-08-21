@@ -18,7 +18,7 @@ alternately, use https://github.com/nix-community/lorri[`lorri`] and https://git
 npm run build
 
 # perhaps this can go in package.json?
-(cd test && npm install)
+npm install
 
 npm run test
 ----

@@ -4,5 +4,5 @@ uuid: ""
 properties: null
 zomes:
   - name: interpreter
-    bundled: "../../target/wasm32-unknown-unknown/release/scaffolding.wasm"
+    bundled: "../../target/wasm32-unknown-unknown/release/rep_interchange.wasm"
     #    properties:

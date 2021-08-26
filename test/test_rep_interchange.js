@@ -15,7 +15,7 @@ const buildRunner = () => new Orchestrator({
 
 // DNA loader, to be used with `buildTestScenario` when constructing DNAs for testing
 const getDNA = ((dnas) => (name) => (dnas[name]))({
-  'scaffolding': path.resolve(__dirname, '../happs/scaffolding/rep_dsl_test_dna.dna'),
+  'rep_interchange': path.resolve(__dirname, '../happs/rep_interchange/rep_dsl_test_dna.dna'),
 })
 
 // temporary method for RSM until conductor can interpret consistency
@@ -40,15 +40,15 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
   const [[firstHapp]] = await player.installAgentsHapps([
     [ // agent 1
       [  // hApp bundle 1
-        getDNA('scaffolding'),  // composed of these DNAs
+        getDNA('rep_interchange'),  // composed of these DNAs
       ]
     ],
   ])
 //  const appCellIds = firstHapp.cells.map(c => c.cellNick.match(/(\w+)\.dna$/)[1])
   
-  const scaffoldingApp = firstHapp.cells[0]
+  const repInterchangeApp = firstHapp.cells[0]
 
-  const result = await scaffoldingApp.call('interpreter', 'test_output', { param: "thing" })
+  const result = await repInterchangeApp.call('interpreter', 'test_output', { param: "thing" })
   await scenario.consistency()
   console.log('did a call!', result)
 

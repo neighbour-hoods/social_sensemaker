@@ -1,6 +1,6 @@
-= scaffolding
+= rep_interchange
 
-\... for integrating `rep_lang` & Holochain.
+integrating `rep_lang` & Holochain.
 
 == entering dev environment
 

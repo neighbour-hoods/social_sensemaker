@@ -1,0 +1,3 @@
+[submodule "submodules/rep_lang"]
+	path = submodules/rep_lang
+	url = git@github.com:sacredcapital/rep_lang.git

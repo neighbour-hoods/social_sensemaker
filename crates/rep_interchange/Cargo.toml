@@ -1,5 +1,5 @@
 [package]
-name = "scaffolding"
+name = "rep_interchange"
 version = "0.1.0"
 authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"

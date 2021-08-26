@@ -9,6 +9,7 @@ edition = "2018"
 [dependencies]
 serde = "1"
 hdk = "0.0.102"
+rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", version = "0.1.0" }
 
 [lib]
 path = "src/lib.rs"

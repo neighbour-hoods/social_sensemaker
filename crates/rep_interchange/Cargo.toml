@@ -7,9 +7,12 @@ edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serde = "1"
+combine = "4.5.2"
 hdk = "0.0.102"
+rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }
+rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", version = "0.1.0" }
 rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", version = "0.1.0" }
+serde = "1"
 
 [lib]
 path = "src/lib.rs"

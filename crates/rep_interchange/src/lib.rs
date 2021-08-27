@@ -11,12 +11,9 @@ use rep_lang_concrete_syntax::parse::expr;
 //     infer::*,
 // };
 
-
 #[hdk_extern]
 fn entry_defs(_: ()) -> ExternResult<EntryDefsCallbackResult> {
-    Ok(EntryDefsCallbackResult::from(vec![
-        Path::entry_def(),
-    ]))
+    Ok(EntryDefsCallbackResult::from(vec![Path::entry_def()]))
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -26,7 +23,9 @@ struct Params {
 
 #[hdk_extern]
 fn test_output(params: Params) -> ExternResult<bool> {
-    let Params { params_string: p_str } = params;
+    let Params {
+        params_string: p_str,
+    } = params;
     debug!("received input: {}", p_str);
 
     match expr().easy_parse(position::Stream::new(&p_str[..])) {

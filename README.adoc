@@ -20,5 +20,9 @@ npm run build
 # perhaps this can go in package.json?
 npm install
 
+# also
+cd test/
+npm install
+
 npm run test
 ----

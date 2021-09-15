@@ -1,0 +1,14 @@
+= UI
+
+== building
+
+[source]
+----
+source ./rebuild.sh
+----
+
+== serving
+
+serve with your static content server of choice, and then load `index.html` in a browser.
+
+`start_serverr.sh` is provided for convenience, using miniserve.

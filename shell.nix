@@ -23,5 +23,8 @@ in nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
   buildInputs = with nixpkgs; [
     binaryen
+    miniserve
+    nodePackages.rollup
+    wasm-pack
   ];
 }

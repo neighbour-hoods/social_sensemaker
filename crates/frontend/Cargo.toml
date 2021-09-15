@@ -1,0 +1,16 @@
+[package]
+name = "frontend"
+version = "0.1.0"
+edition = "2018"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+yew = "0.18.0"
+wasm-bindgen = "0.2"
+
+rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }
+rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", version = "0.1.0" }
+rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", version = "0.1.0" }

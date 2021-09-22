@@ -1173,6 +1173,7 @@ version = "0.1.0"
 dependencies = [
  "quickcheck",
  "rand 0.7.3",
+ "serde",
 ]
 
 [[package]]
@@ -1187,6 +1188,7 @@ dependencies = [
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rustyline",
+ "serde",
 ]
 
 [[package]]

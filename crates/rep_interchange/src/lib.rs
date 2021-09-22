@@ -3,13 +3,9 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use hdk::prelude::*;
 
 use rep_lang_concrete_syntax::parse::expr;
-// use rep_lang_core::abstract_syntax::Expr;
+use rep_lang_core::abstract_syntax::Program;
 
-// use rep_lang_runtime::{
-//     env::*,
-//     eval::{eval_, lookup_sto, new_term_env, value_to_flat_thunk, EvalState, Sto},
-//     infer::*,
-// };
+use rep_lang_runtime::eval::FlatValue;
 
 #[hdk_extern]
 fn entry_defs(_: ()) -> ExternResult<EntryDefsCallbackResult> {
@@ -43,4 +39,17 @@ fn test_output(params: Params) -> ExternResult<bool> {
             }
         }
     }
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub enum InterchangeOperand {
+    RepLangEntry(EntryHash),
+    OtherEntry(EntryHash),
+}
+
+#[hdk_entry(id = "interchange_entry")]
+pub struct InterchangeEntry {
+    pub operator: Program,
+    pub operands: Vec<InterchangeOperand>,
+    pub output: FlatValue,
 }

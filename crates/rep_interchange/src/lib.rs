@@ -43,8 +43,10 @@ fn test_output(params: Params) -> ExternResult<bool> {
 
 #[derive(Debug, Serialize, Deserialize)]
 pub enum InterchangeOperand {
-    RepLangEntry(EntryHash),
-    OtherEntry(EntryHash),
+    // these dereference to `InterchangeEntry`
+    InterchangeOperand(EntryHash),
+    // these dereference to `FlatThunk`??
+    OtherOperand(EntryHash),
 }
 
 #[hdk_entry(id = "interchange_entry")]

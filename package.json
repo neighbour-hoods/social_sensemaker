@@ -10,6 +10,7 @@
   "devDependencies": {},
   "scripts": {
     "build": "CARGO_TARGET_DIR=target cargo build --release --target wasm32-unknown-unknown && scripts/package-dnas.sh",
+    "doc": "CARGO_TARGET_DIR=target cargo doc --target wasm32-unknown-unknown --open",
     "test": "cd test && npm test"
   },
   "author": "",

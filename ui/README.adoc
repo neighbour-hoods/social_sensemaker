@@ -11,4 +11,4 @@ source ./rebuild.sh
 
 serve with your static content server of choice, and then load `index.html` in a browser.
 
-`start_serverr.sh` is provided for convenience, using miniserve.
+`start_server.sh` is provided for convenience, using miniserve.

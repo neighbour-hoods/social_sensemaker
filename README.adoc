@@ -2,6 +2,22 @@
 
 integrating `rep_lang` & Holochain.
 
+== submodules
+
+either:
+
+[source]
+----
+git clone --recurse-submodules $URL
+----
+
+or, after cloning:
+
+[source]
+----
+git submodule update --init
+----
+
 == entering dev environment
 
 [source]

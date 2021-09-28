@@ -3,7 +3,7 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use hdk::prelude::*;
 
 use rep_lang_concrete_syntax::parse::expr;
-use rep_lang_core::abstract_syntax::Program;
+use rep_lang_core::abstract_syntax::Expr;
 
 use rep_lang_runtime::{eval::FlatValue, types::Type};
 
@@ -51,8 +51,35 @@ pub enum InterchangeOperand {
 
 #[hdk_entry(id = "interchange_entry")]
 pub struct InterchangeEntry {
-    pub operator: Program,
+    pub operator: Expr,
     pub operands: Vec<InterchangeOperand>,
     pub output_type: Type,
     pub output: FlatValue,
+}
+
+pub(crate) fn validate_create_entry_interchange_entry(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
+    validate_create_update_entry_interchange_entry(validate_data)
+}
+
+pub(crate) fn validate_update_entry_interchange_entry(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
+    validate_create_update_entry_interchange_entry(validate_data)
+}
+
+pub fn validate_create_update_entry_interchange_entry(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
+    let element = validate_data.element.clone();
+    let entry = element.into_inner().1;
+    let entry = match entry {
+        ElementEntry::Present(e) => e,
+        _ => return Ok(ValidateCallbackResult::Valid),
+    };
+    Ok(match InterchangeEntry::try_from(&entry) {
+        Ok(ie) => {
+            todo!()
+        }
+        _ => ValidateCallbackResult::Valid,
+    })
+}
+
+pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<EntryHash> {
+    todo!()
 }

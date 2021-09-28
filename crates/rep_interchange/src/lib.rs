@@ -3,12 +3,15 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use hdk::prelude::*;
 
 use rep_lang_concrete_syntax::parse::expr;
-use rep_lang_core::abstract_syntax::Expr;
+use rep_lang_core::{
+    app,
+    abstract_syntax::{Expr, Name},
+};
 use rep_lang_runtime::{
     env::Env,
-    eval::{FlatValue},
+    eval::{EvalState, FlatValue},
     infer::infer_expr,
-    types::Type,
+    types::Scheme,
 };
 
 #[hdk_extern]
@@ -57,7 +60,7 @@ pub enum InterchangeOperand {
 pub struct InterchangeEntry {
     pub operator: Expr,
     pub operands: Vec<InterchangeOperand>,
-    pub output_type: Type,
+    pub output_scheme: Scheme,
     pub output: FlatValue,
 }
 
@@ -101,6 +104,21 @@ pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<
             None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
         }
     }).collect::<ExternResult<_>>()?;
+
+    let mut es = EvalState::new();
+    let mut type_env = Env::new();
+    // TODO these `Scheme`s must be normalized / sanitized / renamed
+    let arg_named_schemes: Vec<(Name, Scheme)> = int_entrs.iter().map(|ie| {
+        let sc = ie.output_scheme.clone();
+        (es.fresh(), sc)
+    }).collect();
+    type_env.extends(arg_named_schemes.clone());
+
+    let applicator = |bd, nm: Name| app!(bd, Expr::Var(nm));
+    let full_application: Expr = arg_named_schemes.iter().map(|t| t.0.clone()).fold(expr, applicator);
+
+    // don't need result, just a check
+    let _full_application_sc = infer_expr(&type_env, &full_application).map_err(|type_error| WasmError::Guest(format!("type error in full application: {:?}", type_error)))?;
 
     todo!()
 }

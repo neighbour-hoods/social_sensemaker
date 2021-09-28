@@ -57,10 +57,12 @@ pub struct InterchangeEntry {
     pub output: FlatValue,
 }
 
+#[hdk_extern]
 pub(crate) fn validate_create_entry_interchange_entry(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
     validate_create_update_entry_interchange_entry(validate_data)
 }
 
+#[hdk_extern]
 pub(crate) fn validate_update_entry_interchange_entry(validate_data: ValidateData) -> ExternResult<ValidateCallbackResult> {
     validate_create_update_entry_interchange_entry(validate_data)
 }
@@ -73,13 +75,13 @@ pub fn validate_create_update_entry_interchange_entry(validate_data: ValidateDat
         _ => return Ok(ValidateCallbackResult::Valid),
     };
     Ok(match InterchangeEntry::try_from(&entry) {
-        Ok(ie) => {
+        Ok(_ie) => {
             todo!()
         }
         _ => ValidateCallbackResult::Valid,
     })
 }
 
-pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<EntryHash> {
+pub fn create_interchange_entry(_expr: Expr, _args: &[EntryHash]) -> ExternResult<EntryHash> {
     todo!()
 }

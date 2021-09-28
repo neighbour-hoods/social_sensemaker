@@ -4,8 +4,12 @@ use hdk::prelude::*;
 
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
-
-use rep_lang_runtime::{eval::FlatValue, types::Type};
+use rep_lang_runtime::{
+    env::Env,
+    eval::{FlatValue},
+    infer::infer_expr,
+    types::Type,
+};
 
 #[hdk_extern]
 fn entry_defs(_: ()) -> ExternResult<EntryDefsCallbackResult> {
@@ -82,6 +86,21 @@ pub fn validate_create_update_entry_interchange_entry(validate_data: ValidateDat
     })
 }
 
-pub fn create_interchange_entry(_expr: Expr, _args: &[EntryHash]) -> ExternResult<EntryHash> {
+pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<EntryHash> {
+    // don't need result, just a preliminary check before hitting DHT
+    let _expr_sc = infer_expr(&Env::new(), &expr).map_err(|type_error| WasmError::Guest(format!("type error in `expr`: {:?}", type_error)))?;
+
+    // dereference `args`
+    let int_entrs: Vec<InterchangeEntry> = args.iter().cloned().map(|arg_hash| {
+        let element = (match get(arg_hash.clone(), GetOptions::content())? {
+            Some(el) => Ok(el),
+            None => Err(WasmError::Guest(format!("could not dereference arg: {}", arg_hash))),
+        })?;
+        match element.into_inner().1.to_app_option()? {
+            Some(ie) => Ok(ie),
+            None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
+        }
+    }).collect::<ExternResult<_>>()?;
+
     todo!()
 }

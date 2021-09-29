@@ -102,9 +102,19 @@ pub fn validate_create_update_entry_interchange_entry(
     })
 }
 
-// TODO `args` should perhaps be of type `InterchangeOperand`. that would allow us to tidily
-// handle non-`InterchangeEntry` args.
-pub fn create_interchange_entry(expr: Expr, args: &[HeaderHash]) -> ExternResult<HeaderHash> {
+/// input to `create_interchange_entry`
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct CreateInterchangeEntryInput {
+    pub expr: Expr,
+    // TODO `args` should perhaps be of type `InterchangeOperand`. that would
+    // allow us to tidily handle non-`InterchangeEntry` args.
+    pub args: Vec<HeaderHash>,
+}
+
+#[hdk_extern]
+pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
+    let expr = input.expr;
+    let args = input.args;
     // don't need result, just a preliminary check before hitting DHT
     let _expr_sc = infer_expr(&Env::new(), &expr).map_err(|type_error| {
         WasmError::Guest(format!("type error in `expr`: {:?}", type_error))

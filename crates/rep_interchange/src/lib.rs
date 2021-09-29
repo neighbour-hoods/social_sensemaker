@@ -9,7 +9,10 @@ use rep_lang_core::{
 };
 use rep_lang_runtime::{
     env::Env,
-    eval::{EvalState, FlatValue},
+    eval::{
+        flat_thunk_to_sto_ref, inject_flatvalue_to_flatthunk, new_term_env, EvalState, FlatValue,
+        Sto,
+    },
     infer::infer_expr,
     types::Scheme,
 };
@@ -61,7 +64,7 @@ pub struct InterchangeEntry {
     pub operator: Expr,
     pub operands: Vec<InterchangeOperand>,
     pub output_scheme: Scheme,
-    pub output: FlatValue,
+    pub output_value: FlatValue,
 }
 
 #[hdk_extern]
@@ -123,14 +126,17 @@ pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<
     let mut es = EvalState::new();
     let mut type_env = Env::new();
     // TODO these `Scheme`s must be normalized / sanitized / renamed
-    let arg_named_schemes: Vec<(Name, Scheme)> = int_entrs
+    let arg_named_schemes: Vec<(Name, Scheme, FlatValue)> = int_entrs
         .iter()
         .map(|ie| {
-            let sc = ie.output_scheme.clone();
-            (es.fresh(), sc)
+            (
+                es.fresh(),
+                ie.output_scheme.clone(),
+                ie.output_value.clone(),
+            )
         })
         .collect();
-    type_env.extends(arg_named_schemes.clone());
+    type_env.extends(arg_named_schemes.iter().map(|t| (t.0.clone(), t.1.clone())));
 
     let applicator = |bd, nm: Name| app!(bd, Expr::Var(nm));
     let full_application: Expr = arg_named_schemes
@@ -142,6 +148,16 @@ pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<
     let _full_application_sc = infer_expr(&type_env, &full_application).map_err(|type_error| {
         WasmError::Guest(format!("type error in full application: {:?}", type_error))
     })?;
+
+    let mut term_env = new_term_env();
+    // TODO this should be `Void`
+    let mut sto: Sto<()> = Sto::new();
+
+    for (nm, flat_val) in arg_named_schemes.iter().map(|t| (t.0.clone(), t.2.clone())) {
+        let v_ref =
+            flat_thunk_to_sto_ref(&mut es, &mut sto, inject_flatvalue_to_flatthunk(flat_val));
+        term_env.insert(nm, v_ref);
+    }
 
     todo!()
 }

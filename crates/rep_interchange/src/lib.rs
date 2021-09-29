@@ -2,7 +2,7 @@ use combine::{stream::position, EasyParser, StreamOnce};
 
 use hdk::prelude::*;
 
-use common::CreateInterchangeEntryInput;
+use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand, Marker};
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::{
     abstract_syntax::{Expr, Name},
@@ -12,9 +12,10 @@ use rep_lang_runtime::{
     env::Env,
     eval::{
         eval_, flat_thunk_to_sto_ref, inject_flatvalue_to_flatthunk, lookup_sto, new_term_env,
-        value_to_flat_value, EvalState, FlatValue, Sto,
+        normalize_expr, normalize_flat_value, value_to_flat_value, EvalState, FlatValue, Sto,
     },
-    infer::infer_expr,
+    infer,
+    infer::{infer_expr_with_is, InferState},
     types::Scheme,
 };
 
@@ -52,26 +53,6 @@ fn test_output(params: Params) -> ExternResult<bool> {
     }
 }
 
-// TODO is `HeaderHash` right?
-#[derive(Debug, Serialize, Deserialize)]
-pub enum InterchangeOperand {
-    // these dereference to `InterchangeEntry`
-    InterchangeOperand(HeaderHash),
-    // these dereference to `FlatThunk`??
-    OtherOperand(HeaderHash),
-}
-
-#[hdk_entry(id = "interchange_entry")]
-pub struct InterchangeEntry {
-    pub operator: Expr,
-    pub operands: Vec<InterchangeOperand>,
-    pub output_scheme: Scheme,
-    pub output_value: FlatValue<Marker>,
-}
-
-// TODO think carefully on what this should be.
-type Marker = ();
-
 #[hdk_extern]
 pub(crate) fn validate_create_entry_interchange_entry(
     validate_data: ValidateData,
@@ -90,27 +71,39 @@ pub fn validate_create_update_entry_interchange_entry(
     validate_data: ValidateData,
 ) -> ExternResult<ValidateCallbackResult> {
     let element = validate_data.element.clone();
-    let entry = element.into_inner().1;
-    let entry = match entry {
-        ElementEntry::Present(e) => e,
-        _ => return Ok(ValidateCallbackResult::Valid),
+    let ie: InterchangeEntry = match element.into_inner().1.to_app_option()? {
+        Some(ie) => ie,
+        None => return Ok(ValidateCallbackResult::Valid),
     };
-    Ok(match InterchangeEntry::try_from(&entry) {
-        Ok(_ie) => {
-            todo!()
-        }
-        _ => ValidateCallbackResult::Valid,
-    })
+
+    let _computed_ie = mk_interchange_entry(ie.operator, ie.operands);
+
+    todo!()
 }
 
 #[hdk_extern]
 pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
-    let expr = input.expr;
-    let args = input.args;
+    let ie = mk_interchange_entry(input.expr, input.args)?;
+    create_entry(&ie)
+}
+
+pub fn mk_interchange_entry(
+    expr: Expr,
+    args: Vec<InterchangeOperand>,
+) -> ExternResult<InterchangeEntry> {
+    let args: Vec<HeaderHash> = args
+        .iter()
+        .map(|io| match io {
+            InterchangeOperand::InterchangeOperand(hh) => hh.clone(),
+            InterchangeOperand::OtherOperand(_) => todo!("OtherOperand"),
+        })
+        .collect();
+
     // don't need result, just a preliminary check before hitting DHT
-    let _expr_sc = infer_expr(&Env::new(), &expr).map_err(|type_error| {
-        WasmError::Guest(format!("type error in `expr`: {:?}", type_error))
-    })?;
+    let _expr_sc =
+        infer_expr_with_is(&Env::new(), &mut InferState::new(), &expr).map_err(|type_error| {
+            WasmError::Guest(format!("type error in `expr`: {:?}", type_error))
+        })?;
 
     // dereference `args`
     let int_entrs: Vec<InterchangeEntry> = args
@@ -131,35 +124,46 @@ pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternRes
         })
         .collect::<ExternResult<_>>()?;
 
+    let mut is = InferState::new();
     let mut es = EvalState::new();
     let mut type_env = Env::new();
-    // TODO these `Scheme`s must be normalized / sanitized / renamed
-    let arg_named_schemes: Vec<(Name, Scheme, FlatValue<Marker>)> = int_entrs
+    let arg_named_scheme_values: Vec<(Name, Scheme, FlatValue<Marker>)> = int_entrs
         .iter()
         .map(|ie| {
             (
                 es.fresh(),
-                ie.output_scheme.clone(),
-                ie.output_value.clone(),
+                infer::normalize(&mut is, ie.output_scheme.clone()),
+                normalize_flat_value(&mut es, &ie.output_value),
             )
         })
         .collect();
-    type_env.extends(arg_named_schemes.iter().map(|t| (t.0.clone(), t.1.clone())));
+    type_env.extends(
+        arg_named_scheme_values
+            .iter()
+            .map(|t| (t.0.clone(), t.1.clone())),
+    );
 
     let applicator = |bd, nm: Name| app!(bd, Expr::Var(nm));
-    let full_application: Expr = arg_named_schemes
-        .iter()
-        .map(|t| t.0.clone())
-        .fold(expr.clone(), applicator);
+    let full_application: Expr = {
+        let app_expr = arg_named_scheme_values
+            .iter()
+            .map(|t| t.0.clone())
+            .fold(expr.clone(), applicator);
+        normalize_expr(&mut es, &app_expr)
+    };
 
-    let full_application_sc = infer_expr(&type_env, &full_application).map_err(|type_error| {
-        WasmError::Guest(format!("type error in full application: {:?}", type_error))
-    })?;
+    let full_application_sc =
+        infer_expr_with_is(&type_env, &mut is, &full_application).map_err(|type_error| {
+            WasmError::Guest(format!("type error in full application: {:?}", type_error))
+        })?;
 
     let mut term_env = new_term_env();
     let mut sto: Sto<Marker> = Sto::new();
 
-    for (nm, flat_val) in arg_named_schemes.iter().map(|t| (t.0.clone(), t.2.clone())) {
+    for (nm, flat_val) in arg_named_scheme_values
+        .iter()
+        .map(|t| (t.0.clone(), t.2.clone()))
+    {
         let v_ref =
             flat_thunk_to_sto_ref(&mut es, &mut sto, inject_flatvalue_to_flatthunk(flat_val));
         term_env.insert(nm, v_ref);
@@ -172,12 +176,11 @@ pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternRes
     let new_ie: InterchangeEntry = InterchangeEntry {
         operator: expr,
         operands: args
-            .iter()
-            .cloned()
+            .into_iter()
             .map(InterchangeOperand::InterchangeOperand)
             .collect(),
         output_scheme: full_application_sc,
         output_value: full_application_flat_val,
     };
-    create_entry(&new_ie)
+    Ok(new_ie)
 }

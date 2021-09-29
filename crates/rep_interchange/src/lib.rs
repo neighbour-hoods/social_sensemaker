@@ -10,8 +10,8 @@ use rep_lang_core::{
 use rep_lang_runtime::{
     env::Env,
     eval::{
-        flat_thunk_to_sto_ref, inject_flatvalue_to_flatthunk, new_term_env, EvalState, FlatValue,
-        Sto,
+        eval_, flat_thunk_to_sto_ref, inject_flatvalue_to_flatthunk, lookup_sto, new_term_env,
+        value_to_flat_value, EvalState, FlatValue, Sto,
     },
     infer::infer_expr,
     types::Scheme,
@@ -51,12 +51,13 @@ fn test_output(params: Params) -> ExternResult<bool> {
     }
 }
 
+// TODO is `HeaderHash` right?
 #[derive(Debug, Serialize, Deserialize)]
 pub enum InterchangeOperand {
     // these dereference to `InterchangeEntry`
-    InterchangeOperand(EntryHash),
+    InterchangeOperand(HeaderHash),
     // these dereference to `FlatThunk`??
-    OtherOperand(EntryHash),
+    OtherOperand(HeaderHash),
 }
 
 #[hdk_entry(id = "interchange_entry")]
@@ -98,7 +99,9 @@ pub fn validate_create_update_entry_interchange_entry(
     })
 }
 
-pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<EntryHash> {
+// TODO `args` should perhaps be of type `InterchangeOperand`. that would allow us to tidily
+// handle non-`InterchangeEntry` args.
+pub fn create_interchange_entry(expr: Expr, args: &[HeaderHash]) -> ExternResult<HeaderHash> {
     // don't need result, just a preliminary check before hitting DHT
     let _expr_sc = infer_expr(&Env::new(), &expr).map_err(|type_error| {
         WasmError::Guest(format!("type error in `expr`: {:?}", type_error))
@@ -142,10 +145,9 @@ pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<
     let full_application: Expr = arg_named_schemes
         .iter()
         .map(|t| t.0.clone())
-        .fold(expr, applicator);
+        .fold(expr.clone(), applicator);
 
-    // don't need result, just a check
-    let _full_application_sc = infer_expr(&type_env, &full_application).map_err(|type_error| {
+    let full_application_sc = infer_expr(&type_env, &full_application).map_err(|type_error| {
         WasmError::Guest(format!("type error in full application: {:?}", type_error))
     })?;
 
@@ -159,5 +161,19 @@ pub fn create_interchange_entry(expr: Expr, args: &[EntryHash]) -> ExternResult<
         term_env.insert(nm, v_ref);
     }
 
-    todo!()
+    let full_application_vr = eval_(&mut term_env, &mut sto, &mut es, &full_application);
+    let full_application_val = lookup_sto(&mut es, &full_application_vr, &mut sto);
+    let full_application_flat_val = value_to_flat_value(&mut es, &full_application_val, &mut sto);
+
+    let new_ie: InterchangeEntry = InterchangeEntry {
+        operator: expr,
+        operands: args
+            .iter()
+            .cloned()
+            .map(InterchangeOperand::InterchangeOperand)
+            .collect(),
+        output_scheme: full_application_sc,
+        output_value: full_application_flat_val,
+    };
+    create_entry(&new_ie)
 }

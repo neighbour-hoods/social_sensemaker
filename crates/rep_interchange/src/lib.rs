@@ -68,6 +68,7 @@ pub struct InterchangeEntry {
     pub output_value: FlatValue<Marker>,
 }
 
+// TODO think carefully on what this should be.
 type Marker = ();
 
 #[hdk_extern]
@@ -154,8 +155,7 @@ pub fn create_interchange_entry(expr: Expr, args: &[HeaderHash]) -> ExternResult
     })?;
 
     let mut term_env = new_term_env();
-    // TODO this should be `Void`
-    let mut sto: Sto<()> = Sto::new();
+    let mut sto: Sto<Marker> = Sto::new();
 
     for (nm, flat_val) in arg_named_schemes.iter().map(|t| (t.0.clone(), t.2.clone())) {
         let v_ref =

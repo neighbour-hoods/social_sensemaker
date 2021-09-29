@@ -65,8 +65,10 @@ pub struct InterchangeEntry {
     pub operator: Expr,
     pub operands: Vec<InterchangeOperand>,
     pub output_scheme: Scheme,
-    pub output_value: FlatValue,
+    pub output_value: FlatValue<Marker>,
 }
+
+type Marker = ();
 
 #[hdk_extern]
 pub(crate) fn validate_create_entry_interchange_entry(
@@ -129,7 +131,7 @@ pub fn create_interchange_entry(expr: Expr, args: &[HeaderHash]) -> ExternResult
     let mut es = EvalState::new();
     let mut type_env = Env::new();
     // TODO these `Scheme`s must be normalized / sanitized / renamed
-    let arg_named_schemes: Vec<(Name, Scheme, FlatValue)> = int_entrs
+    let arg_named_schemes: Vec<(Name, Scheme, FlatValue<Marker>)> = int_entrs
         .iter()
         .map(|ie| {
             (

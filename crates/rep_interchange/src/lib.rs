@@ -2,6 +2,7 @@ use combine::{stream::position, EasyParser, StreamOnce};
 
 use hdk::prelude::*;
 
+use common::CreateInterchangeEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::{
     abstract_syntax::{Expr, Name},
@@ -100,15 +101,6 @@ pub fn validate_create_update_entry_interchange_entry(
         }
         _ => ValidateCallbackResult::Valid,
     })
-}
-
-/// input to `create_interchange_entry`
-#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
-pub struct CreateInterchangeEntryInput {
-    pub expr: Expr,
-    // TODO `args` should perhaps be of type `InterchangeOperand`. that would
-    // allow us to tidily handle non-`InterchangeEntry` args.
-    pub args: Vec<HeaderHash>,
 }
 
 #[hdk_extern]

@@ -11,6 +11,7 @@ combine = "4.5.2"
 hdk = "0.0.102"
 serde = "1"
 
+common = { path = "../common" }
 rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }
 rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", version = "0.1.0" }
 rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", version = "0.1.0" }

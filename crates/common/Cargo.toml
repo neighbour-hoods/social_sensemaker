@@ -1,0 +1,11 @@
+[package]
+name = "common"
+version = "0.1.0"
+authors = ["Michael Hueschen <m@mhueschen.space>"]
+edition = "2018"
+
+[dependencies]
+hdk = "0.0.102"
+serde = "1"
+
+rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", version = "0.1.0" }

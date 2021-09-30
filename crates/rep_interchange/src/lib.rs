@@ -77,9 +77,27 @@ pub fn validate_create_update_entry_interchange_entry(
         None => return Ok(ValidateCallbackResult::Valid),
     };
 
-    let _computed_ie = mk_interchange_entry(ie.operator, ie.operands);
+    let computed_ie = mk_interchange_entry(ie.operator, ie.operands)?;
 
-    todo!()
+    if computed_ie.output_scheme != ie.output_scheme {
+        return Ok(ValidateCallbackResult::Invalid(format!(
+            "InterchangeEntry scheme mismatch:\
+        \ncomputed: {:?}\
+        \nreceived: {:?}",
+            computed_ie.output_scheme, ie.output_scheme
+        )));
+    }
+
+    if computed_ie.output_flat_value != ie.output_flat_value {
+        return Ok(ValidateCallbackResult::Invalid(format!(
+            "InterchangeEntry value mismatch:\
+        \ncomputed: {:?}\
+        \nreceived: {:?}",
+            computed_ie.output_flat_value, ie.output_flat_value
+        )));
+    }
+
+    Ok(ValidateCallbackResult::Valid)
 }
 
 #[hdk_extern]
@@ -134,7 +152,7 @@ pub fn mk_interchange_entry(
             (
                 es.fresh_name(),
                 infer::normalize(&mut is, ie.output_scheme.clone()),
-                ie.output_value.normalize(&mut HashMap::new(), &mut es),
+                ie.output_flat_value.normalize(&mut HashMap::new(), &mut es),
             )
         })
         .collect();
@@ -181,7 +199,7 @@ pub fn mk_interchange_entry(
             .map(InterchangeOperand::InterchangeOperand)
             .collect(),
         output_scheme: full_application_sc,
-        output_value: full_application_flat_val,
+        output_flat_value: full_application_flat_val,
         start_gas: es.current_gas_count(),
     };
     Ok(new_ie)

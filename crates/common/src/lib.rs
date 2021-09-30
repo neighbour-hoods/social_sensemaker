@@ -20,7 +20,7 @@ pub struct InterchangeEntry {
     pub operator: Expr,
     pub operands: Vec<InterchangeOperand>,
     pub output_scheme: Scheme,
-    pub output_value: FlatValue<Marker>,
+    pub output_flat_value: FlatValue<Marker>,
     pub start_gas: Gas,
 }
 

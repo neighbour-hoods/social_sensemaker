@@ -131,7 +131,7 @@ pub fn mk_interchange_entry(
         .iter()
         .map(|ie| {
             (
-                es.fresh(),
+                es.fresh_name(),
                 infer::normalize(&mut is, ie.output_scheme.clone()),
                 normalize_flat_value(&mut es, &ie.output_value),
             )

@@ -1,6 +1,6 @@
 use hdk::prelude::*;
 
-use rep_lang_core::abstract_syntax::Expr;
+use rep_lang_core::abstract_syntax::{Expr, Gas};
 use rep_lang_runtime::{eval::FlatValue, types::Scheme};
 
 // TODO think carefully on what this should be.
@@ -21,6 +21,7 @@ pub struct InterchangeEntry {
     pub operands: Vec<InterchangeOperand>,
     pub output_scheme: Scheme,
     pub output_value: FlatValue<Marker>,
+    pub start_gas: Gas,
 }
 
 /// input to `create_interchange_entry`

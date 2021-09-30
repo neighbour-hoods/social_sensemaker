@@ -181,6 +181,7 @@ pub fn mk_interchange_entry(
             .collect(),
         output_scheme: full_application_sc,
         output_value: full_application_flat_val,
+        start_gas: es.current_gas_count(),
     };
     Ok(new_ie)
 }

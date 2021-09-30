@@ -1,4 +1,5 @@
 use combine::{stream::position, EasyParser, StreamOnce};
+use std::collections::HashMap;
 
 use hdk::prelude::*;
 
@@ -12,7 +13,7 @@ use rep_lang_runtime::{
     env::Env,
     eval::{
         eval_, flat_thunk_to_sto_ref, inject_flatvalue_to_flatthunk, lookup_sto, new_term_env,
-        normalize_expr, normalize_flat_value, value_to_flat_value, EvalState, FlatValue, Sto,
+        value_to_flat_value, EvalState, FlatValue, Normalizable, Sto,
     },
     infer,
     infer::{infer_expr_with_is, InferState},
@@ -133,7 +134,7 @@ pub fn mk_interchange_entry(
             (
                 es.fresh_name(),
                 infer::normalize(&mut is, ie.output_scheme.clone()),
-                normalize_flat_value(&mut es, &ie.output_value),
+                ie.output_value.normalize(&mut HashMap::new(), &mut es),
             )
         })
         .collect();
@@ -149,7 +150,7 @@ pub fn mk_interchange_entry(
             .iter()
             .map(|t| t.0.clone())
             .fold(expr.clone(), applicator);
-        normalize_expr(&mut es, &app_expr)
+        app_expr.normalize(&mut HashMap::new(), &mut es)
     };
 
     let full_application_sc =

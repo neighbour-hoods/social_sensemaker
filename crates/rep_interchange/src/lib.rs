@@ -171,6 +171,8 @@ pub fn mk_interchange_entry(
         app_expr.normalize(&mut HashMap::new(), &mut es)
     };
 
+    // TODO substantiate whether this Scheme will have high-indexed `Tv`s, which might be
+    // unintuitive / cause issues with programmatic `Scheme` matching.
     let full_application_sc =
         infer_expr_with_is(&type_env, &mut is, &full_application).map_err(|type_error| {
             WasmError::Guest(format!("type error in full application: {:?}", type_error))

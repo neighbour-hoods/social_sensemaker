@@ -45,7 +45,7 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
     ],
   ])
 //  const appCellIds = firstHapp.cells.map(c => c.cellNick.match(/(\w+)\.dna$/)[1])
-  
+
   const repInterchangeApp = firstHapp.cells[0]
 
   const resultGood = await repInterchangeApp.call('interpreter', 'test_output', { params_string: "(lam [x] (if x 1 2))" })

@@ -20,10 +20,7 @@ use rep_lang_runtime::{
     types::Scheme,
 };
 
-#[hdk_extern]
-fn entry_defs(_: ()) -> ExternResult<EntryDefsCallbackResult> {
-    Ok(EntryDefsCallbackResult::from(vec![Path::entry_def()]))
-}
+entry_defs![Path::entry_def(), InterchangeEntry::entry_def()];
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Params {
@@ -107,14 +104,17 @@ pub struct CreateInterchangeEntryInputParse {
 }
 
 #[hdk_extern]
-pub fn create_interchange_entry_parse(input: CreateInterchangeEntryInputParse) -> ExternResult<HeaderHash> {
-    match expr().easy_parse(position::Stream::new(&input.expr[..])) {
-        Err(err) => {
-            Err(WasmError::Guest(format!("parse error:\n\n{}\n", err)))
-        }
+pub fn create_interchange_entry_parse(
+    input: CreateInterchangeEntryInputParse,
+) -> ExternResult<String> {
+    let hash = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
+        Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
         Ok((expr, extra_input)) => {
             if extra_input.is_partial() {
-                Err(WasmError::Guest(format!("error: unconsumed input: {:?}", extra_input)))
+                Err(WasmError::Guest(format!(
+                    "error: unconsumed input: {:?}",
+                    extra_input
+                )))
             } else {
                 debug!("ast: {:?}\n", expr);
                 create_interchange_entry(CreateInterchangeEntryInput {
@@ -123,6 +123,24 @@ pub fn create_interchange_entry_parse(input: CreateInterchangeEntryInputParse) -
                 })
             }
         }
+    }?;
+    Ok(hash.to_string())
+}
+
+#[hdk_extern]
+pub fn get_interchange_entry(arg_hash_str: String) -> ExternResult<InterchangeEntry> {
+    let arg_hash = HeaderHash::try_from(arg_hash_str)
+        .map_err(|e| WasmError::Guest(format!("hash conversion failed: {}", e)))?;
+    let element = (match get(arg_hash.clone(), GetOptions::content())? {
+        Some(el) => Ok(el),
+        None => Err(WasmError::Guest(format!(
+            "could not dereference arg: {}",
+            arg_hash
+        ))),
+    })?;
+    match element.into_inner().1.to_app_option()? {
+        Some(ie) => Ok(ie),
+        None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
     }
 }
 

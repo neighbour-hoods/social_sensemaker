@@ -58,6 +58,10 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
   await scenario.consistency()
   console.log('bad call:', resultBad)
   t.equal(resultBad, false)
+
+  const resultExpr = await repInterchangeApp.call('interpreter', 'create_interchange_entry_parse', { expr: "(lam [x] (if x 1 2))", args: [] })
+  await scenario.consistency()
+  console.log('header hash: ', resultExpr)
 })
 
 runner.run()

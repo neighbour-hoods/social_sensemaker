@@ -100,6 +100,32 @@ pub fn validate_create_update_entry_interchange_entry(
     Ok(ValidateCallbackResult::Valid)
 }
 
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct CreateInterchangeEntryInputParse {
+    expr: String,
+    args: Vec<String>,
+}
+
+#[hdk_extern]
+pub fn create_interchange_entry_parse(input: CreateInterchangeEntryInputParse) -> ExternResult<HeaderHash> {
+    match expr().easy_parse(position::Stream::new(&input.expr[..])) {
+        Err(err) => {
+            Err(WasmError::Guest(format!("parse error:\n\n{}\n", err)))
+        }
+        Ok((expr, extra_input)) => {
+            if extra_input.is_partial() {
+                Err(WasmError::Guest(format!("error: unconsumed input: {:?}", extra_input)))
+            } else {
+                debug!("ast: {:?}\n", expr);
+                create_interchange_entry(CreateInterchangeEntryInput {
+                    expr,
+                    args: Vec::new(),
+                })
+            }
+        }
+    }
+}
+
 #[hdk_extern]
 pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
     let ie = mk_interchange_entry(input.expr, input.args)?;

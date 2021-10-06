@@ -1,56 +1,98 @@
-use yew::prelude::*;
+use combine::{stream::position, EasyParser, StreamOnce};
+use web_sys::HtmlInputElement as InputElement;
+use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
+
+use rep_lang_concrete_syntax::parse::expr;
+use rep_lang_core::abstract_syntax::Expr;
+use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
+
+pub enum ExprState {
+    Valid(Scheme, Expr),
+    Invalid(String),
+}
 
 pub enum Msg {
-    AddOne,
-    SubOne,
+    ExprEdit(String),
 }
 
 pub struct Model {
-    // `ComponentLink` is like a reference to a component.
-    // It can be used to send messages to the component
-    link: ComponentLink<Self>,
-    value: i64,
+    expr_state: ExprState,
 }
 
 impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_props: Self::Properties, link: ComponentLink<Self>) -> Self {
-        Self { link, value: 0 }
-    }
-
-    fn update(&mut self, msg: Self::Message) -> ShouldRender {
-        match msg {
-            Msg::AddOne => {
-                self.value += 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-                true
-            }
-            Msg::SubOne => {
-                self.value -= 1;
-                // the value has changed so we need to
-                // re-render for it to appear on the page
-                true
-            }
+    fn create(_ctx: &Context<Self>) -> Self {
+        Self {
+            expr_state: ExprState::Invalid("init".to_string()),
         }
     }
 
-    fn change(&mut self, _props: Self::Properties) -> ShouldRender {
-        // Should only return "true" if new properties are different to
-        // previously received properties.
-        // This component has no properties so we will always return "false".
-        false
+    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+        match msg {
+            Msg::ExprEdit(text) => {
+                let st = match expr().easy_parse(position::Stream::new(&text[..])) {
+                    Err(err) => ExprState::Invalid(format!("parse error:\n\n{}\n", err)),
+                    Ok((expr, extra_input)) => {
+                        if extra_input.is_partial() {
+                            ExprState::Invalid(format!(
+                                "error: unconsumed input: {:?}",
+                                extra_input
+                            ))
+                        } else {
+                            match infer_expr(&Env::new(), &expr) {
+                                Ok(sc) => ExprState::Valid(sc, expr),
+                                Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
+                            }
+                        }
+                    }
+                };
+                self.expr_state = st;
+            }
+        }
+        true
     }
 
-    fn view(&self) -> Html {
+    fn view(&self, ctx: &Context<Self>) -> Html {
         html! {
-            <div>
-                <button onclick=self.link.callback(|_| Msg::AddOne)>{ "+1" }</button>
-                <button onclick=self.link.callback(|_| Msg::SubOne)>{ "-1" }</button>
-                <p>{ self.value }</p>
+            <div class="rlp-wrapper">
+                <div id="expr_input">
+                    <h1>{ "expr" }</h1>
+                    { self.view_input(ctx.link()) }
+                </div>
+                <div id="expr_msgs">
+                    <h1>{ "msgs" }</h1>
+                    { self.view_msgs(ctx.link()) }
+                </div>
             </div>
+        }
+    }
+}
+
+impl Model {
+    fn view_input(&self, link: &Scope<Self>) -> Html {
+        let onkeypress = link.batch_callback(|e: KeyboardEvent| {
+            let input: InputElement = e.target_unchecked_into();
+            Some(Msg::ExprEdit(input.value()))
+        });
+        html! {
+            <textarea
+                class="new-expr"
+                placeholder="(lam [x] x)"
+                {onkeypress}
+            />
+        }
+    }
+
+    fn view_msgs(&self, _link: &Scope<Self>) -> Html {
+        match &self.expr_state {
+            ExprState::Valid(sc, expr) => html! {
+                <p>{format!("Valid: type: {:?}, expr: {:?}", sc, expr)}</p>
+            },
+            ExprState::Invalid(msg) => html! {
+                <p>{format!("Invalid: {}", msg)}</p>
+            },
         }
     }
 }

@@ -8,7 +8,7 @@ slots:
       strategy: create
       deferred: false
     dna:
-      bundled: "./rep_dsl_test_dna.dna"
+      bundled: "./rep_interchange.dna"
       properties: ~
       uuid: ~
       version: ~

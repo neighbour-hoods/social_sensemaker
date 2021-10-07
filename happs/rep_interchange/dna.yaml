@@ -1,5 +1,5 @@
 manifest_version: "1"
-name: "rep_dsl_test_dna"
+name: "rep_interchange"
 uuid: ""
 properties: null
 zomes:

@@ -1,0 +1,15 @@
+---
+manifest_version: "1"
+name: rep_interchange
+description: ~
+slots:
+  - id: main
+    provisioning:
+      strategy: create
+      deferred: false
+    dna:
+      bundled: "./rep_dsl_test_dna.dna"
+      properties: ~
+      uuid: ~
+      version: ~
+      clone_limit: 0

@@ -1,5 +1,6 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use jsonrpc_core_client::TypedClient;
+use wasm_bindgen_futures::spawn_local;
 use web_sys::HtmlInputElement as InputElement;
 use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
 
@@ -32,7 +33,14 @@ impl Component for Model {
     type Message = Msg;
     type Properties = ();
 
-    fn create(_ctx: &Context<Self>) -> Self {
+    fn create(ctx: &Context<Self>) -> Self {
+        spawn_local(async move {
+            match ws::try_connect("127.0.0.1:8888") {
+                Ok(tc) => ctx.link().send_self(Msg::HcClientConnected(tc)),
+                Err(err) => { } // TODO: send error msg?
+            };
+        });
+
         Self {
             expr_state: ExprState::Invalid("init".to_string()),
             hc_client: HcClient::Absent,

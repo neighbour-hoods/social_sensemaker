@@ -9,8 +9,11 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 combine = "4.5.2"
+futures = "0.3"
+jsonrpc-core = "18.0.0"
 jsonrpc-core-client = "18.0.0"
 wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4.28"
 web-sys = "0.3.55"
 # use latest Yew, to have new `Context`s
 yew = { git = "https://github.com/yewstack/yew.git", rev = "9c8692262bb21360f69e5ef9440e4eb1252695d4" }

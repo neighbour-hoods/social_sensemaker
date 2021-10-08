@@ -76,11 +76,9 @@ impl Component for Model {
                 </div>
                 <div id="expr_msgs">
                     <h1>{ "msgs" }</h1>
-                    { self.view_msgs(ctx.link()) }
+                    { self.view_msgs() }
                 </div>
-                <div id="hc_client_status">
-                    <p> { self.hc_client_status() } </p>
-                </div>
+                { self.hc_client_status() }
             </div>
         }
     }
@@ -101,7 +99,7 @@ impl Model {
         }
     }
 
-    fn view_msgs(&self, _link: &Scope<Self>) -> Html {
+    fn view_msgs(&self) -> Html {
         match &self.expr_state {
             ExprState::Valid(sc, expr) => html! {
                 <p>{format!("Valid: type: {:?}, expr: {:?}", sc, expr)}</p>
@@ -113,9 +111,17 @@ impl Model {
     }
 
     fn hc_client_status(&self) -> Html {
-        match &self.hc_client {
-            HcClient::Present(_) => html! { "present" },
-            HcClient::Absent => html! { "absent" },
+        let (color, text) = match &self.hc_client {
+            HcClient::Present(_) => ("green", "present"),
+            HcClient::Absent => ("red", "absent"),
+        };
+        html! {
+            <div id="hc_client_status">
+                <h1>{ "Holochain Client Status: " }</h1>
+                <font color={ color }>
+                    { text }
+                </font>
+            </div>
         }
     }
 }

@@ -1,4 +1,5 @@
 use combine::{stream::position, EasyParser, StreamOnce};
+use jsonrpc_core_client::TypedClient;
 use web_sys::HtmlInputElement as InputElement;
 use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
 
@@ -11,12 +12,20 @@ pub enum ExprState {
     Invalid(String),
 }
 
+pub enum HcClient {
+    Present(TypedClient),
+    Absent,
+}
+
+#[allow(dead_code)]
 pub enum Msg {
     ExprEdit(String),
+    HcClientConnected(TypedClient),
 }
 
 pub struct Model {
     expr_state: ExprState,
+    hc_client: HcClient,
 }
 
 impl Component for Model {
@@ -26,6 +35,7 @@ impl Component for Model {
     fn create(_ctx: &Context<Self>) -> Self {
         Self {
             expr_state: ExprState::Invalid("init".to_string()),
+            hc_client: HcClient::Absent,
         }
     }
 
@@ -50,6 +60,9 @@ impl Component for Model {
                 };
                 self.expr_state = st;
             }
+            Msg::HcClientConnected(tc) => {
+                self.hc_client = HcClient::Present(tc);
+            }
         }
         true
     }
@@ -64,6 +77,9 @@ impl Component for Model {
                 <div id="expr_msgs">
                     <h1>{ "msgs" }</h1>
                     { self.view_msgs(ctx.link()) }
+                </div>
+                <div id="hc_client_status">
+                    <p> { self.hc_client_status() } </p>
                 </div>
             </div>
         }
@@ -93,6 +109,13 @@ impl Model {
             ExprState::Invalid(msg) => html! {
                 <p>{format!("Invalid: {}", msg)}</p>
             },
+        }
+    }
+
+    fn hc_client_status(&self) -> Html {
+        match &self.hc_client {
+            HcClient::Present(_) => html! { "present" },
+            HcClient::Absent => html! { "absent" },
         }
     }
 }

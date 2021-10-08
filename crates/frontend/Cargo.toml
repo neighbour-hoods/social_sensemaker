@@ -9,10 +9,11 @@ crate-type = ["rlib", "cdylib"]
 
 [dependencies]
 combine = "4.5.2"
-# use latest Yew, to have new `Context`s
-yew = { git = "https://github.com/yewstack/yew.git", rev = "9c8692262bb21360f69e5ef9440e4eb1252695d4" }
+jsonrpc-core-client = "18.0.0"
 wasm-bindgen = "0.2"
 web-sys = "0.3.55"
+# use latest Yew, to have new `Context`s
+yew = { git = "https://github.com/yewstack/yew.git", rev = "9c8692262bb21360f69e5ef9440e4eb1252695d4" }
 
 common = { path = "../common" }
 rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }

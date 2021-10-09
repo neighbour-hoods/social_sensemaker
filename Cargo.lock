@@ -397,6 +397,7 @@ dependencies = [
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rep_lang_runtime",
+ "reqwasm",
  "wasm-bindgen",
  "wasm-bindgen-futures",
  "web-sys",
@@ -1467,6 +1468,23 @@ dependencies = [
  "rep_lang_core",
  "rustyline",
  "serde",
+]
+
+[[package]]
+name = "reqwasm"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e34bf31941fb867ae9386a4b443b388e6713574944e6517136ee21a6a93cf996"
+dependencies = [
+ "anyhow",
+ "futures",
+ "js-sys",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "wasm-bindgen",
+ "wasm-bindgen-futures",
+ "web-sys",
 ]
 
 [[package]]

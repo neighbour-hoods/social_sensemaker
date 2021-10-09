@@ -16,7 +16,7 @@ pub enum ExprState {
 
 pub enum HcClient {
     Present(WsPair),
-    Absent,
+    Absent(String),
 }
 
 type WsPair = (UnboundedSender<Message>, UnboundedReceiver<Result<Message, WebSocketError>>);
@@ -39,15 +39,15 @@ impl Component for Model {
 
     fn create(ctx: &Context<Self>) -> Self {
         ctx.link().send_future(async {
-            match WebSocket::open("127.0.0.1:8888") {
+            match WebSocket::open("wss://echo.websocket.org") {
                 Ok(ws) => Msg::HcClientConnected((ws.sender, ws.receiver)),
                 Err(err) => Msg::HcClientError(format!("reqwasm WebSocket::open failed : {}", err)),
             }
         });
 
         Self {
-            expr_state: ExprState::Invalid("init".to_string()),
-            hc_client: HcClient::Absent,
+            expr_state: ExprState::Invalid("init".into()),
+            hc_client: HcClient::Absent("".into()),
         }
     }
 
@@ -76,6 +76,7 @@ impl Component for Model {
                 self.hc_client = HcClient::Present(t);
             }
             Msg::HcClientError(err) => {
+                self.hc_client = HcClient::Absent(err.clone());
                 console_error!(err)
             }
         }
@@ -127,8 +128,8 @@ impl Model {
 
     fn hc_client_status(&self) -> Html {
         let (color, text) = match &self.hc_client {
-            HcClient::Present(_) => ("green", "present"),
-            HcClient::Absent => ("red", "absent"),
+            HcClient::Present(_) => ("green", "present".into()),
+            HcClient::Absent(err) => ("red", format!("absent {}", err)),
         };
         html! {
             <div id="hc_client_status">

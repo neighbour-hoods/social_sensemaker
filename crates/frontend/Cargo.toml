@@ -10,6 +10,7 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 combine = "4.5.2"
 futures = "0.3"
+holochain_zome_types = "0.0.11"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4.28"
 web-sys = "0.3.55"

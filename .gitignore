@@ -5,5 +5,6 @@ node_modules
 happs/**/*.dna
 happs/**/*.happ
 .hc
+.hc_live_*
 
 ui/pkg/

@@ -1,4 +1,8 @@
 let
+
+  niv-sources = import ./nix/sources.nix;
+  niv-pkgs = import niv-sources.nixpkgs { };
+
   holonixPath = builtins.fetchTarball {
     url = "https://github.com/holochain/holonix/archive/cedfc2453cfa795a0344acd6f5fb302362e18fc5.tar.gz";
     sha256 = "sha256:004s7lkfhb5lg5292b80byx8b8zdm8lc3g0ldhfx9biqdg6m9agp";
@@ -19,12 +23,16 @@ let
     holochainOtherDepsNames = ["lair-keystore"];
   };
   nixpkgs = holonix.pkgs;
-in nixpkgs.mkShell {
+
+in
+
+nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
-  buildInputs = with nixpkgs; [
+  buildInputs = (with nixpkgs; [
     binaryen
+  ]) ++ (with niv-pkgs; [
     miniserve
     nodePackages.rollup
     wasm-pack
-  ];
+  ]);
 }

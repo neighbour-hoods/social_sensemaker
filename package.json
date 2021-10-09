@@ -14,7 +14,7 @@
     "doc": "CARGO_TARGET_DIR=target cargo doc --target wasm32-unknown-unknown --open",
     "test": "cd test && npm test",
     "pack": "hc app pack happs/rep_interchange",
-    "run": "hc sandbox generate happs/rep_interchange && hc sandbox -f=9000 run -l -p 8888"
+    "run": "hc sandbox generate happs/rep_interchange && hc sandbox -f=9000 run -l -p 9999"
   },
   "author": "",
   "license": "ISC"

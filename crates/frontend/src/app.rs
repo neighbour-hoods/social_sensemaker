@@ -39,7 +39,7 @@ impl Component for Model {
 
     fn create(ctx: &Context<Self>) -> Self {
         ctx.link().send_future(async {
-            match WebSocket::open("ws://127.0.0.1:8888") {
+            match WebSocket::open("ws://127.0.0.1:9999") {
                 Ok(ws) => Msg::HcClientConnected((ws.sender, ws.receiver)),
                 Err(err) => Msg::HcClientError(format!("reqwasm WebSocket::open failed : {}", err)),
             }

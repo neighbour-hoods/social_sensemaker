@@ -1,7 +1,7 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
 use reqwasm::websocket::{Message, WebSocket, WebSocketError};
-use weblog::console_error;
+use weblog::{console_error, console_log};
 use web_sys::HtmlInputElement as InputElement;
 use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
 
@@ -9,9 +9,19 @@ use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
 
+#[derive(Debug)]
 pub enum ExprState {
     Valid(Scheme, Expr),
     Invalid(String),
+}
+
+impl ExprState {
+    fn is_valid(&self) -> bool {
+        match self {
+            ExprState::Valid(_, _) => true,
+            ExprState::Invalid(_) => false,
+        }
+    }
 }
 
 pub enum HcClient {
@@ -26,6 +36,7 @@ pub enum Msg {
     ExprEdit(String),
     HcClientConnected(WsPair),
     HcClientError(String),
+    CreateExpr,
 }
 
 pub struct Model {
@@ -79,6 +90,9 @@ impl Component for Model {
                 self.hc_client = HcClient::Absent(err.clone());
                 console_error!(err)
             }
+            Msg::CreateExpr => {
+                console_log!(format!("create expr @ {:?}", self.expr_state));
+            }
         }
         true
     }
@@ -106,12 +120,17 @@ impl Model {
             let input: InputElement = e.target_unchecked_into();
             Some(Msg::ExprEdit(input.value()))
         });
+        let onclick = link.callback(|_| Msg::CreateExpr);
+        let disabled = !self.expr_state.is_valid();
         html! {
-            <textarea
-                class="new-expr"
-                placeholder="(lam [x] x)"
-                {onkeypress}
-            />
+            <div id="expr-input">
+                <textarea
+                    class="new-expr"
+                    placeholder="(lam [x] x)"
+                    {onkeypress}
+                />
+                <button onclick={onclick} disabled={disabled}>{ "create" }</button>
+            </div>
         }
     }
 

@@ -1,6 +1,7 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use jsonrpc_core_client::TypedClient;
-use wasm_bindgen_futures::spawn_local;
+use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
+use reqwasm::websocket::{Message, WebSocket, WebSocketError};
+use weblog::console_error;
 use web_sys::HtmlInputElement as InputElement;
 use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
 
@@ -14,14 +15,17 @@ pub enum ExprState {
 }
 
 pub enum HcClient {
-    Present(TypedClient),
+    Present(WsPair),
     Absent,
 }
+
+type WsPair = (UnboundedSender<Message>, UnboundedReceiver<Result<Message, WebSocketError>>);
 
 #[allow(dead_code)]
 pub enum Msg {
     ExprEdit(String),
-    HcClientConnected(TypedClient),
+    HcClientConnected(WsPair),
+    HcClientError(String),
 }
 
 pub struct Model {
@@ -34,11 +38,11 @@ impl Component for Model {
     type Properties = ();
 
     fn create(ctx: &Context<Self>) -> Self {
-        spawn_local(async move {
-            match ws::try_connect("127.0.0.1:8888") {
-                Ok(tc) => ctx.link().send_self(Msg::HcClientConnected(tc)),
-                Err(err) => { } // TODO: send error msg?
-            };
+        ctx.link().send_future(async {
+            match WebSocket::open("127.0.0.1:8888") {
+                Ok(ws) => Msg::HcClientConnected((ws.sender, ws.receiver)),
+                Err(err) => Msg::HcClientError(format!("reqwasm WebSocket::open failed : {}", err)),
+            }
         });
 
         Self {
@@ -68,8 +72,11 @@ impl Component for Model {
                 };
                 self.expr_state = st;
             }
-            Msg::HcClientConnected(tc) => {
-                self.hc_client = HcClient::Present(tc);
+            Msg::HcClientConnected(t) => {
+                self.hc_client = HcClient::Present(t);
+            }
+            Msg::HcClientError(err) => {
+                console_error!(err)
             }
         }
         true

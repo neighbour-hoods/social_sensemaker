@@ -1,13 +1,11 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use futures::{
-    SinkExt, StreamExt,
-};
-use holo_hash::HoloHash;
+use futures::{SinkExt, StreamExt};
+use holo_hash::{HeaderHash, HoloHash};
 use holochain_serialized_bytes;
 use holochain_serialized_bytes::holochain_serial;
 use holochain_serialized_bytes_derive::SerializedBytes;
 use holochain_zome_types::{call::Call, zome_io::ExternIO};
-use reqwasm::websocket::{Message, futures::WebSocket};
+use reqwasm::websocket::{futures::WebSocket, Message};
 use serde;
 use std::iter;
 use web_sys::HtmlInputElement as InputElement;
@@ -53,7 +51,7 @@ pub enum Msg {
     HcClientConnected(WebSocket),
     HcClientError(String),
     CreateExpr,
-    CreateExprResponse(String),
+    CreateExprResponse(Result<HeaderHash, String>),
 }
 
 pub struct Model {
@@ -151,17 +149,43 @@ impl Component for Model {
                             let req_bytes = holochain_serialized_bytes::encode(&req).unwrap();
                             ws2.send(Message::Bytes(req_bytes)).await.unwrap();
                             match ws2.next().await {
-                                Some(Ok(Message::Text(m))) => Msg::CreateExprResponse(format!("text: {}", m)),
-                                Some(Ok(Message::Bytes(m))) => Msg::CreateExprResponse(format!("bytes: {:?}", m)),
-                                Some(Err(e)) => Msg::CreateExprResponse(format!("error: {}", e)),
-                                None => Msg::CreateExprResponse("None".into()),
+                                Some(Ok(Message::Text(m))) => {
+                                    Msg::CreateExprResponse(Err(format!("text: {}", m)))
+                                }
+                                Some(Err(e)) => {
+                                    Msg::CreateExprResponse(Err(format!("error: {}", e)))
+                                }
+                                None => Msg::CreateExprResponse(Err("None".into())),
+                                Some(Ok(Message::Bytes(m))) => {
+                                    let resp: WireMessage =
+                                        holochain_serialized_bytes::decode(&m).unwrap();
+                                    if let WireMessage::Response {
+                                        id: resp_id,
+                                        data: Some(resp_data),
+                                    } = resp
+                                    {
+                                        if resp_id == req_id {
+                                            let ie_hash: HeaderHash =
+                                                holochain_serialized_bytes::decode(&resp_data)
+                                                    .unwrap();
+                                            return Msg::CreateExprResponse(Ok(ie_hash));
+                                        }
+                                    }
+                                    return Msg::CreateExprResponse(Err(format!(
+                                        "bytes couldn't be decoded: {:?}",
+                                        m
+                                    )));
+                                }
                             }
                         });
                     }
                 }
             }
-            Msg::CreateExprResponse(msg) => {
+            Msg::CreateExprResponse(Err(msg)) => {
                 console_log!(msg);
+            }
+            Msg::CreateExprResponse(Ok(hh)) => {
+                console_log!(format!("got HeaderHash: {}", hh));
             }
         }
         true

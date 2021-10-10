@@ -1355,6 +1355,7 @@ dependencies = [
 name = "rep_lang_core"
 version = "0.1.0"
 dependencies = [
+ "holochain_serialized_bytes_derive",
  "quickcheck",
  "rand 0.7.3",
  "serde",
@@ -1366,6 +1367,7 @@ version = "0.1.0"
 dependencies = [
  "byteorder",
  "combine",
+ "holochain_serialized_bytes_derive",
  "pretty",
  "quickcheck",
  "quickcheck_macros",

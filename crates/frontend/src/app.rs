@@ -128,6 +128,9 @@ impl Component for Model {
                                 args: Vec::new(),
                             };
                             let input_bytes = ExternIO::encode(input).unwrap();
+                            let input2: CreateInterchangeEntryInput =
+                                ExternIO::decode(&input_bytes).unwrap();
+                            console_log!(format!("{:?}", input2));
                             let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(36).collect();
                             let agent_pk = HoloHash::from_raw_36(agent_pk_bytes);
                             let call = Call::new(
@@ -138,9 +141,11 @@ impl Component for Model {
                                 input_bytes,
                                 agent_pk,
                             );
-                            let msg: Message =
-                                Message::Bytes(holochain_serialized_bytes::encode(&call).unwrap());
-                            send2.send(msg).await.unwrap();
+                            let msg_bytes = holochain_serialized_bytes::encode(&call).unwrap();
+                            let call2: Call =
+                                holochain_serialized_bytes::decode(&msg_bytes).unwrap();
+                            console_log!(format!("{:?}", call2));
+                            send2.send(Message::Bytes(msg_bytes)).await.unwrap();
                             Msg::CreateExprResponse("sent".into())
                             // match recv.next().await {
                             //     Some(Ok(Message::Text(m))) => Msg::CreateExprResponse(format!("text: {}", m)),

@@ -1,14 +1,13 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::{
-    channel::mpsc::{UnboundedReceiver, UnboundedSender},
-    SinkExt,
+    SinkExt, StreamExt,
 };
 use holo_hash::HoloHash;
 use holochain_serialized_bytes;
 use holochain_serialized_bytes::holochain_serial;
 use holochain_serialized_bytes_derive::SerializedBytes;
 use holochain_zome_types::{call::Call, zome_io::ExternIO};
-use reqwasm::websocket::{Message, WebSocket, WebSocketError};
+use reqwasm::websocket::{Message, futures::WebSocket};
 use serde;
 use std::iter;
 use web_sys::HtmlInputElement as InputElement;
@@ -36,7 +35,7 @@ impl ExprState {
 }
 
 pub enum HcClient {
-    Present(WsPair),
+    Present(WebSocket),
     Absent(String),
 }
 
@@ -49,14 +48,9 @@ impl HcClient {
     }
 }
 
-type WsPair = (
-    UnboundedSender<Message>,
-    UnboundedReceiver<Result<Message, WebSocketError>>,
-);
-
 pub enum Msg {
     ExprEdit(String),
-    HcClientConnected(WsPair),
+    HcClientConnected(WebSocket),
     HcClientError(String),
     CreateExpr,
     CreateExprResponse(String),
@@ -75,7 +69,7 @@ impl Component for Model {
     fn create(ctx: &Context<Self>) -> Self {
         ctx.link().send_future(async {
             match WebSocket::open("ws://127.0.0.1:9999") {
-                Ok(ws) => Msg::HcClientConnected((ws.sender, ws.receiver)),
+                Ok(ws) => Msg::HcClientConnected(ws),
                 Err(err) => Msg::HcClientError(format!("reqwasm WebSocket::open failed : {}", err)),
             }
         });
@@ -124,8 +118,8 @@ impl Component for Model {
                     (_, ExprState::Invalid(_)) => {
                         console_error!("attempted to create expr with invalid ExprState");
                     }
-                    (HcClient::Present((send, _recv)), ExprState::Valid(_sc, expr)) => {
-                        let mut send2 = send.clone();
+                    (HcClient::Present(ws), ExprState::Valid(_sc, expr)) => {
+                        let mut ws2 = ws.clone();
                         let req_id = self.next_request_id();
                         ctx.link().send_future(async move {
                             let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
@@ -155,14 +149,13 @@ impl Component for Model {
                                 data: msg_bytes,
                             };
                             let req_bytes = holochain_serialized_bytes::encode(&req).unwrap();
-                            send2.send(Message::Bytes(req_bytes)).await.unwrap();
-                            Msg::CreateExprResponse("sent".into())
-                            // match recv.next().await {
-                            //     Some(Ok(Message::Text(m))) => Msg::CreateExprResponse(format!("text: {}", m)),
-                            //     Some(Ok(Message::Bytes(m))) => Msg::CreateExprResponse(format!("bytes: {:?}", m)),
-                            //     Some(Err(e)) => Msg::CreateExprResponse(format!("error: {}", e)),
-                            //     None => Msg::CreateExprResponse("None".into()),
-                            // }
+                            ws2.send(Message::Bytes(req_bytes)).await.unwrap();
+                            match ws2.next().await {
+                                Some(Ok(Message::Text(m))) => Msg::CreateExprResponse(format!("text: {}", m)),
+                                Some(Ok(Message::Bytes(m))) => Msg::CreateExprResponse(format!("bytes: {:?}", m)),
+                                Some(Err(e)) => Msg::CreateExprResponse(format!("error: {}", e)),
+                                None => Msg::CreateExprResponse("None".into()),
+                            }
                         });
                     }
                 }

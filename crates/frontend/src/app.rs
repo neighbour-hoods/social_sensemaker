@@ -1,15 +1,20 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use futures::channel::mpsc::{UnboundedReceiver, UnboundedSender};
+use futures::{channel::mpsc::{UnboundedReceiver, UnboundedSender}, SinkExt};
+use holo_hash::HoloHash;
+use holochain_zome_types::{call::Call, zome_io::ExternIO};
 use reqwasm::websocket::{Message, WebSocket, WebSocketError};
+use rmp_serde::encode::to_vec;
+use std::iter;
 use weblog::{console_error, console_log};
 use web_sys::HtmlInputElement as InputElement;
 use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
 
+use common::CreateInterchangeEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub enum ExprState {
     Valid(Scheme, Expr),
     Invalid(String),
@@ -29,6 +34,15 @@ pub enum HcClient {
     Absent(String),
 }
 
+impl HcClient {
+    fn is_present(&self) -> bool {
+        match self {
+            HcClient::Present(_) => true,
+            HcClient::Absent(_) => false,
+        }
+    }
+}
+
 type WsPair = (UnboundedSender<Message>, UnboundedReceiver<Result<Message, WebSocketError>>);
 
 #[allow(dead_code)]
@@ -37,6 +51,7 @@ pub enum Msg {
     HcClientConnected(WsPair),
     HcClientError(String),
     CreateExpr,
+    CreateExprResponse(String),
 }
 
 pub struct Model {
@@ -62,7 +77,7 @@ impl Component for Model {
         }
     }
 
-    fn update(&mut self, _ctx: &Context<Self>, msg: Self::Message) -> bool {
+    fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::ExprEdit(text) => {
                 let st = match expr().easy_parse(position::Stream::new(&text[..])) {
@@ -92,6 +107,39 @@ impl Component for Model {
             }
             Msg::CreateExpr => {
                 console_log!(format!("create expr @ {:?}", self.expr_state));
+                match (&self.hc_client, self.expr_state.clone()) {
+                    (HcClient::Absent(_), _) => {
+                        console_error!("attempted to create expr with absent HcClient");
+                    }
+                    (_, ExprState::Invalid(_)) => {
+                        console_error!("attempted to create expr with invalid ExprState");
+                    }
+                    (HcClient::Present((send, _recv)), ExprState::Valid(_sc, expr)) => {
+                        let mut send2 = send.clone();
+                        ctx.link().send_future(async move {
+                            let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
+                                expr,
+                                args: Vec::new(),
+                            };
+                            let input_bytes = ExternIO::encode(input).unwrap();
+                            let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(39).collect();
+                            let agent_pk = HoloHash::from_raw_39_panicky(agent_pk_bytes);
+                            let call = Call::new(None, "interpreter".into(), "create_interchange_entry".into(), None, input_bytes, agent_pk);
+                            let msg: Message = Message::Bytes(to_vec(&call).unwrap());
+                            send2.send(msg).await.unwrap();
+                            Msg::CreateExprResponse("sent".into())
+                            // match recv.next().await {
+                            //     Some(Ok(Message::Text(m))) => Msg::CreateExprResponse(format!("text: {}", m)),
+                            //     Some(Ok(Message::Bytes(m))) => Msg::CreateExprResponse(format!("bytes: {:?}", m)),
+                            //     Some(Err(e)) => Msg::CreateExprResponse(format!("error: {}", e)),
+                            //     None => Msg::CreateExprResponse("None".into()),
+                            // }
+                        });
+                    }
+                }
+            }
+            Msg::CreateExprResponse(msg) => {
+                console_log!(msg);
             }
         }
         true
@@ -121,7 +169,7 @@ impl Model {
             Some(Msg::ExprEdit(input.value()))
         });
         let onclick = link.callback(|_| Msg::CreateExpr);
-        let disabled = !self.expr_state.is_valid();
+        let disabled = !self.expr_state.is_valid() || !self.hc_client.is_present();
         html! {
             <div id="expr-input">
                 <textarea

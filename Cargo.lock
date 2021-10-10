@@ -1426,7 +1426,7 @@ dependencies = [
 [[package]]
 name = "reqwasm"
 version = "0.2.1"
-source = "git+https://github.com/hamza1311/reqwasm.git?rev=7866f5e05d498bcd9c8066ed27f400869d1c4929#7866f5e05d498bcd9c8066ed27f400869d1c4929"
+source = "git+https://github.com/mhuesch/reqwasm.git?rev=c5b6191052ad79b41f1c3dc7f880ca0f4296abc1#c5b6191052ad79b41f1c3dc7f880ca0f4296abc1"
 dependencies = [
  "anyhow",
  "async-broadcast",

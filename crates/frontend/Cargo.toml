@@ -11,9 +11,9 @@ crate-type = ["rlib", "cdylib"]
 combine = "4.5.2"
 futures = "0.3"
 holo_hash = { version = "0.0.8", default-features = false }
+holochain_serialized_bytes = "0.0.51"
 holochain_zome_types = { version = "0.0.11", default-features = false }
 reqwasm = "0.2.1"
-rmp-serde = "0.15.5"
 wasm-bindgen = "0.2"
 wasm-bindgen-futures = "0.4.28"
 weblog = "0.3.0"

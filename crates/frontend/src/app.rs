@@ -1,9 +1,9 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::{channel::mpsc::{UnboundedReceiver, UnboundedSender}, SinkExt};
 use holo_hash::HoloHash;
+use holochain_serialized_bytes;
 use holochain_zome_types::{call::Call, zome_io::ExternIO};
 use reqwasm::websocket::{Message, WebSocket, WebSocketError};
-use rmp_serde::encode::to_vec;
 use std::iter;
 use weblog::{console_error, console_log};
 use web_sys::HtmlInputElement as InputElement;
@@ -122,10 +122,10 @@ impl Component for Model {
                                 args: Vec::new(),
                             };
                             let input_bytes = ExternIO::encode(input).unwrap();
-                            let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(39).collect();
-                            let agent_pk = HoloHash::from_raw_39_panicky(agent_pk_bytes);
+                            let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(36).collect();
+                            let agent_pk = HoloHash::from_raw_36(agent_pk_bytes);
                             let call = Call::new(None, "interpreter".into(), "create_interchange_entry".into(), None, input_bytes, agent_pk);
-                            let msg: Message = Message::Bytes(to_vec(&call).unwrap());
+                            let msg: Message = Message::Bytes(holochain_serialized_bytes::encode(&call).unwrap());
                             send2.send(msg).await.unwrap();
                             Msg::CreateExprResponse("sent".into())
                             // match recv.next().await {

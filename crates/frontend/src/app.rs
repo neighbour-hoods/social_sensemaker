@@ -5,8 +5,11 @@ use futures::{
 };
 use holo_hash::HoloHash;
 use holochain_serialized_bytes;
+use holochain_serialized_bytes::holochain_serial;
+use holochain_serialized_bytes_derive::SerializedBytes;
 use holochain_zome_types::{call::Call, zome_io::ExternIO};
 use reqwasm::websocket::{Message, WebSocket, WebSocketError};
+use serde;
 use std::iter;
 use web_sys::HtmlInputElement as InputElement;
 use weblog::{console_error, console_log};
@@ -51,7 +54,6 @@ type WsPair = (
     UnboundedReceiver<Result<Message, WebSocketError>>,
 );
 
-#[allow(dead_code)]
 pub enum Msg {
     ExprEdit(String),
     HcClientConnected(WsPair),
@@ -63,6 +65,7 @@ pub enum Msg {
 pub struct Model {
     expr_state: ExprState,
     hc_client: HcClient,
+    request_id: u64,
 }
 
 impl Component for Model {
@@ -80,6 +83,7 @@ impl Component for Model {
         Self {
             expr_state: ExprState::Invalid("init".into()),
             hc_client: HcClient::Absent("".into()),
+            request_id: 0,
         }
     }
 
@@ -122,6 +126,7 @@ impl Component for Model {
                     }
                     (HcClient::Present((send, _recv)), ExprState::Valid(_sc, expr)) => {
                         let mut send2 = send.clone();
+                        let req_id = self.next_request_id();
                         ctx.link().send_future(async move {
                             let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
                                 expr,
@@ -145,7 +150,12 @@ impl Component for Model {
                             let call2: Call =
                                 holochain_serialized_bytes::decode(&msg_bytes).unwrap();
                             console_log!(format!("{:?}", call2));
-                            send2.send(Message::Bytes(msg_bytes)).await.unwrap();
+                            let req = WireMessage::Request {
+                                id: req_id,
+                                data: msg_bytes,
+                            };
+                            let req_bytes = holochain_serialized_bytes::encode(&req).unwrap();
+                            send2.send(Message::Bytes(req_bytes)).await.unwrap();
                             Msg::CreateExprResponse("sent".into())
                             // match recv.next().await {
                             //     Some(Ok(Message::Text(m))) => Msg::CreateExprResponse(format!("text: {}", m)),
@@ -226,4 +236,44 @@ impl Model {
             </div>
         }
     }
+
+    fn next_request_id(&mut self) -> u64 {
+        let i = self.request_id;
+        self.request_id += 1;
+        i
+    }
+}
+
+// taken from https://github.com/holochain/holochain/blob/8cade151329117c40e47533449a2f842187c373a/crates/holochain_websocket/src/lib.rs#L138-L167
+// we are unable to use it directly because `holochain_websocket` depends on `net2` and cannot
+// build on wasm.
+#[derive(Debug, serde::Serialize, serde::Deserialize, SerializedBytes)]
+#[serde(tag = "type")]
+/// The messages actually sent over the wire by this library.
+/// If you want to impliment your own server or client you
+/// will need this type or be able to serialize / deserialize it.
+pub enum WireMessage {
+    /// A message without a response.
+    Signal {
+        #[serde(with = "serde_bytes")]
+        /// Actual bytes of the message serialized as [message pack](https://msgpack.org/).
+        data: Vec<u8>,
+    },
+    /// A request that requires a response.
+    Request {
+        /// The id of this request.
+        /// Note ids are recycled once they are used.
+        id: u64,
+        #[serde(with = "serde_bytes")]
+        /// Actual bytes of the message serialized as [message pack](https://msgpack.org/).
+        data: Vec<u8>,
+    },
+    /// The response to a request.
+    Response {
+        /// The id of the request that this response is for.
+        id: u64,
+        #[serde(with = "serde_bytes")]
+        /// Actual bytes of the message serialized as [message pack](https://msgpack.org/).
+        data: Option<Vec<u8>>,
+    },
 }

@@ -5,7 +5,7 @@ authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
 
 [dependencies]
-hdk = "0.0.102"
+hdk = { path = "../../../holochain/crates/hdk" }
 serde = "1"
 
 rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }

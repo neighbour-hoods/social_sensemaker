@@ -10,10 +10,10 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 combine = "4.5.2"
 futures = "0.3"
-holo_hash = { version = "0.0.8", default-features = false }
+holo_hash = { path = "../../../holochain/crates/holo_hash", default-features = false }
 holochain_serialized_bytes = "0.0.51"
 holochain_serialized_bytes_derive = "0.0.51"
-holochain_zome_types = { version = "0.0.11", default-features = false }
+holochain_zome_types = { path = "../../../holochain/crates/holochain_zome_types", default-features = false }
 reqwasm = { git = "https://github.com/mhuesch/reqwasm.git", rev = "f4af1fd670d37b7ac9f0ac8d3543d28204c72b6e" }
 serde = "1.0"
 serde_bytes = "0.11.5"

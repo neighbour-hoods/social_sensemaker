@@ -2,6 +2,7 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use std::collections::HashMap;
 
 use hdk::prelude::*;
+use hdk::entry::EntryDefRegistration;
 
 use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand, Marker};
 use rep_lang_concrete_syntax::parse::expr;
@@ -128,9 +129,7 @@ pub fn create_interchange_entry_parse(
 }
 
 #[hdk_extern]
-pub fn get_interchange_entry(arg_hash_str: String) -> ExternResult<InterchangeEntry> {
-    let arg_hash = HeaderHash::try_from(arg_hash_str)
-        .map_err(|e| WasmError::Guest(format!("hash conversion failed: {}", e)))?;
+pub fn get_interchange_entry(arg_hash: HeaderHash) -> ExternResult<InterchangeEntry> {
     let element = (match get(arg_hash.clone(), GetOptions::content())? {
         Some(el) => Ok(el),
         None => Err(WasmError::Guest(format!(

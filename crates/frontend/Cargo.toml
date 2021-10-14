@@ -14,7 +14,7 @@ holo_hash = { version = "0.0.8", default-features = false }
 holochain_serialized_bytes = "0.0.51"
 holochain_serialized_bytes_derive = "0.0.51"
 holochain_zome_types = { version = "0.0.11", default-features = false }
-reqwasm = { git = "https://github.com/mhuesch/reqwasm.git", rev = "c5b6191052ad79b41f1c3dc7f880ca0f4296abc1" }
+reqwasm = { git = "https://github.com/mhuesch/reqwasm.git", rev = "f4af1fd670d37b7ac9f0ac8d3543d28204c72b6e" }
 serde = "1.0"
 serde_bytes = "0.11.5"
 wasm-bindgen = "0.2"

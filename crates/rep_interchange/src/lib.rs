@@ -1,8 +1,8 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use std::collections::HashMap;
 
-use hdk::prelude::*;
 use hdk::entry::EntryDefRegistration;
+use hdk::prelude::*;
 
 use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand, Marker};
 use rep_lang_concrete_syntax::parse::expr;

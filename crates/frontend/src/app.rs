@@ -1,10 +1,7 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::{SinkExt, StreamExt};
-use holo_hash::{HeaderHash, HoloHash};
 use holochain_serialized_bytes;
-use holochain_serialized_bytes::holochain_serial;
-use holochain_serialized_bytes_derive::SerializedBytes;
-use holochain_zome_types::{call::Call, zome_io::ExternIO};
+use holochain_zome_types::{call::Call, HeaderHash, HoloHash, WireMessage, zome_io::ExternIO};
 use reqwasm::websocket::{futures::WebSocket, Message};
 use serde;
 use std::iter;
@@ -259,38 +256,4 @@ impl Model {
         self.request_id += 1;
         i
     }
-}
-
-// taken from https://github.com/holochain/holochain/blob/8cade151329117c40e47533449a2f842187c373a/crates/holochain_websocket/src/lib.rs#L138-L167
-// we are unable to use it directly because `holochain_websocket` depends on `net2` and cannot
-// build on wasm.
-#[derive(Debug, serde::Serialize, serde::Deserialize, SerializedBytes)]
-#[serde(tag = "type")]
-/// The messages actually sent over the wire by this library.
-/// If you want to impliment your own server or client you
-/// will need this type or be able to serialize / deserialize it.
-pub enum WireMessage {
-    /// A message without a response.
-    Signal {
-        #[serde(with = "serde_bytes")]
-        /// Actual bytes of the message serialized as [message pack](https://msgpack.org/).
-        data: Vec<u8>,
-    },
-    /// A request that requires a response.
-    Request {
-        /// The id of this request.
-        /// Note ids are recycled once they are used.
-        id: u64,
-        #[serde(with = "serde_bytes")]
-        /// Actual bytes of the message serialized as [message pack](https://msgpack.org/).
-        data: Vec<u8>,
-    },
-    /// The response to a request.
-    Response {
-        /// The id of the request that this response is for.
-        id: u64,
-        #[serde(with = "serde_bytes")]
-        /// Actual bytes of the message serialized as [message pack](https://msgpack.org/).
-        data: Option<Vec<u8>>,
-    },
 }

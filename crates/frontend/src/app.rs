@@ -1,7 +1,8 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::{SinkExt, StreamExt};
+use holo_hash::{HeaderHash, HoloHash};
 use holochain_serialized_bytes;
-use holochain_zome_types::{call::Call, zome_io::ExternIO, HeaderHash, HoloHash, WireMessage};
+use holochain_zome_types::{call::Call, zome_io::ExternIO, WireMessage};
 use reqwasm::websocket::{futures::WebSocket, Message};
 use std::iter;
 use web_sys::HtmlInputElement as InputElement;

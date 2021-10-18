@@ -450,6 +450,7 @@ dependencies = [
  "combine",
  "common",
  "futures",
+ "holo_hash",
  "holochain_serialized_bytes",
  "holochain_zome_types",
  "rep_lang_concrete_syntax",

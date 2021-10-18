@@ -1,3 +1,6 @@
 [submodule "submodules/rep_lang"]
 	path = submodules/rep_lang
 	url = git@github.com:sacredcapital/rep_lang.git
+[submodule "submodules/holochain"]
+	path = submodules/holochain
+	url = git@github.com:mhuesch/holochain.git

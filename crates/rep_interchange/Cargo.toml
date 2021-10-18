@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 combine = "4.5.2"
-hdk = { path = "../../../holochain/crates/hdk" }
+hdk = { path = "../../submodules/holochain/crates/hdk" }
 serde = "1"
 
 common = { path = "../common" }

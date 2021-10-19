@@ -2,7 +2,7 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use futures::{SinkExt, StreamExt};
 use holo_hash::{HeaderHash, HoloHash};
 use holochain_serialized_bytes;
-use holochain_zome_types::{call::Call, zome_io::ExternIO, wire::WireMessage};
+use holochain_zome_types::{call::Call, zome_io::{ExternIO, ZomeCallResponse}, wire::WireMessage};
 use reqwasm::websocket::{futures::WebSocket, Message};
 use std::iter;
 use web_sys::HtmlInputElement as InputElement;
@@ -162,10 +162,20 @@ impl Component for Model {
                                     } = resp
                                     {
                                         if resp_id == req_id {
-                                            let ie_hash: HeaderHash =
+                                            let zcr: ZomeCallResponse =
                                                 holochain_serialized_bytes::decode(&resp_data)
                                                     .unwrap();
-                                            return Msg::CreateExprResponse(Ok(ie_hash));
+                                            match zcr {
+                                                ZomeCallResponse::Ok(ok_bytes) => {
+                                                    let ie_hash: HeaderHash =
+                                                        holochain_serialized_bytes::decode(&ok_bytes)
+                                                            .unwrap();
+                                                    return Msg::CreateExprResponse(Ok(ie_hash));
+                                                }
+                                                _ =>
+                                                    return Msg::CreateExprResponse(Err(format!(
+                                                        "ZomeCallResponse error: {:?}", zcr))),
+                                            }
                                         }
                                     }
                                     return Msg::CreateExprResponse(Err(format!(

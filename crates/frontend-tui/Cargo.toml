@@ -1,0 +1,16 @@
+[package]
+name = "frontend-tui"
+version = "0.1.0"
+edition = "2018"
+
+[[bin]]
+name = "rlp"
+path = "src/main.rs"
+
+[dependencies]
+rand = "0.8.4"
+termion = "1.5.6"
+tui = "0.16.0"
+unicode-width = "0.1.9"
+
+common = { path = "../common" }

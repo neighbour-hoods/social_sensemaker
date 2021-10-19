@@ -8,6 +8,6 @@ edition = "2018"
 hdk = { path = "../../submodules/holochain/crates/hdk" }
 serde = "1"
 
-rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }
-rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", version = "0.1.0" }
-rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", version = "0.1.0" }
+rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax" }
+rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", features = ["hc"] }
+rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", features = ["hc"] }

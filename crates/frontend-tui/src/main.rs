@@ -146,33 +146,32 @@ fn main() -> Result<(), Box<dyn Error>> {
         })?;
 
         // Handle input
-        if let Event::Input(input) = events.next()? {
-            match app.input_mode {
-                InputMode::Normal => match input {
-                    Key::Char('e') => {
-                        app.input_mode = InputMode::Editing;
-                    }
-                    Key::Char('q') => {
-                        break;
-                    }
-                    _ => {}
-                },
-                InputMode::Editing => match input {
-                    Key::Char('\n') => {
-                        app.messages.push(app.input.drain(..).collect());
-                    }
-                    Key::Char(c) => {
-                        app.input.push(c);
-                    }
-                    Key::Backspace => {
-                        app.input.pop();
-                    }
-                    Key::Esc => {
-                        app.input_mode = InputMode::Normal;
-                    }
-                    _ => {}
-                },
-            }
+        let Event::Input(input) = events.next()?;
+        match app.input_mode {
+            InputMode::Normal => match input {
+                Key::Char('e') => {
+                    app.input_mode = InputMode::Editing;
+                }
+                Key::Char('q') => {
+                    break;
+                }
+                _ => {}
+            },
+            InputMode::Editing => match input {
+                Key::Char('\n') => {
+                    app.messages.push(app.input.drain(..).collect());
+                }
+                Key::Char(c) => {
+                    app.input.push(c);
+                }
+                Key::Backspace => {
+                    app.input.pop();
+                }
+                Key::Esc => {
+                    app.input_mode = InputMode::Normal;
+                }
+                _ => {}
+            },
         }
     }
     Ok(())

@@ -25,18 +25,15 @@ impl Events {
                 let stdin = io::stdin();
                 for evt in stdin.keys() {
                     if let Ok(key) = evt {
-                        if let Err(err) = tx.send(Event::Input(key)) {
-                            eprintln!("{}", err);
+                        if let Err(_err) = tx.send(Event::Input(key)) {
+                            // silently exit, otherwise output is distractingly visible
                             return;
                         }
                     }
                 }
             })
         };
-        Events {
-            rx,
-            input_handle,
-        }
+        Events { rx, input_handle }
     }
 
     pub fn next(&self) -> Result<Event<Key>, mpsc::RecvError> {

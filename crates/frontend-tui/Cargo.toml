@@ -8,9 +8,13 @@ name = "rlp"
 path = "src/main.rs"
 
 [dependencies]
+combine = "4.5.2"
 rand = "0.8.4"
+scrawl = "1.1.0"
 termion = "1.5.6"
 tui = "0.16.0"
-unicode-width = "0.1.9"
 
 common = { path = "../common" }
+rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }
+rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", version = "0.1.0", features = ["hc"] }
+rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", version = "0.1.0", features = ["hc"] }

@@ -43,6 +43,7 @@ struct App {
     opt_events: Option<Events>,
     #[allow(dead_code)]
     hc_ws: AppWebsocket,
+    hc_response: String,
 }
 
 impl App {
@@ -53,6 +54,7 @@ impl App {
             expr_state: ExprState::Invalid("init".into()),
             opt_events: Some(Events::new()),
             hc_ws,
+            hc_response: "".into(),
         }
     }
 }
@@ -126,6 +128,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         .title("feedback on expr"),
                 );
             f.render_widget(msgs, chunks[2]);
+
+            let app_info = Paragraph::new(format!("{}", app.hc_response))
+                .style(Style::default())
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("holochain response"),
+                );
+            f.render_widget(app_info, chunks[3]);
         })?;
 
         // handle input

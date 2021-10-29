@@ -1,4 +1,6 @@
 use combine::{stream::position, EasyParser, StreamOnce};
+use futures::executor;
+use holochain_conductor_client::{AppWebsocket, InstalledAppInfo};
 use scrawl;
 use std::{error::Error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
@@ -35,32 +37,23 @@ impl ExprState {
     }
 }
 
-// pub enum HcClient {
-//     Present(WebSocket),
-//     Absent(String),
-// }
-
-// impl HcClient {
-//     fn is_present(&self) -> bool {
-//         match self {
-//             HcClient::Present(_) => true,
-//             HcClient::Absent(_) => false,
-//         }
-//     }
-// }
-
 struct App {
     expr_input: String,
     expr_state: ExprState,
     opt_events: Option<Events>,
+    hc_ws: AppWebsocket,
+    hc_app_info: Result<InstalledAppInfo, String>,
 }
 
-impl Default for App {
-    fn default() -> App {
+impl App {
+    fn new(app_url: String) -> App {
+        let hc_ws = executor::block_on(AppWebsocket::connect(app_url)).expect("connect failed");
         App {
             expr_input: String::new(),
             expr_state: ExprState::Invalid("init".into()),
             opt_events: Some(Events::new()),
+            hc_ws,
+            hc_app_info: Err("just created".into()),
         }
     }
 }
@@ -73,8 +66,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    // create default app state
-    let mut app = App::default();
+    let mut app = App::new("ws://127.0.0.1:9999".into());
 
     loop {
         // draw UI
@@ -87,6 +79,7 @@ fn main() -> Result<(), Box<dyn Error>> {
                         Constraint::Length(1),
                         Constraint::Length(25),
                         Constraint::Min(1),
+                        Constraint::Length(4),
                     ]
                     .as_ref(),
                 )
@@ -97,10 +90,12 @@ fn main() -> Result<(), Box<dyn Error>> {
                 Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(" to exit, "),
                 Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to launch $EDITOR"),
+                Span::raw(" to launch $EDITOR, "),
+                Span::styled("r", Style::default().add_modifier(Modifier::BOLD)),
+                Span::raw(" to query Holochain app info"),
             ];
             let mut valid_expr_commands = vec![
-                Span::raw(", press "),
+                Span::raw(", "),
                 Span::styled("c", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(" to create entry"),
             ];
@@ -131,6 +126,15 @@ fn main() -> Result<(), Box<dyn Error>> {
                         .title("feedback on expr"),
                 );
             f.render_widget(msgs, chunks[2]);
+
+            let app_info = Paragraph::new(format!("{:?}", app.hc_app_info))
+                .style(Style::default())
+                .block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("holochain_app_info"),
+                );
+            f.render_widget(app_info, chunks[3]);
         })?;
 
         // handle input
@@ -173,6 +177,14 @@ fn main() -> Result<(), Box<dyn Error>> {
                 terminal.clear().expect("clear failed");
                 eprintln!("create!");
                 break;
+            }
+            Key::Char('r') => {
+                let app_id = "interpreter";
+                app.hc_app_info = match executor::block_on(app.hc_ws.app_info(app_id.into())) {
+                    Err(err) => Err(format!("{:?}", err)),
+                    Ok(None) => Err(format!("lookup failed for `{}`", app_id)),
+                    Ok(Some(ai)) => Ok(ai),
+                };
             }
             _ => {}
         }

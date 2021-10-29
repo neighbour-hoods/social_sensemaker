@@ -1221,6 +1221,7 @@ version = "0.1.0"
 dependencies = [
  "combine",
  "common",
+ "futures",
  "holochain_conductor_client",
  "rand 0.8.4",
  "rep_lang_concrete_syntax",

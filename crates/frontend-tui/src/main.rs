@@ -2,7 +2,7 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use futures::executor;
 use holochain_conductor_client::{AppWebsocket, InstalledAppInfo};
 use scrawl;
-use std::{error::Error, io};
+use std::{error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
@@ -58,7 +58,8 @@ impl App {
     }
 }
 
-fn main() -> Result<(), Box<dyn Error>> {
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn error::Error>> {
     // terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
@@ -180,7 +181,7 @@ fn main() -> Result<(), Box<dyn Error>> {
             }
             Key::Char('r') => {
                 let app_id = "interpreter";
-                app.hc_app_info = match executor::block_on(app.hc_ws.app_info(app_id.into())) {
+                app.hc_app_info = match app.hc_ws.app_info(app_id.into()).await {
                     Err(err) => Err(format!("{:?}", err)),
                     Ok(None) => Err(format!("lookup failed for `{}`", app_id)),
                     Ok(Some(ai)) => Ok(ai),

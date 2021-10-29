@@ -1,6 +1,6 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::executor;
-use holochain_conductor_client::{AppWebsocket, InstalledAppInfo};
+use holochain_conductor_client::{AppWebsocket};
 use scrawl;
 use std::{error, io};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
@@ -41,8 +41,8 @@ struct App {
     expr_input: String,
     expr_state: ExprState,
     opt_events: Option<Events>,
+    #[allow(dead_code)]
     hc_ws: AppWebsocket,
-    hc_app_info: Result<InstalledAppInfo, String>,
 }
 
 impl App {
@@ -53,7 +53,6 @@ impl App {
             expr_state: ExprState::Invalid("init".into()),
             opt_events: Some(Events::new()),
             hc_ws,
-            hc_app_info: Err("just created".into()),
         }
     }
 }
@@ -127,15 +126,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         .title("feedback on expr"),
                 );
             f.render_widget(msgs, chunks[2]);
-
-            let app_info = Paragraph::new(format!("{:?}", app.hc_app_info))
-                .style(Style::default())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("holochain_app_info"),
-                );
-            f.render_widget(app_info, chunks[3]);
         })?;
 
         // handle input
@@ -178,14 +168,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 terminal.clear().expect("clear failed");
                 eprintln!("create!");
                 break;
-            }
-            Key::Char('r') => {
-                let app_id = "interpreter";
-                app.hc_app_info = match app.hc_ws.app_info(app_id.into()).await {
-                    Err(err) => Err(format!("{:?}", err)),
-                    Ok(None) => Err(format!("lookup failed for `{}`", app_id)),
-                    Ok(Some(ai)) => Ok(ai),
-                };
             }
             _ => {}
         }

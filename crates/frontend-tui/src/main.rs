@@ -1,9 +1,9 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::executor;
+use holo_hash::{HeaderHash, HoloHash};
 use holochain_conductor_client::{AppWebsocket, ZomeCall};
 use holochain_types::{dna::DnaBundle, prelude::CellId};
 use holochain_zome_types::zome_io::ExternIO;
-use holo_hash::{HeaderHash, HoloHash};
 use scrawl;
 use std::{error, io, iter, path::Path};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
@@ -200,12 +200,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         // start time, and store results in `App`
                         let cell_id = {
                             let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
-                            let bundle = DnaBundle::read_from_file(path)
-                                .await
-                                .unwrap();
-                            let (_dna_file, dna_hash) = bundle.into_dna_file(None, None)
-                                .await
-                                .unwrap();
+                            let bundle = DnaBundle::read_from_file(path).await.unwrap();
+                            let (_dna_file, dna_hash) =
+                                bundle.into_dna_file(None, None).await.unwrap();
                             CellId::new(dna_hash, agent_pk.clone())
                         };
                         let zc = ZomeCall {

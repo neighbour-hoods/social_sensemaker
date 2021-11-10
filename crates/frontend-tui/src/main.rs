@@ -41,8 +41,15 @@ impl ExprState {
 }
 
 struct App {
+    /// the text which may parse to an `Expr`.
     expr_input: String,
+    /// the result of parsing and typechecking `expr_input`.
     expr_state: ExprState,
+    /// this is an Option so we can close the Events stream when we open EDITOR
+    /// (by setting this field to `None` and thereby allowing the `Events` go
+    /// out of scope and be collected).
+    /// while the TUI has control of the screen & input, this should always be
+    /// `Some`.
     opt_events: Option<Events>,
     #[allow(dead_code)]
     hc_ws: AppWebsocket,
@@ -151,15 +158,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         };
         match input {
             Key::Char('q') => {
-                terminal.clear().expect("clear failed");
+                terminal.clear().expect("clear to succeed");
                 break;
             }
             Key::Char('e') => {
                 app.opt_events = None;
-                terminal.clear().expect("clear failed");
+                terminal.clear().expect("clear to succeed");
                 app.expr_input = scrawl::with(&app.expr_input)?;
                 app.opt_events = Some(Events::new());
-                terminal.clear().expect("clear failed");
+                terminal.clear().expect("clear to succeed");
                 let st = match expr().easy_parse(position::Stream::new(&app.expr_input[..])) {
                     Err(err) => ExprState::Invalid(format!("parse error:\n\n{}\n", err)),
                     Ok((expr, extra_input)) => {

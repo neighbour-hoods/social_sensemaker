@@ -92,9 +92,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
                 Span::raw(" to exit, "),
                 Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to launch $EDITOR, "),
-                Span::styled("r", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to query Holochain app info"),
+                Span::raw(" to launch $EDITOR"),
             ];
             let mut valid_expr_commands = vec![
                 Span::raw(", "),

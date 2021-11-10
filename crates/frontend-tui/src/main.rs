@@ -48,6 +48,8 @@ struct App {
 
 impl App {
     fn new(app_url: String) -> App {
+        // TODO make this async to avoid TUI hangs, and also to allow graceful
+        // dis/connection without requiring TUI restarts.
         let hc_ws = executor::block_on(AppWebsocket::connect(app_url)).expect("connect failed");
         App {
             expr_input: String::new(),
@@ -173,10 +175,12 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 };
                 app.expr_state = st;
             }
-            Key::Char('c') if app.expr_state.is_valid() => {
-                terminal.clear().expect("clear failed");
-                eprintln!("create!");
-                break;
+            Key::Char('c') => {
+                if !app.expr_state.is_valid() {
+                    app.hc_response = "cannot create with invalid expr".into();
+                } else {
+                    app.hc_response = "create: unimplemented".into();
+                }
             }
             _ => {}
         }

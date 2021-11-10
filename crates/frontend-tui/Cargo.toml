@@ -10,7 +10,10 @@ path = "src/main.rs"
 [dependencies]
 combine = "4.5.2"
 futures = "0.3"
+holo_hash = { version = "0.0.10", default-features = false }
 holochain_conductor_client = { git = "https://github.com/holochain/conductor-client-rust.git", rev = "da01edf2de86cdd929b8759f40058ed8ea7ecd11" }
+holochain_types = "0.0.12"
+holochain_zome_types = { version = "0.0.14", default-features = false }
 rand = "0.8.4"
 scrawl = "1.1.0"
 termion = "1.5.6"

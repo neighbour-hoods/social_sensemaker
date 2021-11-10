@@ -1,8 +1,11 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::executor;
-use holochain_conductor_client::{AppWebsocket};
+use holochain_conductor_client::{AppWebsocket, ZomeCall};
+use holochain_types::{dna::DnaBundle, prelude::CellId};
+use holochain_zome_types::zome_io::ExternIO;
+use holo_hash::{HeaderHash, HoloHash};
 use scrawl;
-use std::{error, io};
+use std::{error, io, iter, path::Path};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
@@ -13,7 +16,7 @@ use tui::{
     Terminal,
 };
 
-// use common::CreateInterchangeEntryInput;
+use common::CreateInterchangeEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
@@ -176,10 +179,41 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 app.expr_state = st;
             }
             Key::Char('c') => {
-                if !app.expr_state.is_valid() {
-                    app.hc_response = "cannot create with invalid expr".into();
-                } else {
-                    app.hc_response = "create: unimplemented".into();
+                match &app.expr_state {
+                    ExprState::Invalid(_) => {}
+                    ExprState::Valid(_sc, expr) => {
+                        let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
+                            expr: expr.clone(),
+                            args: Vec::new(),
+                        };
+                        let payload = ExternIO::encode(input).unwrap();
+                        let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(36).collect();
+                        let agent_pk = HoloHash::from_raw_36(agent_pk_bytes);
+                        // TODO do all of this async, with jobs spawned at TUI
+                        // start time, and store results in `App`
+                        let cell_id = {
+                            let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
+                            let bundle = DnaBundle::read_from_file(path)
+                                .await
+                                .unwrap();
+                            let (_dna_file, dna_hash) = bundle.into_dna_file(None, None)
+                                .await
+                                .unwrap();
+                            CellId::new(dna_hash, agent_pk.clone())
+                        };
+                        let zc = ZomeCall {
+                            cell_id,
+                            zome_name: "interpreter".into(),
+                            fn_name: "create_interchange_entry".into(),
+                            payload,
+                            cap: None,
+                            provenance: agent_pk,
+                        };
+                        // TODO \/ we have a problem here: CellMissing
+                        let result = app.hc_ws.zome_call(zc).await.unwrap();
+                        let ie_hash: HeaderHash = result.decode().unwrap();
+                        app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
+                    }
                 }
             }
             _ => {}

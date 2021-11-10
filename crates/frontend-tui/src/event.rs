@@ -1,23 +1,24 @@
+use holochain_conductor_client::AppWebsocket;
 use std::io;
-use std::sync::mpsc;
+use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
-
 use termion::event::Key;
 use termion::input::TermRead;
 
-pub enum Event<I> {
-    Input(I),
+pub enum Event {
+    Input(Key),
+    HcWs(AppWebsocket),
 }
 
 /// A small event handler that wrap termion input and tick events. Each event
 /// type is handled in its own thread and returned to a common `Receiver`
 pub struct Events {
-    rx: mpsc::Receiver<Event<Key>>,
+    rx: Receiver<Event>,
     input_handle: thread::JoinHandle<()>,
 }
 
 impl Events {
-    pub fn new() -> Events {
+    pub fn mk() -> (Events, Sender<Event>) {
         let (tx, rx) = mpsc::channel();
         let input_handle = {
             let tx = tx.clone();
@@ -33,10 +34,10 @@ impl Events {
                 }
             })
         };
-        Events { rx, input_handle }
+        (Events { rx, input_handle }, tx)
     }
 
-    pub fn next(&self) -> Result<Event<Key>, mpsc::RecvError> {
+    pub fn next(&self) -> Result<Event, mpsc::RecvError> {
         self.rx.recv()
     }
 }

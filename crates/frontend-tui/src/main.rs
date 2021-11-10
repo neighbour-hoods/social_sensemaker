@@ -1,12 +1,12 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use futures::executor;
 use holo_hash::{HeaderHash, HoloHash};
 use holochain_conductor_client::{AppWebsocket, ZomeCall};
 use holochain_types::{dna::DnaBundle, prelude::CellId};
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
-use std::{error, io, iter, path::Path};
+use std::{error, io, iter, path::Path, sync::mpsc::Sender};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
+use tokio;
 use tui::{
     backend::TermionBackend,
     layout::{Constraint, Direction, Layout},
@@ -51,22 +51,21 @@ struct App {
     /// while the TUI has control of the screen & input, this should always be
     /// `Some`.
     opt_events: Option<Events>,
-    #[allow(dead_code)]
-    hc_ws: AppWebsocket,
+    event_sender: Sender<Event>,
+    hc_ws: Option<AppWebsocket>,
     hc_response: String,
 }
 
 impl App {
-    fn new(app_url: String) -> App {
-        // TODO make this async to avoid TUI hangs, and also to allow graceful
-        // dis/connection without requiring TUI restarts.
-        let hc_ws = executor::block_on(AppWebsocket::connect(app_url)).expect("connect failed");
+    fn new() -> App {
+        let (events, event_sender) = Events::mk();
         App {
             expr_input: String::new(),
             expr_state: ExprState::Invalid("init".into()),
-            opt_events: Some(Events::new()),
-            hc_ws,
-            hc_response: "".into(),
+            opt_events: Some(events),
+            event_sender,
+            hc_ws: None,
+            hc_response: "not connected".into(),
         }
     }
 }
@@ -80,7 +79,18 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let mut app = App::new("ws://127.0.0.1:9999".into());
+    let mut app = App::new();
+
+    {
+        let send = app.event_sender.clone();
+        tokio::task::spawn(async move {
+            let app_url: String = "ws://127.0.0.1:9999".into();
+            let hc_ws = AppWebsocket::connect(app_url)
+                .await
+                .expect("connect to succeed");
+            send.send(Event::HcWs(hc_ws)).expect("send to succeed");
+        });
+    }
 
     loop {
         // draw UI
@@ -150,22 +160,26 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
         })?;
 
         // handle input
-        let Event::Input(input) = {
+        let evt = {
             match app.opt_events {
                 None => panic!("impossible: logic error"),
                 Some(ref itr) => itr.next()?,
             }
         };
-        match input {
-            Key::Char('q') => {
+        match evt {
+            Event::Input(Key::Char('q')) => {
                 terminal.clear().expect("clear to succeed");
                 break;
             }
-            Key::Char('e') => {
+            Event::Input(Key::Char('e')) => {
                 app.opt_events = None;
                 terminal.clear().expect("clear to succeed");
                 app.expr_input = scrawl::with(&app.expr_input)?;
-                app.opt_events = Some(Events::new());
+                {
+                    let (events, event_sender) = Events::mk();
+                    app.opt_events = Some(events);
+                    app.event_sender = event_sender;
+                }
                 terminal.clear().expect("clear to succeed");
                 let st = match expr().easy_parse(position::Stream::new(&app.expr_input[..])) {
                     Err(err) => ExprState::Invalid(format!("parse error:\n\n{}\n", err)),
@@ -185,10 +199,11 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 };
                 app.expr_state = st;
             }
-            Key::Char('c') => {
-                match &app.expr_state {
-                    ExprState::Invalid(_) => {}
-                    ExprState::Valid(_sc, expr) => {
+            Event::Input(Key::Char('c')) => {
+                match (&app.expr_state, &mut app.hc_ws) {
+                    (ExprState::Invalid(_), _) => {} // invalid expr
+                    (_, None) => {}                  // no hc_ws client
+                    (ExprState::Valid(_sc, expr), Some(hc_ws)) => {
                         let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
                             expr: expr.clone(),
                             args: Vec::new(),
@@ -214,11 +229,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             provenance: agent_pk,
                         };
                         // TODO \/ we have a problem here: CellMissing
-                        let result = app.hc_ws.zome_call(zc).await.unwrap();
+                        let result = hc_ws.zome_call(zc).await.unwrap();
                         let ie_hash: HeaderHash = result.decode().unwrap();
                         app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
                     }
                 }
+            }
+            Event::HcWs(hc_ws) => {
+                app.hc_ws = Some(hc_ws);
+                app.hc_response = "hc_ws: connected".into();
             }
             _ => {}
         }

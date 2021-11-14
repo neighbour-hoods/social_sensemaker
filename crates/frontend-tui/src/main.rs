@@ -1,10 +1,14 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use holo_hash::{HeaderHash, HoloHash};
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
-use holochain_types::{dna::DnaBundle, prelude::CellId};
+use holochain_types::{
+    dna::{AgentPubKey, DnaBundle},
+    prelude::CellId,
+};
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
-use std::{error, io, iter, path::Path, sync::mpsc::Sender};
+use serde_json;
+use std::{error, fs, io, iter, path::Path, sync::mpsc::Sender};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tokio;
 use tui::{
@@ -15,6 +19,7 @@ use tui::{
     widgets::{Block, Borders, Paragraph},
     Terminal,
 };
+use xdg;
 
 use common::CreateInterchangeEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
@@ -23,7 +28,7 @@ use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
 
 #[allow(dead_code)]
 mod event;
-use event::{Event, Events};
+use event::{Event, Events, HcInfo};
 
 #[derive(Debug, Clone)]
 pub enum ExprState {
@@ -52,7 +57,7 @@ struct App {
     /// `Some`.
     opt_events: Option<Events>,
     event_sender: Sender<Event>,
-    hc_ws_s: Option<(AdminWebsocket, AppWebsocket)>,
+    hc_info: Option<HcInfo>,
     hc_response: String,
 }
 
@@ -64,7 +69,7 @@ impl App {
             expr_state: ExprState::Invalid("init".into()),
             opt_events: Some(events),
             event_sender,
-            hc_ws_s: None,
+            hc_info: None,
             hc_response: "not connected".into(),
         }
     }
@@ -79,6 +84,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
+    let xdg_dirs = xdg::BaseDirectories::with_prefix("rlp").unwrap();
     let mut app = App::new();
 
     {
@@ -87,11 +93,33 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             let app_ws = AppWebsocket::connect("ws://127.0.0.1:9999".into())
                 .await
                 .expect("connect to succeed");
-            let admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
+            let mut admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
                 .await
                 .expect("connect to succeed");
-            send.send(Event::HcWs((admin_ws, app_ws)))
-                .expect("send to succeed");
+            // TODO address failure mode where file exists but does not deserialize
+            let agent_pk = match xdg_dirs.find_data_file("agent_pk") {
+                Some(agent_pk_path) => {
+                    eprintln!("found agent_pk file, loading.");
+                    let agent_pk_str = fs::read_to_string(agent_pk_path).unwrap();
+                    let agent_pk: AgentPubKey = serde_json::from_str(&agent_pk_str).unwrap();
+                    agent_pk
+                }
+                None => {
+                    eprintln!("no agent_pk file found, generating from holochain/lair.");
+                    let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
+                    let agent_pk_pathbuf = xdg_dirs.place_data_file("agent_pk").unwrap();
+                    let agent_pk_str = serde_json::to_string(&agent_pk).unwrap();
+                    fs::write(agent_pk_pathbuf.as_path(), agent_pk_str).unwrap();
+                    eprintln!("wrote key file: {:?}", agent_pk_pathbuf);
+                    agent_pk
+                }
+            };
+            let hc_info = HcInfo {
+                admin_ws,
+                app_ws,
+                agent_pk,
+            };
+            send.send(Event::HcInfo(hc_info)).expect("send to succeed");
         });
     }
 
@@ -203,10 +231,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 app.expr_state = st;
             }
             Event::Input(Key::Char('c')) => {
-                match (&app.expr_state, &mut app.hc_ws_s) {
+                match (&app.expr_state, &mut app.hc_info) {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
-                    (ExprState::Valid(_sc, expr), Some((_, app_ws))) => {
+                    (ExprState::Valid(_sc, expr), Some(hc_info)) => {
                         let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
                             expr: expr.clone(),
                             args: Vec::new(),
@@ -232,15 +260,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             provenance: agent_pk,
                         };
                         // TODO \/ we have a problem here: CellMissing
-                        let result = app_ws.zome_call(zc).await.unwrap();
+                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
                         let ie_hash: HeaderHash = result.decode().unwrap();
                         app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
                     }
                 }
             }
-            Event::HcWs(hc_ws_s) => {
-                app.hc_ws_s = Some(hc_ws_s);
-                app.hc_response = "hc_ws_s: connected".into();
+            Event::HcInfo(hc_info) => {
+                app.hc_info = Some(hc_info);
+                app.hc_response = "hc_info: connected".into();
             }
             _ => {}
         }

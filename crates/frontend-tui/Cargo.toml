@@ -16,9 +16,11 @@ holochain_types = "0.0.12"
 holochain_zome_types = { version = "0.0.14", default-features = false }
 rand = "0.8.4"
 scrawl = "1.1.0"
+serde_json = "1.0.70"
 termion = "1.5.6"
 tokio = "1.13.0"
 tui = "0.16.0"
+xdg = "2.4.0"
 
 common = { path = "../common" }
 rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax", version = "0.1.0" }

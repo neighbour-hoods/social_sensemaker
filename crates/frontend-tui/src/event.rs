@@ -1,4 +1,5 @@
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket};
+use holochain_types::dna::AgentPubKey;
 use std::io;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
@@ -7,7 +8,13 @@ use termion::input::TermRead;
 
 pub enum Event {
     Input(Key),
-    HcWs((AdminWebsocket, AppWebsocket)),
+    HcInfo(HcInfo),
+}
+
+pub struct HcInfo {
+    pub admin_ws: AdminWebsocket,
+    pub app_ws: AppWebsocket,
+    pub agent_pk: AgentPubKey,
 }
 
 /// A small event handler that wrap termion input and tick events. Each event

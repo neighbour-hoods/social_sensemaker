@@ -1,6 +1,6 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use holo_hash::{HeaderHash, HoloHash};
-use holochain_conductor_client::{AppWebsocket, ZomeCall};
+use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{dna::DnaBundle, prelude::CellId};
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
@@ -52,7 +52,7 @@ struct App {
     /// `Some`.
     opt_events: Option<Events>,
     event_sender: Sender<Event>,
-    hc_ws: Option<AppWebsocket>,
+    hc_ws_s: Option<(AdminWebsocket, AppWebsocket)>,
     hc_response: String,
 }
 
@@ -64,7 +64,7 @@ impl App {
             expr_state: ExprState::Invalid("init".into()),
             opt_events: Some(events),
             event_sender,
-            hc_ws: None,
+            hc_ws_s: None,
             hc_response: "not connected".into(),
         }
     }
@@ -84,11 +84,14 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     {
         let send = app.event_sender.clone();
         tokio::task::spawn(async move {
-            let app_url: String = "ws://127.0.0.1:9999".into();
-            let hc_ws = AppWebsocket::connect(app_url)
+            let app_ws = AppWebsocket::connect("ws://127.0.0.1:9999".into())
                 .await
                 .expect("connect to succeed");
-            send.send(Event::HcWs(hc_ws)).expect("send to succeed");
+            let admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
+                .await
+                .expect("connect to succeed");
+            send.send(Event::HcWs((admin_ws, app_ws)))
+                .expect("send to succeed");
         });
     }
 
@@ -200,10 +203,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 app.expr_state = st;
             }
             Event::Input(Key::Char('c')) => {
-                match (&app.expr_state, &mut app.hc_ws) {
+                match (&app.expr_state, &mut app.hc_ws_s) {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
-                    (ExprState::Valid(_sc, expr), Some(hc_ws)) => {
+                    (ExprState::Valid(_sc, expr), Some((_, app_ws))) => {
                         let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
                             expr: expr.clone(),
                             args: Vec::new(),
@@ -229,15 +232,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             provenance: agent_pk,
                         };
                         // TODO \/ we have a problem here: CellMissing
-                        let result = hc_ws.zome_call(zc).await.unwrap();
+                        let result = app_ws.zome_call(zc).await.unwrap();
                         let ie_hash: HeaderHash = result.decode().unwrap();
                         app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
                     }
                 }
             }
-            Event::HcWs(hc_ws) => {
-                app.hc_ws = Some(hc_ws);
-                app.hc_response = "hc_ws: connected".into();
+            Event::HcWs(hc_ws_s) => {
+                app.hc_ws_s = Some(hc_ws_s);
+                app.hc_response = "hc_ws_s: connected".into();
             }
             _ => {}
         }

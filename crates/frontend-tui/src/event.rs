@@ -1,4 +1,4 @@
-use holochain_conductor_client::AppWebsocket;
+use holochain_conductor_client::{AdminWebsocket, AppWebsocket};
 use std::io;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
@@ -7,7 +7,7 @@ use termion::input::TermRead;
 
 pub enum Event {
     Input(Key),
-    HcWs(AppWebsocket),
+    HcWs((AdminWebsocket, AppWebsocket)),
 }
 
 /// A small event handler that wrap termion input and tick events. Each event

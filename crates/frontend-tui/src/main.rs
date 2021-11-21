@@ -1,14 +1,18 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use holo_hash::HeaderHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
+    app::AppBundleSource,
     dna::{AgentPubKey, DnaBundle},
-    prelude::CellId,
+    prelude::{CellId, InstallAppBundlePayload},
 };
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
 use serde_json;
-use std::{error, fs, io, path::Path, sync::mpsc::Sender};
+use std::{
+    error, fs, io,
+    path::{Path, PathBuf},
+    sync::mpsc::Sender,
+};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tokio;
 use tui::{
@@ -25,6 +29,8 @@ use common::CreateInterchangeEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
+
+const APP_ID: &str = "rep_interchange";
 
 #[allow(dead_code)]
 mod event;
@@ -115,11 +121,21 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 }
             };
             let hc_info = HcInfo {
-                admin_ws,
+                admin_ws: admin_ws.clone(),
                 app_ws,
-                agent_pk,
+                agent_pk: agent_pk.clone(),
             };
             send.send(Event::HcInfo(hc_info)).expect("send to succeed");
+
+            let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.dna");
+            let iabp = InstallAppBundlePayload {
+                source: AppBundleSource::Path(pathbuf),
+                agent_key: agent_pk,
+                installed_app_id: Some(APP_ID.into()),
+                membrane_proofs: Default::default(),
+                uid: None,
+            };
+            let _app_info = admin_ws.install_app_bundle(iabp).await.unwrap();
         });
     }
 
@@ -235,6 +251,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
                     (ExprState::Valid(_sc, expr), Some(hc_info)) => {
+                        let apps_interfaces = hc_info.admin_ws.list_app_interfaces().await;
+                        let apps = hc_info.admin_ws.list_apps(None).await;
+                        eprintln!("apps_interfaces: {:?}", apps_interfaces);
+                        eprintln!("apps: {:?}", apps);
                         let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
                             expr: expr.clone(),
                             args: Vec::new(),
@@ -248,7 +268,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                 bundle.into_dna_file(None, None).await.unwrap();
                             CellId::new(dna_hash, hc_info.agent_pk.clone())
                         };
-                        let zc = ZomeCall {
+                        let _zc = ZomeCall {
                             cell_id,
                             zome_name: "interpreter".into(),
                             fn_name: "create_interchange_entry".into(),
@@ -256,10 +276,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             cap: None,
                             provenance: hc_info.agent_pk.clone(),
                         };
-                        // TODO \/ we have a problem here: CellMissing
-                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                        let ie_hash: HeaderHash = result.decode().unwrap();
-                        app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
+                        // // TODO \/ we have a problem here: CellMissing
+                        // let result = hc_info.app_ws.zome_call(zc).await.unwrap();
+                        // let ie_hash: HeaderHash = result.decode().unwrap();
+                        // app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
                     }
                 }
             }

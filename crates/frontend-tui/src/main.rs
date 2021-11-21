@@ -1,5 +1,5 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use holo_hash::{HeaderHash, HoloHash};
+use holo_hash::HeaderHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     dna::{AgentPubKey, DnaBundle},
@@ -8,7 +8,7 @@ use holochain_types::{
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
 use serde_json;
-use std::{error, fs, io, iter, path::Path, sync::mpsc::Sender};
+use std::{error, fs, io, path::Path, sync::mpsc::Sender};
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tokio;
 use tui::{
@@ -240,16 +240,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             args: Vec::new(),
                         };
                         let payload = ExternIO::encode(input).unwrap();
-                        let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(36).collect();
-                        let agent_pk = HoloHash::from_raw_36(agent_pk_bytes);
-                        // TODO do all of this async, with jobs spawned at TUI
-                        // start time, and store results in `App`
                         let cell_id = {
+                            // TODO consider loading the DNA async, at TUI launch time.
                             let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
                             let bundle = DnaBundle::read_from_file(path).await.unwrap();
                             let (_dna_file, dna_hash) =
                                 bundle.into_dna_file(None, None).await.unwrap();
-                            CellId::new(dna_hash, agent_pk.clone())
+                            CellId::new(dna_hash, hc_info.agent_pk.clone())
                         };
                         let zc = ZomeCall {
                             cell_id,
@@ -257,7 +254,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             fn_name: "create_interchange_entry".into(),
                             payload,
                             cap: None,
-                            provenance: agent_pk,
+                            provenance: hc_info.agent_pk.clone(),
                         };
                         // TODO \/ we have a problem here: CellMissing
                         let result = hc_info.app_ws.zome_call(zc).await.unwrap();

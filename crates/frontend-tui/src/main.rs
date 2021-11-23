@@ -127,7 +127,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             };
             send.send(Event::HcInfo(hc_info)).expect("send to succeed");
 
-            let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.dna");
+            let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.happ");
             let iabp = InstallAppBundlePayload {
                 source: AppBundleSource::Path(pathbuf),
                 agent_key: agent_pk,

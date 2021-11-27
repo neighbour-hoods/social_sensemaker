@@ -1,1 +1,1 @@
-CARGO_TARGET_DIR=target cargo run --bin rlp
+cargo run --bin rlp

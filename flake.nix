@@ -6,9 +6,15 @@
       url = "github:holochain/holonix?rev=48a75e79b1713334ab0086767a214e5b1619d38d";
       flake = false;
     };
+    rust-overlay.url = "github:oxalica/rust-overlay";
+    cargo2nix.url = "github:cargo2nix/cargo2nix/host-platform-build-rs";
+    flake-compat = {
+      url = "github:edolstra/flake-compat";
+      flake = false;
+    };
   };
 
-  outputs = { nixpkgs, flake-utils, holonix, ... }:
+  outputs = { nixpkgs, flake-utils, holonix, rust-overlay, cargo2nix, ... }:
     flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (system:
       let
         holonixMain = import holonix {
@@ -53,7 +59,36 @@
             miniserve
             nodePackages.rollup
             wasm-pack
+            cargo2nix.defaultPackage.${system}
           ]);
         };
+
+        packages.rlp =
+          let
+            target = "wasm32-unknown-unknown";
+
+            # create nixpkgs that contains rustBuilder from cargo2nix overlay
+            crossPkgs = import nixpkgs {
+              inherit system;
+
+              crossSystem = {
+                config = target;
+              };
+              overlays = [
+                (import "${cargo2nix}/overlay")
+                rust-overlay.overlay
+              ];
+            };
+
+            # create the workspace & dependencies package set
+            rustPkgs = crossPkgs.rustBuilder.makePackageSet' {
+              rustChannel = "1.56.1";
+              packageFun = import ./crates/rep_interchange/Cargo.nix;
+              inherit target;
+            };
+
+          in
+
+          rustPkgs.workspace.rep_interchange {};
       });
 }

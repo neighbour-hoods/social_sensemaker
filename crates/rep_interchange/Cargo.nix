@@ -5,9 +5,6 @@ args@{
   release ? true,
   rootFeatures ? [
     "common/default"
-    "rep_lang_concrete_syntax/default"
-    "rep_lang_core/default"
-    "rep_lang_runtime/default"
     "frontend/default"
     "frontend-tui/default"
     "rep_interchange/default"
@@ -42,9 +39,6 @@ in
   cargo2nixVersion = "0.10.0";
   workspace = {
     common = rustPackages.unknown.common."0.1.0";
-    rep_lang_concrete_syntax = rustPackages.unknown.rep_lang_concrete_syntax."0.1.0";
-    rep_lang_core = rustPackages.unknown.rep_lang_core."0.1.0";
-    rep_lang_runtime = rustPackages.unknown.rep_lang_runtime."0.1.0";
     frontend = rustPackages.unknown.frontend."0.1.0";
     frontend-tui = rustPackages.unknown.frontend-tui."0.1.0";
     rep_interchange = rustPackages.unknown.rep_interchange."0.1.0";
@@ -567,7 +561,7 @@ in
     features = builtins.concatLists [
       (lib.optional (rootFeatures' ? "frontend-tui") "default")
       (lib.optional (rootFeatures' ? "frontend-tui") "serde")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "std")
+      [ "std" ]
     ];
     dependencies = {
       ${ if rootFeatures' ? "frontend-tui" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
@@ -680,9 +674,9 @@ in
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "14c189c53d098945499cdfa7ecc63567cf3886b3332b312a5b4585d8d3a6a610"; };
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "default")
+      [ "default" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "i128")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "std")
+      [ "std" ]
     ];
   });
   
@@ -874,9 +868,9 @@ in
     src = fetchCrateLocal (workspaceSrc + "/../common");
     dependencies = {
       hdk = rustPackages."registry+https://github.com/rust-lang/crates.io-index".hdk."0.0.112" { inherit profileName; };
-      rep_lang_concrete_syntax = rustPackages."unknown".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
-      rep_lang_core = rustPackages."unknown".rep_lang_core."0.1.0" { inherit profileName; };
-      rep_lang_runtime = rustPackages."unknown".rep_lang_runtime."0.1.0" { inherit profileName; };
+      rep_lang_concrete_syntax = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
+      rep_lang_core = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" { inherit profileName; };
+      rep_lang_runtime = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_runtime."0.1.0" { inherit profileName; };
       serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
     };
   });
@@ -1665,9 +1659,9 @@ in
       holochain_serialized_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes."0.0.51" { inherit profileName; };
       holochain_serialized_bytes_derive = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes_derive."0.0.51" { profileName = "__noProfile"; };
       holochain_zome_types = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_zome_types."0.0.11" { inherit profileName; };
-      rep_lang_concrete_syntax = rustPackages."unknown".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
-      rep_lang_core = rustPackages."unknown".rep_lang_core."0.1.0" { inherit profileName; };
-      rep_lang_runtime = rustPackages."unknown".rep_lang_runtime."0.1.0" { inherit profileName; };
+      rep_lang_concrete_syntax = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
+      rep_lang_core = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" { inherit profileName; };
+      rep_lang_runtime = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_runtime."0.1.0" { inherit profileName; };
       reqwasm = rustPackages."git+https://github.com/hamza1311/reqwasm.git".reqwasm."0.2.1" { inherit profileName; };
       serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
       serde_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
@@ -1693,9 +1687,9 @@ in
       holochain_types = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_types."0.0.12" { inherit profileName; };
       holochain_zome_types = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_zome_types."0.0.14" { inherit profileName; };
       rand = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand."0.8.4" { inherit profileName; };
-      rep_lang_concrete_syntax = rustPackages."unknown".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
-      rep_lang_core = rustPackages."unknown".rep_lang_core."0.1.0" { inherit profileName; };
-      rep_lang_runtime = rustPackages."unknown".rep_lang_runtime."0.1.0" { inherit profileName; };
+      rep_lang_concrete_syntax = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
+      rep_lang_core = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" { inherit profileName; };
+      rep_lang_runtime = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_runtime."0.1.0" { inherit profileName; };
       scrawl = rustPackages."registry+https://github.com/rust-lang/crates.io-index".scrawl."1.1.0" { inherit profileName; };
       serde_json = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.70" { inherit profileName; };
       termion = rustPackages."registry+https://github.com/rust-lang/crates.io-index".termion."1.5.6" { inherit profileName; };
@@ -2194,7 +2188,7 @@ in
       (lib.optional (rootFeatures' ? "frontend-tui") "ahash")
       (lib.optional (rootFeatures' ? "frontend-tui") "default")
       (lib.optional (rootFeatures' ? "frontend-tui") "inline-more")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "raw")
+      [ "raw" ]
     ];
     dependencies = {
       ${ if rootFeatures' ? "frontend-tui" then "ahash" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".ahash."0.7.6" { inherit profileName; };
@@ -2319,7 +2313,7 @@ in
       (lib.optional (rootFeatures' ? "frontend-tui") "arbitrary")
       (lib.optional (rootFeatures' ? "frontend-tui") "base64")
       (lib.optional (rootFeatures' ? "frontend-tui") "blake2b_simd")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "default")
+      [ "default" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "derive_more")
       (lib.optional (rootFeatures' ? "frontend-tui") "encoding")
       (lib.optional (rootFeatures' ? "frontend-tui") "fixt")
@@ -2327,13 +2321,13 @@ in
       (lib.optional (rootFeatures' ? "frontend-tui") "full")
       (lib.optional (rootFeatures' ? "frontend-tui") "futures")
       (lib.optional (rootFeatures' ? "frontend-tui") "hashing")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "holochain_serialized_bytes")
+      [ "holochain_serialized_bytes" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "must_future")
       (lib.optional (rootFeatures' ? "frontend-tui") "rand")
       (lib.optional (rootFeatures' ? "frontend-tui") "rusqlite")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "serde")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "serde_bytes")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "serialization")
+      [ "serde" ]
+      [ "serde_bytes" ]
+      [ "serialization" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "test_utils")
     ];
     dependencies = {
@@ -2343,14 +2337,14 @@ in
       ${ if rootFeatures' ? "frontend-tui" then "derive_more" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".derive_more."0.99.14" { profileName = "__noProfile"; };
       ${ if rootFeatures' ? "frontend-tui" then "fixt" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".fixt."0.0.7" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "futures" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".futures."0.3.17" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "holochain_serialized_bytes" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes."0.0.51" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "kitsune_p2p_dht_arc" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".kitsune_p2p_dht_arc."0.0.6" { inherit profileName; };
+      holochain_serialized_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes."0.0.51" { inherit profileName; };
+      kitsune_p2p_dht_arc = rustPackages."registry+https://github.com/rust-lang/crates.io-index".kitsune_p2p_dht_arc."0.0.6" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "must_future" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".must_future."0.1.2" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "rand" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand."0.7.3" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "rusqlite" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rusqlite."0.26.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde_bytes" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "thiserror" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
+      serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
+      serde_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
+      thiserror = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
     };
   });
   
@@ -2463,13 +2457,13 @@ in
     ];
     dependencies = {
       ${ if rootFeatures' ? "frontend-tui" then "arbitrary" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".arbitrary."1.0.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "holochain_serialized_bytes_derive" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes_derive."0.0.51" { profileName = "__noProfile"; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "rmp_serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rmp-serde."0.15.5" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde_transcode" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde-transcode."1.1.0" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde_bytes" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde_json" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.70" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "thiserror" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
+      holochain_serialized_bytes_derive = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes_derive."0.0.51" { profileName = "__noProfile"; };
+      rmp_serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rmp-serde."0.15.5" { inherit profileName; };
+      serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
+      serde_transcode = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde-transcode."1.1.0" { inherit profileName; };
+      serde_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
+      serde_json = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_json."1.0.70" { inherit profileName; };
+      thiserror = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
     };
   });
   
@@ -2792,28 +2786,28 @@ in
     ];
     dependencies = {
       ${ if rootFeatures' ? "frontend-tui" then "arbitrary" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".arbitrary."1.0.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "chrono" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.19" { inherit profileName; };
+      chrono = rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.19" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "contrafact" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".contrafact."0.1.0-dev.1" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "derive_builder" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".derive_builder."0.9.0" { profileName = "__noProfile"; };
       ${ if rootFeatures' ? "frontend-tui" then "fixt" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".fixt."0.0.7" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "holo_hash" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holo_hash."0.0.10" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "holochain_serialized_bytes" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes."0.0.51" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "holochain_wasmer_common" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_wasmer_common."0.0.73" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "kitsune_p2p_timestamp" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".kitsune_p2p_timestamp."0.0.5" { inherit profileName; };
+      holo_hash = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holo_hash."0.0.10" { inherit profileName; };
+      holochain_serialized_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes."0.0.51" { inherit profileName; };
+      holochain_wasmer_common = rustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_wasmer_common."0.0.73" { inherit profileName; };
+      kitsune_p2p_timestamp = rustPackages."registry+https://github.com/rust-lang/crates.io-index".kitsune_p2p_timestamp."0.0.5" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "nanoid" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".nanoid."0.3.0" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "num_enum" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".num_enum."0.5.4" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "once_cell" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".once_cell."1.8.0" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "paste" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".paste."1.0.5" { profileName = "__noProfile"; };
+      paste = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".paste."1.0.5" { profileName = "__noProfile"; };
       ${ if rootFeatures' ? "frontend-tui" then "rand" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand."0.7.3" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "rusqlite" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rusqlite."0.26.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde_bytes" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
+      serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
+      serde_bytes = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_bytes."0.11.5" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "shrinkwraprs" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".shrinkwraprs."0.3.0" { profileName = "__noProfile"; };
       ${ if rootFeatures' ? "frontend-tui" then "strum" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".strum."0.18.0" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "subtle" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".subtle."2.4.0" { inherit profileName; };
+      subtle = rustPackages."registry+https://github.com/rust-lang/crates.io-index".subtle."2.4.0" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "subtle_encoding" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".subtle-encoding."0.5.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "thiserror" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "tracing" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.29" { inherit profileName; };
+      thiserror = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
+      tracing = rustPackages."registry+https://github.com/rust-lang/crates.io-index".tracing."0.1.29" { inherit profileName; };
     };
   });
   
@@ -2975,10 +2969,10 @@ in
       (lib.optional (rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui") "std")
     ];
     dependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "hashbrown" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".hashbrown."0.11.2" { inherit profileName; };
+      hashbrown = rustPackages."registry+https://github.com/rust-lang/crates.io-index".hashbrown."0.11.2" { inherit profileName; };
     };
     buildDependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "autocfg" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".autocfg."1.0.1" { profileName = "__noProfile"; };
+      autocfg = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".autocfg."1.0.1" { profileName = "__noProfile"; };
     };
   });
   
@@ -3158,12 +3152,12 @@ in
       (lib.optional (rootFeatures' ? "frontend-tui") "sqlite")
     ];
     dependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "derive_more" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".derive_more."0.99.14" { profileName = "__noProfile"; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "gcollections" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".gcollections."1.5.0" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "interval" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".intervallum."1.4.0" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "num_traits" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".num-traits."0.2.14" { inherit profileName; };
+      derive_more = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".derive_more."0.99.14" { profileName = "__noProfile"; };
+      gcollections = rustPackages."registry+https://github.com/rust-lang/crates.io-index".gcollections."1.5.0" { inherit profileName; };
+      interval = rustPackages."registry+https://github.com/rust-lang/crates.io-index".intervallum."1.4.0" { inherit profileName; };
+      num_traits = rustPackages."registry+https://github.com/rust-lang/crates.io-index".num-traits."0.2.14" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "rusqlite" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rusqlite."0.26.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
+      serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
     };
   });
   
@@ -3224,10 +3218,10 @@ in
     ];
     dependencies = {
       ${ if rootFeatures' ? "frontend-tui" then "arbitrary" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".arbitrary."1.0.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "chrono" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.19" { inherit profileName; };
+      chrono = rustPackages."registry+https://github.com/rust-lang/crates.io-index".chrono."0.4.19" { inherit profileName; };
       ${ if rootFeatures' ? "frontend-tui" then "rusqlite" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rusqlite."0.26.1" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "thiserror" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
+      serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
+      thiserror = rustPackages."registry+https://github.com/rust-lang/crates.io-index".thiserror."1.0.30" { inherit profileName; };
     };
   });
   
@@ -3396,9 +3390,9 @@ in
     src = fetchCratesIo { inherit name version; sha256 = "dd8f7255a17a627354f321ef0055d63b898c6fb27eff628af4d1b66b7331edf6"; };
     features = builtins.concatLists [
       (lib.optional (rootFeatures' ? "frontend-tui") "align")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "default")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "extra_traits")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "std")
+      [ "default" ]
+      [ "extra_traits" ]
+      [ "std" ]
     ];
   });
   
@@ -3577,7 +3571,7 @@ in
     features = builtins.concatLists [
       [ "default" ]
       [ "std" ]
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_concrete_syntax" || rootFeatures' ? "rep_lang_runtime") "use_std")
+      [ "use_std" ]
     ];
   });
   
@@ -3967,15 +3961,15 @@ in
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "d2cc698a63b549a70bc047073d2949cce27cd1c7b0a4a862d08a8031bc2801db"; };
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "default")
+      [ "default" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "i128")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "std")
+      [ "std" ]
     ];
     dependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "num_traits" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".num-traits."0.2.14" { inherit profileName; };
+      num_traits = rustPackages."registry+https://github.com/rust-lang/crates.io-index".num-traits."0.2.14" { inherit profileName; };
     };
     buildDependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "autocfg" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".autocfg."1.0.1" { profileName = "__noProfile"; };
+      autocfg = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".autocfg."1.0.1" { profileName = "__noProfile"; };
     };
   });
   
@@ -4023,12 +4017,12 @@ in
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "9a64b1ec5cda2586e284722486d802acf1f7dbdc623e2bfc57e65ca1cd099290"; };
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "default")
+      [ "default" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "i128")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "std")
+      [ "std" ]
     ];
     buildDependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "autocfg" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".autocfg."1.0.1" { profileName = "__noProfile"; };
+      autocfg = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".autocfg."1.0.1" { profileName = "__noProfile"; };
     };
   });
   
@@ -4622,7 +4616,7 @@ in
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "f0d8caf72986c1a598726adc988bb5984792ef84f5ee5aa50209145ee8077038"; };
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_concrete_syntax" || rootFeatures' ? "rep_lang_runtime") "default")
+      [ "default" ]
       [ "proc-macro" ]
     ];
     dependencies = {
@@ -4675,18 +4669,6 @@ in
       log = rustPackages."registry+https://github.com/rust-lang/crates.io-index".log."0.4.14" { inherit profileName; };
       rand = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand."0.7.3" { inherit profileName; };
       rand_core = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand_core."0.5.1" { inherit profileName; };
-    };
-  });
-  
-  "registry+https://github.com/rust-lang/crates.io-index".quickcheck_macros."0.9.1" = overridableMkRustCrate (profileName: rec {
-    name = "quickcheck_macros";
-    version = "0.9.1";
-    registry = "registry+https://github.com/rust-lang/crates.io-index";
-    src = fetchCratesIo { inherit name version; sha256 = "608c156fd8e97febc07dc9c2e2c80bf74cfc6ef26893eae3daf8bc2bc94a4b7f"; };
-    dependencies = {
-      proc_macro2 = rustPackages."registry+https://github.com/rust-lang/crates.io-index".proc-macro2."1.0.27" { inherit profileName; };
-      quote = rustPackages."registry+https://github.com/rust-lang/crates.io-index".quote."1.0.9" { inherit profileName; };
-      syn = rustPackages."registry+https://github.com/rust-lang/crates.io-index".syn."1.0.73" { inherit profileName; };
     };
   });
   
@@ -5246,53 +5228,62 @@ in
       combine = rustPackages."registry+https://github.com/rust-lang/crates.io-index".combine."4.6.1" { inherit profileName; };
       common = rustPackages."unknown".common."0.1.0" { inherit profileName; };
       hdk = rustPackages."registry+https://github.com/rust-lang/crates.io-index".hdk."0.0.112" { inherit profileName; };
-      rep_lang_concrete_syntax = rustPackages."unknown".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
-      rep_lang_core = rustPackages."unknown".rep_lang_core."0.1.0" { inherit profileName; };
-      rep_lang_runtime = rustPackages."unknown".rep_lang_runtime."0.1.0" { inherit profileName; };
+      rep_lang_concrete_syntax = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
+      rep_lang_core = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" { inherit profileName; };
+      rep_lang_runtime = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_runtime."0.1.0" { inherit profileName; };
       serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
     };
   });
   
-  "unknown".rep_lang_concrete_syntax."0.1.0" = overridableMkRustCrate (profileName: rec {
+  "git+https://github.com/sacredcapital/rep_lang.git".rep_lang_concrete_syntax."0.1.0" = overridableMkRustCrate (profileName: rec {
     name = "rep_lang_concrete_syntax";
     version = "0.1.0";
-    registry = "unknown";
-    src = fetchCrateLocal (workspaceSrc + "/../../submodules/rep_lang/rep_lang_concrete_syntax");
+    registry = "git+https://github.com/sacredcapital/rep_lang.git";
+    src = fetchCrateGit {
+      url = https://github.com/sacredcapital/rep_lang.git;
+      name = "rep_lang_concrete_syntax";
+      version = "0.1.0";
+      rev = "90ffafb84406b570ca71e738eea5f22a1806200f";};
     dependencies = {
       combine = rustPackages."registry+https://github.com/rust-lang/crates.io-index".combine."4.6.1" { inherit profileName; };
       pretty = rustPackages."registry+https://github.com/rust-lang/crates.io-index".pretty."0.10.0" { inherit profileName; };
       quickcheck = rustPackages."registry+https://github.com/rust-lang/crates.io-index".quickcheck."0.9.2" { inherit profileName; };
       rand = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand."0.7.3" { inherit profileName; };
-      rep_lang_core = rustPackages."unknown".rep_lang_core."0.1.0" { inherit profileName; };
-    };
-    devDependencies = {
-      quickcheck_macros = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".quickcheck_macros."0.9.1" { profileName = "__noProfile"; };
+      rep_lang_core = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" { inherit profileName; };
     };
   });
   
-  "unknown".rep_lang_core."0.1.0" = overridableMkRustCrate (profileName: rec {
+  "git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" = overridableMkRustCrate (profileName: rec {
     name = "rep_lang_core";
     version = "0.1.0";
-    registry = "unknown";
-    src = fetchCrateLocal (workspaceSrc + "/../../submodules/rep_lang/rep_lang_core");
+    registry = "git+https://github.com/sacredcapital/rep_lang.git";
+    src = fetchCrateGit {
+      url = https://github.com/sacredcapital/rep_lang.git;
+      name = "rep_lang_core";
+      version = "0.1.0";
+      rev = "90ffafb84406b570ca71e738eea5f22a1806200f";};
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core") "hc")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core") "holochain_serialized_bytes_derive")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core") "serde")
+      [ "hc" ]
+      [ "holochain_serialized_bytes_derive" ]
+      [ "serde" ]
     ];
     dependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core" then "holochain_serialized_bytes_derive" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes_derive."0.0.51" { profileName = "__noProfile"; };
+      holochain_serialized_bytes_derive = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes_derive."0.0.51" { profileName = "__noProfile"; };
       quickcheck = rustPackages."registry+https://github.com/rust-lang/crates.io-index".quickcheck."0.9.2" { inherit profileName; };
       rand = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rand."0.7.3" { inherit profileName; };
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core" then "serde" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
+      serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
     };
   });
   
-  "unknown".rep_lang_runtime."0.1.0" = overridableMkRustCrate (profileName: rec {
+  "git+https://github.com/sacredcapital/rep_lang.git".rep_lang_runtime."0.1.0" = overridableMkRustCrate (profileName: rec {
     name = "rep_lang_runtime";
     version = "0.1.0";
-    registry = "unknown";
-    src = fetchCrateLocal (workspaceSrc + "/../../submodules/rep_lang/rep_lang_runtime");
+    registry = "git+https://github.com/sacredcapital/rep_lang.git";
+    src = fetchCrateGit {
+      url = https://github.com/sacredcapital/rep_lang.git;
+      name = "rep_lang_runtime";
+      version = "0.1.0";
+      rev = "90ffafb84406b570ca71e738eea5f22a1806200f";};
     features = builtins.concatLists [
       [ "hc" ]
       [ "holochain_serialized_bytes_derive" ]
@@ -5303,14 +5294,10 @@ in
       combine = rustPackages."registry+https://github.com/rust-lang/crates.io-index".combine."4.6.1" { inherit profileName; };
       holochain_serialized_bytes_derive = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".holochain_serialized_bytes_derive."0.0.51" { profileName = "__noProfile"; };
       pretty = rustPackages."registry+https://github.com/rust-lang/crates.io-index".pretty."0.10.0" { inherit profileName; };
-      rep_lang_concrete_syntax = rustPackages."unknown".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
-      rep_lang_core = rustPackages."unknown".rep_lang_core."0.1.0" { inherit profileName; };
+      rep_lang_concrete_syntax = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_concrete_syntax."0.1.0" { inherit profileName; };
+      rep_lang_core = rustPackages."git+https://github.com/sacredcapital/rep_lang.git".rep_lang_core."0.1.0" { inherit profileName; };
       rustyline = rustPackages."registry+https://github.com/rust-lang/crates.io-index".rustyline."6.3.0" { inherit profileName; };
       serde = rustPackages."registry+https://github.com/rust-lang/crates.io-index".serde."1.0.123" { inherit profileName; };
-    };
-    devDependencies = {
-      quickcheck = rustPackages."registry+https://github.com/rust-lang/crates.io-index".quickcheck."0.9.2" { inherit profileName; };
-      quickcheck_macros = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".quickcheck_macros."0.9.1" { profileName = "__noProfile"; };
     };
   });
   
@@ -5410,7 +5397,7 @@ in
     ];
     dependencies = {
       ${ if hostPlatform.parsed.kernel.name == "android" || hostPlatform.parsed.kernel.name == "linux" then "libc" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".libc."0.2.103" { inherit profileName; };
-      ${ if hostPlatform.parsed.kernel.name == "android" || hostPlatform.parsed.kernel.name == "linux" || hostPlatform.parsed.kernel.name == "dragonfly" || hostPlatform.parsed.kernel.name == "freebsd" || hostPlatform.parsed.kernel.name == "illumos" || hostPlatform.parsed.kernel.name == "netbsd" || hostPlatform.parsed.kernel.name == "openbsd" || hostPlatform.parsed.kernel.name == "solaris" then "once_cell" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".once_cell."1.8.0" { inherit profileName; };
+      ${ if hostPlatform.parsed.kernel.name == "dragonfly" || hostPlatform.parsed.kernel.name == "freebsd" || hostPlatform.parsed.kernel.name == "illumos" || hostPlatform.parsed.kernel.name == "netbsd" || hostPlatform.parsed.kernel.name == "openbsd" || hostPlatform.parsed.kernel.name == "solaris" || hostPlatform.parsed.kernel.name == "android" || hostPlatform.parsed.kernel.name == "linux" then "once_cell" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".once_cell."1.8.0" { inherit profileName; };
       ${ if hostPlatform.parsed.cpu.name == "i686" || hostPlatform.parsed.cpu.name == "x86_64" || (hostPlatform.parsed.cpu.name == "aarch64" || hostPlatform.parsed.cpu.name == "armv6l" || hostPlatform.parsed.cpu.name == "armv7l") && (hostPlatform.parsed.kernel.name == "android" || hostPlatform.parsed.kernel.name == "fuchsia" || hostPlatform.parsed.kernel.name == "linux") then "spin" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".spin."0.5.2" { inherit profileName; };
       untrusted = rustPackages."registry+https://github.com/rust-lang/crates.io-index".untrusted."0.7.1" { inherit profileName; };
       ${ if hostPlatform.parsed.cpu.name == "wasm32" && hostPlatform.parsed.vendor.name == "unknown" && hostPlatform.parsed.kernel.name == "unknown" && hostPlatform.parsed.abi.name == "" then "web_sys" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".web-sys."0.3.55" { inherit profileName; };
@@ -5692,14 +5679,14 @@ in
     registry = "registry+https://github.com/rust-lang/crates.io-index";
     src = fetchCratesIo { inherit name version; sha256 = "92d5161132722baa40d802cc70b15262b98258453e85e5d1d365c757c73869ae"; };
     features = builtins.concatLists [
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core" || rootFeatures' ? "rep_lang_runtime") "default")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "derive")
+      [ "default" ]
+      [ "derive" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "rc")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "serde_derive")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_core" || rootFeatures' ? "rep_lang_runtime") "std")
+      [ "serde_derive" ]
+      [ "std" ]
     ];
     dependencies = {
-      ${ if rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" then "serde_derive" else null } = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_derive."1.0.123" { profileName = "__noProfile"; };
+      serde_derive = buildRustPackages."registry+https://github.com/rust-lang/crates.io-index".serde_derive."1.0.123" { profileName = "__noProfile"; };
     };
   });
   
@@ -6091,14 +6078,14 @@ in
       [ "clone-impls" ]
       [ "default" ]
       [ "derive" ]
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "extra-traits")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_concrete_syntax" || rootFeatures' ? "rep_lang_runtime") "full")
+      [ "extra-traits" ]
+      [ "full" ]
       [ "parsing" ]
       [ "printing" ]
       [ "proc-macro" ]
       [ "quote" ]
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "visit")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "visit-mut")
+      [ "visit" ]
+      [ "visit-mut" ]
     ];
     dependencies = {
       proc_macro2 = rustPackages."registry+https://github.com/rust-lang/crates.io-index".proc-macro2."1.0.27" { inherit profileName; };
@@ -7121,71 +7108,71 @@ in
     features = builtins.concatLists [
       (lib.optional (rootFeatures' ? "frontend-tui") "cfg")
       (lib.optional (rootFeatures' ? "frontend-tui") "combaseapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "consoleapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "errhandlingapi")
+      [ "consoleapi" ]
+      [ "errhandlingapi" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "evntrace")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "fileapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "handleapi")
+      [ "fileapi" ]
+      [ "handleapi" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "ifdef")
       (lib.optional (rootFeatures' ? "frontend-tui") "impl-debug")
       (lib.optional (rootFeatures' ? "frontend-tui") "impl-default")
       (lib.optional (rootFeatures' ? "frontend-tui") "in6addr")
       (lib.optional (rootFeatures' ? "frontend-tui") "inaddr")
       (lib.optional (rootFeatures' ? "frontend-tui") "ioapiset")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "knownfolders")
+      [ "knownfolders" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "lmaccess")
       (lib.optional (rootFeatures' ? "frontend-tui") "lmapibuf")
       (lib.optional (rootFeatures' ? "frontend-tui") "lmcons")
       (lib.optional (rootFeatures' ? "frontend-tui") "memoryapi")
       (lib.optional (rootFeatures' ? "frontend-tui") "minschannel")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "minwinbase")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "minwindef")
+      [ "minwinbase" ]
+      [ "minwindef" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "mstcpip")
       (lib.optional (rootFeatures' ? "frontend-tui") "mswsock")
       (lib.optional (rootFeatures' ? "frontend-tui") "namedpipeapi")
       (lib.optional (rootFeatures' ? "frontend-tui") "netioapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "ntdef")
+      [ "ntdef" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "ntsecapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "ntstatus")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "objbase")
+      [ "ntstatus" ]
+      [ "objbase" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "objidl")
       (lib.optional (rootFeatures' ? "frontend-tui") "oleauto")
       (lib.optional (rootFeatures' ? "frontend-tui") "pdh")
       (lib.optional (rootFeatures' ? "frontend-tui") "powerbase")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "processenv")
+      [ "processenv" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "processthreadsapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "profileapi")
+      [ "profileapi" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "psapi")
       (lib.optional (rootFeatures' ? "frontend-tui") "rpcdce")
       (lib.optional (rootFeatures' ? "frontend-tui") "schannel")
       (lib.optional (rootFeatures' ? "frontend-tui") "securitybaseapi")
       (lib.optional (rootFeatures' ? "frontend-tui") "shellapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "shlobj")
+      [ "shlobj" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "sspi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "std")
+      [ "std" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "synchapi")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "sysinfoapi")
+      [ "sysinfoapi" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "threadpoollegacyapiset")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "timezoneapi")
+      [ "timezoneapi" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "wbemcli")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "winbase")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "wincon")
+      [ "winbase" ]
+      [ "wincon" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "wincrypt")
       (lib.optional (rootFeatures' ? "frontend-tui") "windef")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "winerror")
+      [ "winerror" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "winioctl")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange") "winnt")
+      [ "winnt" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "winreg")
       (lib.optional (rootFeatures' ? "frontend-tui") "winsock2")
-      (lib.optional (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") "winuser")
+      [ "winuser" ]
       (lib.optional (rootFeatures' ? "frontend-tui") "ws2def")
       (lib.optional (rootFeatures' ? "frontend-tui") "ws2ipdef")
       (lib.optional (rootFeatures' ? "frontend-tui") "ws2tcpip")
       (lib.optional (rootFeatures' ? "frontend-tui") "wtypesbase")
     ];
     dependencies = {
-      ${ if (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") && hostPlatform.config == "i686-pc-windows-gnu" then "winapi_i686_pc_windows_gnu" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".winapi-i686-pc-windows-gnu."0.4.0" { inherit profileName; };
-      ${ if (rootFeatures' ? "common" || rootFeatures' ? "frontend" || rootFeatures' ? "frontend-tui" || rootFeatures' ? "rep_interchange" || rootFeatures' ? "rep_lang_runtime") && hostPlatform.config == "x86_64-pc-windows-gnu" then "winapi_x86_64_pc_windows_gnu" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".winapi-x86_64-pc-windows-gnu."0.4.0" { inherit profileName; };
+      ${ if hostPlatform.config == "i686-pc-windows-gnu" then "winapi_i686_pc_windows_gnu" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".winapi-i686-pc-windows-gnu."0.4.0" { inherit profileName; };
+      ${ if hostPlatform.config == "x86_64-pc-windows-gnu" then "winapi_x86_64_pc_windows_gnu" else null } = rustPackages."registry+https://github.com/rust-lang/crates.io-index".winapi-x86_64-pc-windows-gnu."0.4.0" { inherit profileName; };
     };
   });
   

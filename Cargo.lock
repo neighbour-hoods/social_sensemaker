@@ -3514,17 +3514,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "quickcheck_macros"
-version = "0.9.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "608c156fd8e97febc07dc9c2e2c80bf74cfc6ef26893eae3daf8bc2bc94a4b7f"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "quinn"
 version = "0.7.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3924,11 +3913,11 @@ dependencies = [
 [[package]]
 name = "rep_lang_concrete_syntax"
 version = "0.1.0"
+source = "git+https://github.com/sacredcapital/rep_lang.git?rev=90ffafb84406b570ca71e738eea5f22a1806200f#90ffafb84406b570ca71e738eea5f22a1806200f"
 dependencies = [
  "combine",
  "pretty",
  "quickcheck",
- "quickcheck_macros",
  "rand 0.7.3",
  "rep_lang_core",
 ]
@@ -3936,6 +3925,7 @@ dependencies = [
 [[package]]
 name = "rep_lang_core"
 version = "0.1.0"
+source = "git+https://github.com/sacredcapital/rep_lang.git?rev=90ffafb84406b570ca71e738eea5f22a1806200f#90ffafb84406b570ca71e738eea5f22a1806200f"
 dependencies = [
  "holochain_serialized_bytes_derive",
  "quickcheck",
@@ -3946,13 +3936,12 @@ dependencies = [
 [[package]]
 name = "rep_lang_runtime"
 version = "0.1.0"
+source = "git+https://github.com/sacredcapital/rep_lang.git?rev=90ffafb84406b570ca71e738eea5f22a1806200f#90ffafb84406b570ca71e738eea5f22a1806200f"
 dependencies = [
  "byteorder",
  "combine",
  "holochain_serialized_bytes_derive",
  "pretty",
- "quickcheck",
- "quickcheck_macros",
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rustyline",

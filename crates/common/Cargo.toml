@@ -8,6 +8,6 @@ edition = "2018"
 hdk = "0.0.112"
 serde = "1"
 
-rep_lang_concrete_syntax = { path = "../../submodules/rep_lang/rep_lang_concrete_syntax" }
-rep_lang_core = { path = "../../submodules/rep_lang/rep_lang_core", features = ["hc"] }
-rep_lang_runtime = { path = "../../submodules/rep_lang/rep_lang_runtime", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "90ffafb84406b570ca71e738eea5f22a1806200f" }
+rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "90ffafb84406b570ca71e738eea5f22a1806200f", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "90ffafb84406b570ca71e738eea5f22a1806200f", features = ["hc"] }

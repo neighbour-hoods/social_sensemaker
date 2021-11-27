@@ -63,17 +63,18 @@
           ]);
         };
 
-        packages.rlp =
+        packages.rep_interchange =
           let
-            target = "wasm32-unknown-unknown";
-
             # create nixpkgs that contains rustBuilder from cargo2nix overlay
             crossPkgs = import nixpkgs {
               inherit system;
 
               crossSystem = {
-                config = target;
+                config = "wasm32-unknown-wasi";
+                system = "wasm32-wasi";
+                useLLVM = true;
               };
+
               overlays = [
                 (import "${cargo2nix}/overlay")
                 rust-overlay.overlay
@@ -84,7 +85,7 @@
             rustPkgs = crossPkgs.rustBuilder.makePackageSet' {
               rustChannel = "1.56.1";
               packageFun = import ./crates/rep_interchange/Cargo.nix;
-              inherit target;
+              target = "wasm32-unknown-unknown";
             };
 
           in

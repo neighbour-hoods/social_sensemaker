@@ -7,6 +7,10 @@ edition = "2018"
 [dependencies]
 hdk = "0.0.112"
 serde = "1"
+getrandom = { version = "0.2.3", features = [ "js" ] }
+# workaround hack courtesy of:
+# https://github.com/tkaitchuck/aHash/issues/95
+indexmap = { version = "~1.6.2" }
 
 rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23" }
 rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23", features = ["hc"] }

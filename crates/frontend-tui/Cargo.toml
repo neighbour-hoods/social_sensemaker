@@ -23,6 +23,6 @@ tui = "0.16.0"
 xdg = "2.4.0"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "90ffafb84406b570ca71e738eea5f22a1806200f" }
-rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "90ffafb84406b570ca71e738eea5f22a1806200f" }
-rep_lang_runtime = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "90ffafb84406b570ca71e738eea5f22a1806200f" }
+rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23" }
+rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23" }
+rep_lang_runtime = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23" }

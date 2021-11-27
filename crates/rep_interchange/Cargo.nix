@@ -5243,7 +5243,7 @@ in
       url = https://github.com/sacredcapital/rep_lang.git;
       name = "rep_lang_concrete_syntax";
       version = "0.1.0";
-      rev = "90ffafb84406b570ca71e738eea5f22a1806200f";};
+      rev = "b4468e1e8e624386c036a6aca67e7af57617bc23";};
     dependencies = {
       combine = rustPackages."registry+https://github.com/rust-lang/crates.io-index".combine."4.6.1" { inherit profileName; };
       pretty = rustPackages."registry+https://github.com/rust-lang/crates.io-index".pretty."0.10.0" { inherit profileName; };
@@ -5261,7 +5261,7 @@ in
       url = https://github.com/sacredcapital/rep_lang.git;
       name = "rep_lang_core";
       version = "0.1.0";
-      rev = "90ffafb84406b570ca71e738eea5f22a1806200f";};
+      rev = "b4468e1e8e624386c036a6aca67e7af57617bc23";};
     features = builtins.concatLists [
       [ "hc" ]
       [ "holochain_serialized_bytes_derive" ]
@@ -5283,7 +5283,7 @@ in
       url = https://github.com/sacredcapital/rep_lang.git;
       name = "rep_lang_runtime";
       version = "0.1.0";
-      rev = "90ffafb84406b570ca71e738eea5f22a1806200f";};
+      rev = "b4468e1e8e624386c036a6aca67e7af57617bc23";};
     features = builtins.concatLists [
       [ "hc" ]
       [ "holochain_serialized_bytes_derive" ]

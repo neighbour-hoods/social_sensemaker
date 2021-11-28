@@ -9,11 +9,11 @@
   "dependencies": {},
   "devDependencies": {},
   "scripts": {
-    "build": "cargo build -p rep_interchange --release --target wasm32-unknown-unknown && scripts/package-dnas.sh",
+    "build": "cargo build -p rep_interchange --release --target wasm32-unknown-unknown",
     "clippy": "cargo clippy --target wasm32-unknown-unknown",
     "doc": "cargo doc",
     "test": "cd test && npm test",
-    "pack": "hc app pack happs/rep_interchange",
+    "pack": "hc dna pack happs/rep_interchange && hc app pack happs/rep_interchange",
     "run": "hc sandbox generate happs/rep_interchange && hc sandbox -f=9000 run -l -p 9999"
   },
   "author": "",

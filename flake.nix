@@ -67,6 +67,8 @@
           ]);
         };
 
+        packages.holonix = holonixMain;
+
         packages.rep_interchange-cargo2nix =
           let
             # create nixpkgs that contains rustBuilder from cargo2nix overlay
@@ -109,13 +111,29 @@
               rustc = rust;
             };
 
+            ri-wasm = naersk'.buildPackage {
+              src = ./.;
+              copyLibs = true;
+              CARGO_BUILD_TARGET = wasmTarget;
+              cargoBuildOptions = (opts: opts ++ ["--package=rep_interchange"]);
+            };
+
           in
 
-          naersk'.buildPackage {
-            src = ./.;
-            copyLibs = true;
-            CARGO_BUILD_TARGET = wasmTarget;
-            cargoBuildOptions = (opts: opts ++ ["--package=rep_interchange"]);
+          pkgs.stdenv.mkDerivation {
+            name = "rep_interchange-happ";
+            buildInputs = [
+              holonixMain.pkgs.holochainBinaries.hc
+            ];
+            unpackPhase = "true";
+            installPhase = ''
+              mkdir $out
+              cp ${ri-wasm}/lib/rep_interchange.wasm $out
+              cp ${happs/rep_interchange/dna.yaml} $out/dna.yaml
+              cp ${happs/rep_interchange/happ.yaml} $out/happ.yaml
+              hc dna pack $out
+              hc app pack $out
+            '';
           };
       });
 }

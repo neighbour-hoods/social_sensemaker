@@ -12,9 +12,10 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
+    naersk.url = "github:nix-community/naersk";
   };
 
-  outputs = { nixpkgs, flake-utils, holonix, rust-overlay, cargo2nix, ... }:
+  outputs = { nixpkgs, flake-utils, holonix, rust-overlay, cargo2nix, naersk, ... }:
     flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (system:
       let
         holonixMain = import holonix {
@@ -43,7 +44,10 @@
 
         pkgs = import nixpkgs {
           inherit system;
+          overlays = [ rust-overlay.overlay ];
         };
+
+        rustVersion = "1.54.0";
 
       in
 
@@ -63,7 +67,7 @@
           ]);
         };
 
-        packages.rep_interchange =
+        packages.rep_interchange-cargo2nix =
           let
             # create nixpkgs that contains rustBuilder from cargo2nix overlay
             crossPkgs = import nixpkgs {
@@ -83,7 +87,7 @@
 
             # create the workspace & dependencies package set
             rustPkgs = crossPkgs.rustBuilder.makePackageSet' {
-              rustChannel = "1.56.1";
+              rustChannel = rustVersion;
               packageFun = import ./crates/rep_interchange/Cargo.nix;
               target = "wasm32-unknown-unknown";
             };
@@ -91,5 +95,27 @@
           in
 
           rustPkgs.workspace.rep_interchange {};
+
+        packages.rep_interchange-naersk =
+          let
+            wasmTarget = "wasm32-unknown-unknown";
+
+            rust = pkgs.rust-bin.stable.${rustVersion}.default.override {
+              targets = [ wasmTarget ];
+            };
+
+            naersk' = pkgs.callPackage naersk {
+              cargo = rust;
+              rustc = rust;
+            };
+
+          in
+
+          naersk'.buildPackage {
+            src = ./.;
+            copyLibs = true;
+            CARGO_BUILD_TARGET = wasmTarget;
+            cargoBuildOptions = (opts: opts ++ ["--package=rep_interchange"]);
+          };
       });
 }

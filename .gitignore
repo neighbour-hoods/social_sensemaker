@@ -8,3 +8,6 @@ happs/**/*.happ
 .hc_live_*
 
 ui/pkg/
+
+# nix
+result*

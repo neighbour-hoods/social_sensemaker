@@ -12,7 +12,7 @@
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    naersk.url = "github:nix-community/naersk";
+    naersk.url = "github:mhuesch/naersk";
   };
 
   outputs = { nixpkgs, flake-utils, holonix, rust-overlay, cargo2nix, naersk, ... }:

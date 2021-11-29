@@ -11,10 +11,7 @@ path = "src/main.rs"
 combine = "4.5.2"
 futures = "0.3"
 holo_hash = { version = "0.0.10", default-features = false }
-# naersk requires that every git dep has a `master` branch, even if our rev is not on it.
-# this fork works around that, though is not a very ideal solution.
-# see https://github.com/nix-community/naersk/issues/149
-holochain_conductor_client = { git = "https://github.com/mhuesch/conductor-client-rust.git", rev = "da01edf2de86cdd929b8759f40058ed8ea7ecd11" }
+holochain_conductor_client = { git = "https://github.com/holochain/conductor-client-rust.git", rev = "da01edf2de86cdd929b8759f40058ed8ea7ecd11" }
 holochain_types = "0.0.12"
 holochain_zome_types = { version = "0.0.14", default-features = false }
 rand = "0.8.4"

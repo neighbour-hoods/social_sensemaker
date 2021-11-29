@@ -1729,7 +1729,7 @@ dependencies = [
 [[package]]
 name = "holochain_conductor_client"
 version = "0.0.1"
-source = "git+https://github.com/mhuesch/conductor-client-rust.git?rev=da01edf2de86cdd929b8759f40058ed8ea7ecd11#da01edf2de86cdd929b8759f40058ed8ea7ecd11"
+source = "git+https://github.com/holochain/conductor-client-rust.git?rev=da01edf2de86cdd929b8759f40058ed8ea7ecd11#da01edf2de86cdd929b8759f40058ed8ea7ecd11"
 dependencies = [
  "again",
  "anyhow",

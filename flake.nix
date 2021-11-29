@@ -135,5 +135,26 @@
               hc app pack $out
             '';
           };
+
+        packages.rlp-tui =
+          let
+            rust = pkgs.rust-bin.stable.${rustVersion}.default;
+
+            naersk' = pkgs.callPackage naersk {
+              cargo = rust;
+              rustc = rust;
+            };
+
+          in
+
+          naersk'.buildPackage {
+            src = ./.;
+            copyLibs = true;
+            cargoBuildOptions = (opts: opts ++ ["--package=frontend-tui"]);
+            buildInputs = with pkgs; [
+              openssl
+              pkgconfig
+            ];
+          };
       });
 }

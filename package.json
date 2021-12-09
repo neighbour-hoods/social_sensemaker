@@ -6,7 +6,9 @@
   "directories": {
     "test": "test"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rimraf": "^3.0.2"
+  },
   "devDependencies": {},
   "scripts": {
     "build": "cargo build -p rep_interchange --release --target wasm32-unknown-unknown && cp $CARGO_TARGET_DIR/wasm32-unknown-unknown/release/rep_interchange.wasm ./happs/rep_interchange",
@@ -14,7 +16,7 @@
     "doc": "cargo doc",
     "test": "cd test && npm test",
     "pack": "hc dna pack happs/rep_interchange && hc app pack happs/rep_interchange",
-    "run": "hc sandbox generate happs/rep_interchange && hc sandbox -f=9000 run -l -p 9999"
+    "run": "rimraf .hc* && hc sandbox generate happs/rep_interchange && hc sandbox -f=9000 run -l -p 9999"
   },
   "author": "",
   "license": "ISC"

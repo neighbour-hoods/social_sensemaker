@@ -3,7 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     holonix = {
-      url = "github:holochain/holonix?rev=2f8ca2fa76165e2978112cb693c572f1086c5541";
+      url = "github:holochain/holonix?rev=bcb7cbedfc06026181552a7d64db731c0398165c";
       flake = false;
     };
     rust-overlay.url = "github:oxalica/rust-overlay";
@@ -41,7 +41,6 @@
             miniserve
             nodePackages.rollup
             wasm-pack
-            cargo2nix.defaultPackage.${system}
           ]);
         };
 

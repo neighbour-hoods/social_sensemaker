@@ -8,7 +8,7 @@ edition = "2018"
 
 [dependencies]
 combine = "4.5.2"
-hdk = "0.0.112"
+hdk = "0.0.116"
 serde = "1"
 
 common = { path = "../common" }

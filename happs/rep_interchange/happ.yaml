@@ -2,7 +2,7 @@
 manifest_version: "1"
 name: rep_interchange
 description: ~
-slots:
+roles:
   - id: main
     provisioning:
       strategy: create

@@ -2,14 +2,13 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
-    dna::{AgentPubKey, DnaBundle},
+    dna::DnaBundle,
     prelude::{CellId, InstallAppBundlePayload},
 };
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
-use serde_json;
 use std::{
-    error, fs, io,
+    error, io,
     path::{Path, PathBuf},
     sync::mpsc::Sender,
 };
@@ -23,7 +22,6 @@ use tui::{
     widgets::{Block, Borders, Paragraph},
     Terminal,
 };
-use xdg;
 
 use common::CreateInterchangeEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
@@ -90,7 +88,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let backend = TermionBackend::new(stdout);
     let mut terminal = Terminal::new(backend)?;
 
-    let xdg_dirs = xdg::BaseDirectories::with_prefix("rlp").unwrap();
     let mut app = App::new();
 
     {
@@ -102,24 +99,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             let mut admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
                 .await
                 .expect("connect to succeed");
-            // TODO address failure mode where file exists but does not deserialize
-            let agent_pk = match xdg_dirs.find_data_file("agent_pk") {
-                Some(agent_pk_path) => {
-                    eprintln!("found agent_pk file, loading.");
-                    let agent_pk_str = fs::read_to_string(agent_pk_path).unwrap();
-                    let agent_pk: AgentPubKey = serde_json::from_str(&agent_pk_str).unwrap();
-                    agent_pk
-                }
-                None => {
-                    eprintln!("no agent_pk file found, generating from holochain/lair.");
-                    let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
-                    let agent_pk_pathbuf = xdg_dirs.place_data_file("agent_pk").unwrap();
-                    let agent_pk_str = serde_json::to_string(&agent_pk).unwrap();
-                    fs::write(agent_pk_pathbuf.as_path(), agent_pk_str).unwrap();
-                    eprintln!("wrote key file: {:?}", agent_pk_pathbuf);
-                    agent_pk
-                }
-            };
+            let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
             let hc_info = HcInfo {
                 admin_ws: admin_ws.clone(),
                 app_ws,

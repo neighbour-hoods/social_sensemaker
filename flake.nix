@@ -43,6 +43,11 @@
             wasm-pack
             cargo2nix.defaultPackage.${system}
           ]);
+
+          shellHook = ''
+            export CARGO_HOME=~/.cargo
+            export CARGO_TARGET_DIR=target
+          '';
         };
 
         packages.holonix = holonixMain;

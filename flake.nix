@@ -41,6 +41,7 @@
             miniserve
             nodePackages.rollup
             wasm-pack
+            cargo2nix.defaultPackage.${system}
           ]);
         };
 

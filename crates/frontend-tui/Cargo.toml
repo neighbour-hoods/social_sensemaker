@@ -11,7 +11,7 @@ path = "src/main.rs"
 combine = "4.5.2"
 futures = "0.3"
 holo_hash = { version = "0.0.13", default-features = false }
-holochain_conductor_client = { git = "https://github.com/holochain/conductor-client-rust.git", ref = "hc-119" }
+holochain_conductor_client = { git = "https://github.com/holochain/conductor-client-rust.git", rev = "148477fdee025090bfd7a8face48a0eed3dd5788" }
 holochain_types = "0.0.19"
 holochain_zome_types = { version = "0.0.18", default-features = false }
 rand = "0.8.4"

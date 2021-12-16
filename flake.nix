@@ -25,7 +25,7 @@
           overlays = [ rust-overlay.overlay ];
         };
 
-        rustVersion = "1.54.0";
+        rustVersion = "1.55.0";
 
       in
 

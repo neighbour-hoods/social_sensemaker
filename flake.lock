@@ -85,17 +85,16 @@
     "holonix": {
       "flake": false,
       "locked": {
-        "lastModified": 1639010243,
-        "narHash": "sha256-b96jIVwo9IGsXxScCUcyJ8sqwwOjxaQ0O+XM19p5RU0=",
+        "lastModified": 1639618513,
+        "narHash": "sha256-Ie2eJwZuAdJxRG5K4lILXWhsb6uFrxW7boVc94Vqyzs=",
         "owner": "holochain",
         "repo": "holonix",
-        "rev": "bcb7cbedfc06026181552a7d64db731c0398165c",
+        "rev": "2b789b2ffc95d221c28dc2faca6f321ef90108b2",
         "type": "github"
       },
       "original": {
         "owner": "holochain",
         "repo": "holonix",
-        "rev": "bcb7cbedfc06026181552a7d64db731c0398165c",
         "type": "github"
       }
     },

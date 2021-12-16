@@ -5,6 +5,7 @@ use holochain_types::{
     dna::DnaBundle,
     prelude::{CellId, InstallAppBundlePayload},
 };
+use holo_hash::HeaderHash;
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
 use std::{
@@ -248,18 +249,19 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                 bundle.into_dna_file(None, None).await.unwrap();
                             CellId::new(dna_hash, hc_info.agent_pk.clone())
                         };
-                        let _zc = ZomeCall {
+                        let zc = ZomeCall {
                             cell_id,
                             zome_name: "interpreter".into(),
                             fn_name: "create_interchange_entry".into(),
                             payload,
-                            cap: None,
+                            cap_secret: None,
                             provenance: hc_info.agent_pk.clone(),
                         };
-                        // // TODO \/ we have a problem here: CellMissing
-                        // let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                        // let ie_hash: HeaderHash = result.decode().unwrap();
-                        // app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
+                        // TODO \/ we have a problem here: CellMissing
+                        // this is perhaps because we have not "started" the cell.
+                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
+                        let ie_hash: HeaderHash = result.decode().unwrap();
+                        app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
                     }
                 }
             }

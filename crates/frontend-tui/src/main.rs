@@ -121,6 +121,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 uid: None,
             };
             let _app_info = admin_ws.install_app_bundle(iabp).await.unwrap();
+            let _enable_app_response = admin_ws.enable_app(APP_ID.into()).await.unwrap();
         });
     }
 

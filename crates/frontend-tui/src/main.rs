@@ -1,11 +1,11 @@
 use combine::{stream::position, EasyParser, StreamOnce};
+use holo_hash::HeaderHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
     dna::DnaBundle,
     prelude::{CellId, InstallAppBundlePayload},
 };
-use holo_hash::HeaderHash;
 use holochain_zome_types::zome_io::ExternIO;
 use scrawl;
 use std::{
@@ -63,7 +63,7 @@ struct App {
     opt_events: Option<Events>,
     event_sender: Sender<Event>,
     hc_info: Option<HcInfo>,
-    hc_response: String,
+    hc_responses: Vec<String>,
 }
 
 impl App {
@@ -75,8 +75,12 @@ impl App {
             opt_events: Some(events),
             event_sender,
             hc_info: None,
-            hc_response: "not connected".into(),
+            hc_responses: vec!["not connected".into()],
         }
+    }
+
+    fn log_hc_response(&mut self, s: String) {
+        self.hc_responses.insert(0, s);
     }
 }
 
@@ -131,7 +135,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         Constraint::Length(1),
                         Constraint::Length(25),
                         Constraint::Min(1),
-                        Constraint::Length(4),
+                        Constraint::Length(6),
                     ]
                     .as_ref(),
                 )
@@ -177,12 +181,18 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 );
             f.render_widget(msgs, chunks[2]);
 
-            let app_info = Paragraph::new(format!("{}", app.hc_response))
+            let hc_responses = app
+                .hc_responses
+                .iter()
+                .map(|resp| "- ".to_string() + resp)
+                .collect::<Vec<String>>()
+                .join("\n");
+            let app_info = Paragraph::new(format!("{}", hc_responses))
                 .style(Style::default())
                 .block(
                     Block::default()
                         .borders(Borders::ALL)
-                        .title("holochain response"),
+                        .title("holochain responses (newest first)"),
                 );
             f.render_widget(app_info, chunks[3]);
         })?;
@@ -261,13 +271,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         // this is perhaps because we have not "started" the cell.
                         let result = hc_info.app_ws.zome_call(zc).await.unwrap();
                         let ie_hash: HeaderHash = result.decode().unwrap();
-                        app.hc_response = format!("create: ie_hash: {:?}", ie_hash);
+                        app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
                     }
                 }
             }
             Event::HcInfo(hc_info) => {
                 app.hc_info = Some(hc_info);
-                app.hc_response = "hc_info: connected".into();
+                app.log_hc_response("hc_info: connected".into());
             }
             _ => {}
         }

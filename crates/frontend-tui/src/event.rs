@@ -6,11 +6,15 @@ use std::thread;
 use termion::event::Key;
 use termion::input::TermRead;
 
+use common::InterchangeEntry;
+
 pub enum Event {
     Input(Key),
     HcInfo(HcInfo),
+    GetIes(Vec<InterchangeEntry>),
 }
 
+#[derive(Clone)]
 pub struct HcInfo {
     pub admin_ws: AdminWebsocket,
     pub app_ws: AppWebsocket,

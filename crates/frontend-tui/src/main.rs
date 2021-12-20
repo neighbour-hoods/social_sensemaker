@@ -24,7 +24,7 @@ use tui::{
     Terminal,
 };
 
-use common::CreateInterchangeEntryInput;
+use common::{CreateInterchangeEntryInput, InterchangeEntry};
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
@@ -50,17 +50,30 @@ impl ExprState {
     }
 }
 
-#[derive(Debug, PartialEq, Eq)]
 enum ViewState {
-    Viewer,
+    Viewer(Vec<InterchangeEntry>),
     Creator,
 }
 
 impl ViewState {
     fn toggle(&self) -> ViewState {
         match &self {
-            ViewState::Viewer => ViewState::Creator,
-            ViewState::Creator => ViewState::Viewer,
+            ViewState::Viewer(_) => ViewState::Creator,
+            ViewState::Creator => ViewState::Viewer(vec![]),
+        }
+    }
+
+    fn is_creator(&self) -> bool {
+        match &self {
+            ViewState::Creator => true,
+            _ => false,
+        }
+    }
+
+    fn is_viewer(&self) -> bool {
+        match &self {
+            ViewState::Viewer(_) => true,
+            _ => false,
         }
     }
 }
@@ -151,7 +164,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
     loop {
         // draw UI
-        terminal.draw(|f| match app.view_state {
+        terminal.draw(|f| match &app.view_state {
             ViewState::Creator => {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
@@ -225,7 +238,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 f.render_widget(app_info, chunks[3]);
             }
 
-            ViewState::Viewer => {
+            ViewState::Viewer(ie_s) => {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
@@ -242,7 +255,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 let help_msg = Paragraph::new(Text::from(Spans::from(help_spans)));
                 f.render_widget(help_msg, chunks[0]);
 
-                let block = Paragraph::new("...")
+                let rendered_ie_s: String = ie_s
+                    .into_iter()
+                    .map(|ie| format!("{:?}", ie))
+                    .collect::<Vec<String>>()
+                    .join("\n");
+
+                let block = Paragraph::new(rendered_ie_s)
                     .style(Style::default())
                     .block(Block::default().borders(Borders::ALL).title("viewer"));
                 f.render_widget(block, chunks[1]);
@@ -261,7 +280,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 terminal.clear().expect("clear to succeed");
                 break;
             }
-            Event::Input(Key::Char('e')) if app.view_state == ViewState::Creator => {
+            Event::Input(Key::Char('e')) if app.view_state.is_creator() => {
                 app.opt_events = None;
                 terminal.clear().expect("clear to succeed");
                 app.expr_input = scrawl::with(&app.expr_input)?;
@@ -289,7 +308,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 };
                 app.expr_state = st;
             }
-            Event::Input(Key::Char('c')) if app.view_state == ViewState::Creator => {
+            Event::Input(Key::Char('c')) if app.view_state.is_creator() => {
                 match (&app.expr_state, &mut app.hc_info) {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
@@ -317,10 +336,36 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             }
             Event::Input(Key::Char('\t')) => {
                 app.view_state = app.view_state.toggle();
+                // TODO this cloning could maybe be eliminated
+                let mut hc_info = app.hc_info.clone().unwrap();
+                let send = app.event_sender.clone();
+
+                if app.view_state.is_viewer() {
+                    tokio::task::spawn(async move {
+                        let payload = ExternIO::encode(()).unwrap();
+                        let cell_id =
+                            CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
+                        let zc = ZomeCall {
+                            cell_id,
+                            zome_name: "interpreter".into(),
+                            fn_name: "get_all_interchange_entries".into(),
+                            payload,
+                            cap_secret: None,
+                            provenance: hc_info.agent_pk.clone(),
+                        };
+                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
+                        let ie_s: Vec<InterchangeEntry> = result.decode().unwrap();
+                        send.send(Event::GetIes(ie_s)).expect("send to succeed");
+                    });
+                }
             }
             Event::HcInfo(hc_info) => {
                 app.hc_info = Some(hc_info);
                 app.log_hc_response("hc_info: connected".into());
+            }
+            Event::GetIes(ie_s) => {
+                app.view_state = ViewState::Viewer(ie_s);
+                app.log_hc_response("got IEs".into());
             }
             _ => {}
         }

@@ -20,7 +20,7 @@ use tui::{
     layout::{Constraint, Direction, Layout},
     style::{Modifier, Style},
     text::{Span, Spans, Text},
-    widgets::{Block, Borders, Paragraph},
+    widgets::{Block, Borders, Paragraph, Wrap},
     Terminal,
 };
 
@@ -262,6 +262,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     .join("\n");
 
                 let block = Paragraph::new(rendered_ie_s)
+                    .wrap(Wrap { trim: false })
                     .style(Style::default())
                     .block(Block::default().borders(Borders::ALL).title("viewer"));
                 f.render_widget(block, chunks[1]);

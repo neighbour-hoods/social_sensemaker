@@ -20,7 +20,13 @@ use rep_lang_runtime::{
     types::Scheme,
 };
 
-entry_defs![Path::entry_def(), InterchangeEntry::entry_def()];
+pub const OWNER_TAG: &str = "rep_interchange_owner";
+
+entry_defs![
+    Path::entry_def(),
+    InterchangeEntry::entry_def(),
+    SchemeEntry::entry_def()
+];
 
 #[derive(Debug, Serialize, Deserialize)]
 struct Params {
@@ -53,6 +59,11 @@ fn test_output(params: Params) -> ExternResult<bool> {
 
 #[hdk_entry]
 struct SchemeRoot;
+
+#[hdk_entry]
+struct SchemeEntry {
+    sc: Scheme,
+}
 
 #[hdk_extern]
 pub fn get_all_interchange_entries(_: ()) -> ExternResult<Vec<InterchangeEntry>> {
@@ -162,7 +173,30 @@ pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<InterchangeEnt
 #[hdk_extern]
 pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
     let ie = mk_interchange_entry(input.expr, input.args)?;
-    create_entry(&ie)
+    let headerhash = create_entry(&ie)?;
+
+    // create SchemeRoot (if needed)
+    let _hh = create_entry(&SchemeRoot)?;
+
+    // create Scheme entry (if needed)
+    let scheme_entry = SchemeEntry {
+        sc: ie.output_scheme.clone(),
+    };
+    let _hh = create_entry(&scheme_entry)?;
+
+    // link from Scheme root to Scheme entry
+    let scheme_entry_hash = hash_entry(&scheme_entry)?;
+    create_link(
+        hash_entry(SchemeRoot)?,
+        scheme_entry_hash.clone(),
+        LinkTag::new(OWNER_TAG),
+    )?;
+
+    // link from Scheme entry to IE
+    let ie_entry_hash = hash_entry(&ie)?;
+    create_link(scheme_entry_hash, ie_entry_hash, LinkTag::new(OWNER_TAG))?;
+
+    Ok(headerhash)
 }
 
 pub fn mk_interchange_entry(

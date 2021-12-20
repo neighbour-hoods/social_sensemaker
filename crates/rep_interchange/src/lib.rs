@@ -51,6 +51,23 @@ fn test_output(params: Params) -> ExternResult<bool> {
     }
 }
 
+#[hdk_entry]
+struct SchemeRoot;
+
+#[hdk_extern]
+pub fn get_all_interchange_entries(_: ()) -> ExternResult<Vec<InterchangeEntry>> {
+    let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
+    let ie_links: Vec<Link> = scheme_entry_links
+        .into_iter()
+        .map(|lnk| get_links(lnk.target.clone(), None))
+        .collect::<ExternResult<Vec<Vec<Link>>>>()?
+        .concat();
+    ie_links
+        .into_iter()
+        .map(|lnk| get_interchange_entry(lnk.target.clone()))
+        .collect()
+}
+
 #[hdk_extern]
 pub(crate) fn validate_create_entry_interchange_entry(
     validate_data: ValidateData,
@@ -128,7 +145,7 @@ pub fn create_interchange_entry_parse(
 }
 
 #[hdk_extern]
-pub fn get_interchange_entry(arg_hash: HeaderHash) -> ExternResult<InterchangeEntry> {
+pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<InterchangeEntry> {
     let element = (match get(arg_hash.clone(), GetOptions::content())? {
         Some(el) => Ok(el),
         None => Err(WasmError::Guest(format!(

@@ -176,23 +176,29 @@ pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternRes
     let headerhash = create_entry(&ie)?;
 
     // create SchemeRoot (if needed)
-    // TODO only create if not needed
-    let _hh = create_entry(&SchemeRoot)?;
+    match get(hash_entry(&SchemeRoot)?, GetOptions::content())? {
+        None => {
+            let _hh = create_entry(&SchemeRoot)?;
+        }
+        Some(_) => {}
+    };
 
-    // create Scheme entry (if needed)
-    // TODO only create if not present (we seem to be getting duplication?)
+    // create Scheme entry & link from SchemeRoot (if needed)
     let scheme_entry = SchemeEntry {
         sc: ie.output_scheme.clone(),
     };
-    let _hh = create_entry(&scheme_entry)?;
-
-    // link from Scheme root to Scheme entry
     let scheme_entry_hash = hash_entry(&scheme_entry)?;
-    create_link(
-        hash_entry(SchemeRoot)?,
-        scheme_entry_hash.clone(),
-        LinkTag::new(OWNER_TAG),
-    )?;
+    match get(scheme_entry_hash.clone(), GetOptions::content())? {
+        None => {
+            let _hh = create_entry(&scheme_entry)?;
+            create_link(
+                hash_entry(SchemeRoot)?,
+                scheme_entry_hash.clone(),
+                LinkTag::new(OWNER_TAG),
+            )?;
+        }
+        Some(_) => {}
+    };
 
     // link from Scheme entry to IE
     let ie_entry_hash = hash_entry(&ie)?;

@@ -176,9 +176,11 @@ pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternRes
     let headerhash = create_entry(&ie)?;
 
     // create SchemeRoot (if needed)
+    // TODO only create if not needed
     let _hh = create_entry(&SchemeRoot)?;
 
     // create Scheme entry (if needed)
+    // TODO only create if not present (we seem to be getting duplication?)
     let scheme_entry = SchemeEntry {
         sc: ie.output_scheme.clone(),
     };

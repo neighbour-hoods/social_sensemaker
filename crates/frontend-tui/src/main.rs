@@ -259,7 +259,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     .into_iter()
                     .map(|ie| format!("{:?}", ie))
                     .collect::<Vec<String>>()
-                    .join("\n");
+                    .join("\n\n");
 
                 let block = Paragraph::new(rendered_ie_s)
                     .wrap(Wrap { trim: false })

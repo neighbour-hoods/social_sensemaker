@@ -50,6 +50,21 @@ impl ExprState {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+enum ViewState {
+    Viewer,
+    Creator,
+}
+
+impl ViewState {
+    fn toggle(&self) -> ViewState {
+        match &self {
+            ViewState::Viewer => ViewState::Creator,
+            ViewState::Creator => ViewState::Viewer,
+        }
+    }
+}
+
 struct App {
     /// the text which may parse to an `Expr`.
     expr_input: String,
@@ -58,12 +73,13 @@ struct App {
     /// this is an Option so we can close the Events stream when we open EDITOR
     /// (by setting this field to `None` and thereby allowing the `Events` go
     /// out of scope and be collected).
-    /// while the TUI has control of the screen & input, this should always be
+    /// when the TUI has control of the screen & input, this should always be
     /// `Some`.
     opt_events: Option<Events>,
     event_sender: Sender<Event>,
     hc_info: Option<HcInfo>,
     hc_responses: Vec<String>,
+    view_state: ViewState,
 }
 
 impl App {
@@ -76,6 +92,7 @@ impl App {
             event_sender,
             hc_info: None,
             hc_responses: vec!["not connected".into()],
+            view_state: ViewState::Creator,
         }
     }
 
@@ -134,75 +151,102 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
     loop {
         // draw UI
-        terminal.draw(|f| {
-            let chunks = Layout::default()
-                .direction(Direction::Vertical)
-                .margin(1)
-                .constraints(
-                    [
-                        Constraint::Length(1),
-                        Constraint::Length(25),
-                        Constraint::Min(1),
-                        Constraint::Length(6),
-                    ]
-                    .as_ref(),
-                )
-                .split(f.size());
+        terminal.draw(|f| match app.view_state {
+            ViewState::Creator => {
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints(
+                        [
+                            Constraint::Length(1),
+                            Constraint::Length(25),
+                            Constraint::Min(1),
+                            Constraint::Length(6),
+                        ]
+                        .as_ref(),
+                    )
+                    .split(f.size());
 
-            let mut default_commands = vec![
-                Span::raw("press "),
-                Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to exit, "),
-                Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to launch $EDITOR"),
-            ];
-            let mut valid_expr_commands = vec![
-                Span::raw(", "),
-                Span::styled("c", Style::default().add_modifier(Modifier::BOLD)),
-                Span::raw(" to create entry"),
-            ];
-            let msg = {
-                if app.expr_state.is_valid() {
-                    default_commands.append(&mut valid_expr_commands);
-                }
-                default_commands.push(Span::raw("."));
-                default_commands
-            };
+                let mut default_commands = vec![
+                    Span::raw("press "),
+                    Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to exit, "),
+                    Span::styled("Tab", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to switch to viewer, "),
+                    Span::styled("e", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to launch $EDITOR"),
+                ];
+                let mut valid_expr_commands = vec![
+                    Span::raw(", "),
+                    Span::styled("c", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to create entry"),
+                ];
+                let msg = {
+                    if app.expr_state.is_valid() {
+                        default_commands.append(&mut valid_expr_commands);
+                    }
+                    default_commands.push(Span::raw("."));
+                    default_commands
+                };
 
-            let style = Style::default().add_modifier(Modifier::RAPID_BLINK);
-            let mut text = Text::from(Spans::from(msg));
-            text.patch_style(style);
-            let help_message = Paragraph::new(text);
-            f.render_widget(help_message, chunks[0]);
+                let style = Style::default().add_modifier(Modifier::RAPID_BLINK);
+                let mut text = Text::from(Spans::from(msg));
+                text.patch_style(style);
+                let help_message = Paragraph::new(text);
+                f.render_widget(help_message, chunks[0]);
 
-            let expr_input = Paragraph::new(app.expr_input.as_ref())
-                .style(Style::default())
-                .block(Block::default().borders(Borders::ALL).title("expr input"));
-            f.render_widget(expr_input, chunks[1]);
+                let expr_input = Paragraph::new(app.expr_input.as_ref())
+                    .style(Style::default())
+                    .block(Block::default().borders(Borders::ALL).title("expr input"));
+                f.render_widget(expr_input, chunks[1]);
 
-            let msgs = Paragraph::new(format!("{:?}", app.expr_state))
-                .style(Style::default())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("feedback on expr"),
-                );
-            f.render_widget(msgs, chunks[2]);
+                let msgs = Paragraph::new(format!("{:?}", app.expr_state))
+                    .style(Style::default())
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("feedback on expr"),
+                    );
+                f.render_widget(msgs, chunks[2]);
 
-            let hc_responses = app
-                .hc_responses
-                .iter()
-                .map(|resp| "- ".to_string() + resp)
-                .collect::<Vec<String>>()
-                .join("\n");
-            let app_info = Paragraph::new(format!("{}", hc_responses))
-                .style(Style::default())
-                .block(
-                    Block::default()
-                        .borders(Borders::ALL)
-                        .title("holochain responses (newest first)"),
-                );
-            f.render_widget(app_info, chunks[3]);
+                let hc_responses = app
+                    .hc_responses
+                    .iter()
+                    .map(|resp| "- ".to_string() + resp)
+                    .collect::<Vec<String>>()
+                    .join("\n");
+                let app_info = Paragraph::new(format!("{}", hc_responses))
+                    .style(Style::default())
+                    .block(
+                        Block::default()
+                            .borders(Borders::ALL)
+                            .title("holochain responses (newest first)"),
+                    );
+                f.render_widget(app_info, chunks[3]);
+            }
+
+            ViewState::Viewer => {
+                let chunks = Layout::default()
+                    .direction(Direction::Vertical)
+                    .margin(1)
+                    .constraints([Constraint::Length(1), Constraint::Min(1)].as_ref())
+                    .split(f.size());
+
+                let help_spans = vec![
+                    Span::raw("press "),
+                    Span::styled("q", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to exit, "),
+                    Span::styled("Tab", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to switch to creator."),
+                ];
+                let help_msg = Paragraph::new(Text::from(Spans::from(help_spans)));
+                f.render_widget(help_msg, chunks[0]);
+
+                let block = Paragraph::new("...")
+                    .style(Style::default())
+                    .block(Block::default().borders(Borders::ALL).title("viewer"));
+                f.render_widget(block, chunks[1]);
+            }
         })?;
 
         // handle input
@@ -217,7 +261,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 terminal.clear().expect("clear to succeed");
                 break;
             }
-            Event::Input(Key::Char('e')) => {
+            Event::Input(Key::Char('e')) if app.view_state == ViewState::Creator => {
                 app.opt_events = None;
                 terminal.clear().expect("clear to succeed");
                 app.expr_input = scrawl::with(&app.expr_input)?;
@@ -245,7 +289,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 };
                 app.expr_state = st;
             }
-            Event::Input(Key::Char('c')) => {
+            Event::Input(Key::Char('c')) if app.view_state == ViewState::Creator => {
                 match (&app.expr_state, &mut app.hc_info) {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
@@ -270,6 +314,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
                     }
                 }
+            }
+            Event::Input(Key::Char('\t')) => {
+                app.view_state = app.view_state.toggle();
             }
             Event::HcInfo(hc_info) => {
                 app.hc_info = Some(hc_info);

@@ -268,8 +268,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             cap_secret: None,
                             provenance: hc_info.agent_pk.clone(),
                         };
-                        // TODO \/ we have a problem here: CellMissing
-                        // this is perhaps because we have not "started" the cell.
                         let result = hc_info.app_ws.zome_call(zc).await.unwrap();
                         let ie_hash: HeaderHash = result.decode().unwrap();
                         app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));

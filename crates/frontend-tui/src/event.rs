@@ -1,5 +1,5 @@
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket};
-use holochain_types::dna::AgentPubKey;
+use holochain_types::dna::{AgentPubKey, DnaHash};
 use std::io;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
@@ -15,6 +15,7 @@ pub struct HcInfo {
     pub admin_ws: AdminWebsocket,
     pub app_ws: AppWebsocket,
     pub agent_pk: AgentPubKey,
+    pub dna_hash: DnaHash,
 }
 
 /// A small event handler that wrap termion input and tick events. Each event

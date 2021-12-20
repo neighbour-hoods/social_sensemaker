@@ -105,10 +105,17 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 .await
                 .expect("connect to succeed");
             let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
+            let dna_hash = {
+                let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
+                let bundle = DnaBundle::read_from_file(path).await.unwrap();
+                let (_dna_file, dna_hash) = bundle.into_dna_file(None, None).await.unwrap();
+                dna_hash
+            };
             let hc_info = HcInfo {
                 admin_ws: admin_ws.clone(),
                 app_ws,
                 agent_pk: agent_pk.clone(),
+                dna_hash,
             };
             send.send(Event::HcInfo(hc_info)).expect("send to succeed");
 
@@ -243,23 +250,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
                     (ExprState::Valid(_sc, expr), Some(hc_info)) => {
-                        let apps_interfaces = hc_info.admin_ws.list_app_interfaces().await;
-                        let apps = hc_info.admin_ws.list_apps(None).await;
-                        eprintln!("apps_interfaces: {:?}", apps_interfaces);
-                        eprintln!("apps: {:?}", apps);
                         let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
                             expr: expr.clone(),
                             args: Vec::new(),
                         };
                         let payload = ExternIO::encode(input).unwrap();
-                        let cell_id = {
-                            // TODO consider loading the DNA async, at TUI launch time.
-                            let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
-                            let bundle = DnaBundle::read_from_file(path).await.unwrap();
-                            let (_dna_file, dna_hash) =
-                                bundle.into_dna_file(None, None).await.unwrap();
-                            CellId::new(dna_hash, hc_info.agent_pk.clone())
-                        };
+                        let cell_id =
+                            CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
                         let zc = ZomeCall {
                             cell_id,
                             zome_name: "interpreter".into(),

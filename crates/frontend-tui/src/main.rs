@@ -58,10 +58,7 @@ pub struct ValidExprState {
 
 impl ExprState {
     fn is_valid(&self) -> bool {
-        match self {
-            ExprState::Valid(_) => true,
-            ExprState::Invalid(_) => false,
-        }
+        matches!(self, ExprState::Valid(_))
     }
 }
 
@@ -222,6 +219,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 f.render_widget(expr_input, chunks[1]);
 
                 let msgs = Paragraph::new(format!("{:?}", app.expr_state))
+                    .wrap(Wrap { trim: false })
                     .style(Style::default())
                     .block(
                         Block::default()
@@ -309,12 +307,35 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             match infer_expr(&Env::new(), &expr) {
                                 Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
                                 Ok(sc) => {
-                                    let _opt_arg_sc = match &sc {
+                                    // TODO this cloning could maybe be eliminated
+                                    let mut hc_info = app.hc_info.clone().unwrap();
+                                    let opt_sc = match &sc {
                                         Scheme(tvs, Type::TArr(arg, _)) => {
                                             Some(Scheme(tvs.clone(), *arg.clone()))
                                         }
                                         _ => None,
                                     };
+                                    // TODO deduplicate this
+                                    let payload = ExternIO::encode(opt_sc).unwrap();
+                                    let cell_id = CellId::new(
+                                        hc_info.dna_hash.clone(),
+                                        hc_info.agent_pk.clone(),
+                                    );
+                                    let zc = ZomeCall {
+                                        cell_id,
+                                        zome_name: "interpreter".into(),
+                                        fn_name: "get_interchange_entries_which_unify".into(),
+                                        payload,
+                                        cap_secret: None,
+                                        provenance: hc_info.agent_pk.clone(),
+                                    };
+                                    let result = hc_info.app_ws.zome_call(zc).await.unwrap();
+                                    let hash_ie_s: Vec<(EntryHash, InterchangeEntry)> =
+                                        result.decode().unwrap();
+                                    app.event_sender
+                                        .send(Event::SelectorIes(hash_ie_s))
+                                        .expect("send to succeed");
+
                                     ExprState::Valid(ValidExprState {
                                         sc,
                                         expr,
@@ -340,7 +361,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                 InterchangeOperand::InterchangeOperand(e_hash.clone())
                             })
                             .collect();
-                        let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
+                        let input = CreateInterchangeEntryInput {
                             expr: ves.expr.clone(),
                             args,
                         };
@@ -367,6 +388,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 let mut hc_info = app.hc_info.clone().unwrap();
 
                 if app.view_state.is_viewer() {
+                    // TODO deduplicate this
                     let opt_sc: Option<Scheme> = None;
                     let payload = ExternIO::encode(opt_sc).unwrap();
                     let cell_id = CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
@@ -379,9 +401,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         provenance: hc_info.agent_pk.clone(),
                     };
                     let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                    let ie_s: Vec<InterchangeEntry> = result.decode().unwrap();
+                    let hash_ie_s: Vec<(EntryHash, InterchangeEntry)> = result.decode().unwrap();
+                    let ie_s = hash_ie_s.into_iter().map(|(_eh, ie)| ie).collect();
                     app.event_sender
-                        .send(Event::GetIes(ie_s))
+                        .send(Event::ViewerIes(ie_s))
                         .expect("send to succeed");
                 }
             }
@@ -389,9 +412,15 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 app.hc_info = Some(hc_info);
                 app.log_hc_response("hc_info: connected".into());
             }
-            Event::GetIes(ie_s) => {
+            Event::SelectorIes(hash_ie_s) => {
+                app.log_hc_response("got selector IEs".into());
+                if let ExprState::Valid(ves) = &mut app.expr_state {
+                    ves.next_application_candidates = hash_ie_s;
+                }
+            }
+            Event::ViewerIes(ie_s) => {
+                app.log_hc_response("got viewer IEs".into());
                 app.view_state = ViewState::Viewer(ie_s);
-                app.log_hc_response("got IEs".into());
             }
             _ => {}
         }

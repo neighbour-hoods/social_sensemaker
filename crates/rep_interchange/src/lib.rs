@@ -68,7 +68,9 @@ struct SchemeEntry {
 #[hdk_extern]
 pub fn get_interchange_entries_which_unify(
     _opt_sc: Option<Scheme>,
-) -> ExternResult<Vec<InterchangeEntry>> {
+) -> ExternResult<Vec<(EntryHash, InterchangeEntry)>> {
+    // TODO implement unification / filtering
+    //
     let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
     let ie_links: Vec<Link> = scheme_entry_links
         .into_iter()
@@ -77,7 +79,7 @@ pub fn get_interchange_entries_which_unify(
         .concat();
     ie_links
         .into_iter()
-        .map(|lnk| get_interchange_entry(lnk.target))
+        .map(|lnk| get_interchange_entry(lnk.target.clone()).map(|ie| (lnk.target, ie)))
         .collect()
 }
 

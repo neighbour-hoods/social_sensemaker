@@ -1,5 +1,5 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use holo_hash::{EntryHash, HeaderHash};
+use holo_hash::EntryHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
@@ -356,7 +356,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             provenance: hc_info.agent_pk.clone(),
                         };
                         let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                        let ie_hash: HeaderHash = result.decode().unwrap();
+                        let ie_hash: EntryHash = result.decode().unwrap();
                         app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
                     }
                 }

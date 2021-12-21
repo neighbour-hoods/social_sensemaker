@@ -173,9 +173,8 @@ pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<InterchangeEnt
 }
 
 #[hdk_extern]
-pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
+pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<EntryHash> {
     let ie = mk_interchange_entry(input.expr, input.args)?;
-    let headerhash = create_entry(&ie)?;
 
     // create SchemeRoot (if needed)
     match get(hash_entry(&SchemeRoot)?, GetOptions::content())? {
@@ -202,11 +201,17 @@ pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternRes
         Some(_) => {}
     };
 
-    // link from Scheme entry to IE
-    let ie_entry_hash = hash_entry(&ie)?;
-    create_link(scheme_entry_hash, ie_entry_hash, LinkTag::new(OWNER_TAG))?;
+    // create IE & link from Scheme entry (if needed)
+    let ie_hash = hash_entry(&ie)?;
+    match get(ie_hash.clone(), GetOptions::content())? {
+        None => {
+            let _hh = create_entry(&ie)?;
+            create_link(scheme_entry_hash, ie_hash.clone(), LinkTag::new(OWNER_TAG))?;
+        }
+        Some(_) => {}
+    };
 
-    Ok(headerhash)
+    Ok(ie_hash)
 }
 
 pub fn mk_interchange_entry(

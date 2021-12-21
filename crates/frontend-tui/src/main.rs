@@ -144,40 +144,37 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let mut app = App::new();
 
     {
-        let send = app.event_sender.clone();
-        tokio::task::spawn(async move {
-            let app_ws = AppWebsocket::connect("ws://127.0.0.1:9999".into())
-                .await
-                .expect("connect to succeed");
-            let mut admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
-                .await
-                .expect("connect to succeed");
-            let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
-            let dna_hash = {
-                let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
-                let bundle = DnaBundle::read_from_file(path).await.unwrap();
-                let (_dna_file, dna_hash) = bundle.into_dna_file(None, None).await.unwrap();
-                dna_hash
-            };
-            let hc_info = HcInfo {
-                admin_ws: admin_ws.clone(),
-                app_ws,
-                agent_pk: agent_pk.clone(),
-                dna_hash,
-            };
-            send.send(Event::HcInfo(hc_info)).expect("send to succeed");
+        let app_ws = AppWebsocket::connect("ws://127.0.0.1:9999".into())
+            .await
+            .expect("connect to succeed");
+        let mut admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
+            .await
+            .expect("connect to succeed");
+        let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
+        let dna_hash = {
+            let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
+            let bundle = DnaBundle::read_from_file(path).await.unwrap();
+            let (_dna_file, dna_hash) = bundle.into_dna_file(None, None).await.unwrap();
+            dna_hash
+        };
+        let hc_info = HcInfo {
+            admin_ws: admin_ws.clone(),
+            app_ws,
+            agent_pk: agent_pk.clone(),
+            dna_hash,
+        };
+        app.event_sender.send(Event::HcInfo(hc_info)).expect("send to succeed");
 
-            let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.happ");
-            let iabp = InstallAppBundlePayload {
-                source: AppBundleSource::Path(pathbuf),
-                agent_key: agent_pk,
-                installed_app_id: Some(APP_ID.into()),
-                membrane_proofs: Default::default(),
-                uid: None,
-            };
-            let _app_info = admin_ws.install_app_bundle(iabp).await.unwrap();
-            let _enable_app_response = admin_ws.enable_app(APP_ID.into()).await.unwrap();
-        });
+        let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.happ");
+        let iabp = InstallAppBundlePayload {
+            source: AppBundleSource::Path(pathbuf),
+            agent_key: agent_pk,
+            installed_app_id: Some(APP_ID.into()),
+            membrane_proofs: Default::default(),
+            uid: None,
+        };
+        let _app_info = admin_ws.install_app_bundle(iabp).await.unwrap();
+        let _enable_app_response = admin_ws.enable_app(APP_ID.into()).await.unwrap();
     }
 
     loop {
@@ -345,10 +342,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
                     (ExprState::Valid(ves), Some(hc_info)) => {
-                        // TODO should this block go in a `spawn`?
-                        // since we are async maybe it's not necessary, and is
-                        // fine as it is.
-                        //
                         let args = ves
                             .args
                             .iter()
@@ -381,26 +374,23 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 app.view_state = app.view_state.toggle();
                 // TODO this cloning could maybe be eliminated
                 let mut hc_info = app.hc_info.clone().unwrap();
-                let send = app.event_sender.clone();
 
                 if app.view_state.is_viewer() {
-                    tokio::task::spawn(async move {
-                        let opt_sc: Option<Scheme> = None;
-                        let payload = ExternIO::encode(opt_sc).unwrap();
-                        let cell_id =
-                            CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
-                        let zc = ZomeCall {
-                            cell_id,
-                            zome_name: "interpreter".into(),
-                            fn_name: "get_interchange_entries_which_unify".into(),
-                            payload,
-                            cap_secret: None,
-                            provenance: hc_info.agent_pk.clone(),
-                        };
-                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                        let ie_s: Vec<InterchangeEntry> = result.decode().unwrap();
-                        send.send(Event::GetIes(ie_s)).expect("send to succeed");
-                    });
+                    let opt_sc: Option<Scheme> = None;
+                    let payload = ExternIO::encode(opt_sc).unwrap();
+                    let cell_id =
+                        CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
+                    let zc = ZomeCall {
+                        cell_id,
+                        zome_name: "interpreter".into(),
+                        fn_name: "get_interchange_entries_which_unify".into(),
+                        payload,
+                        cap_secret: None,
+                        provenance: hc_info.agent_pk.clone(),
+                    };
+                    let result = hc_info.app_ws.zome_call(zc).await.unwrap();
+                    let ie_s: Vec<InterchangeEntry> = result.decode().unwrap();
+                    app.event_sender.send(Event::GetIes(ie_s)).expect("send to succeed");
                 }
             }
             Event::HcInfo(hc_info) => {

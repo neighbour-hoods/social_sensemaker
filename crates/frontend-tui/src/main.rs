@@ -1,5 +1,5 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use holo_hash::HeaderHash;
+use holo_hash::{EntryHash, HeaderHash};
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
@@ -24,7 +24,7 @@ use tui::{
     Terminal,
 };
 
-use common::{CreateInterchangeEntryInput, InterchangeEntry};
+use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
@@ -37,14 +37,28 @@ use event::{Event, Events, HcInfo};
 
 #[derive(Debug, Clone)]
 pub enum ExprState {
-    Valid(Scheme, Expr),
+    Valid(ValidExprState),
     Invalid(String),
+}
+
+#[derive(Debug, Clone)]
+pub struct ValidExprState {
+    sc: Scheme,
+    expr: Expr,
+    /// any IEs we have already selected for `expr` to be applied to. Vec
+    /// ordering is the order in which they will be applied.
+    args: Vec<(EntryHash, InterchangeEntry)>,
+    /// IEs which have not yet been selected for application, but are
+    /// candidates (meaning that `expr` must be a closure & `sc` must have a
+    /// toplevel `TArr`. and the closure argument's `Scheme` unifies with all
+    /// of these candidates individually).
+    next_application_candidates: Vec<(EntryHash, InterchangeEntry)>,
 }
 
 impl ExprState {
     fn is_valid(&self) -> bool {
         match self {
-            ExprState::Valid(_, _) => true,
+            ExprState::Valid(_) => true,
             ExprState::Invalid(_) => false,
         }
     }
@@ -301,7 +315,12 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             ))
                         } else {
                             match infer_expr(&Env::new(), &expr) {
-                                Ok(sc) => ExprState::Valid(sc, expr),
+                                Ok(sc) => ExprState::Valid(ValidExprState {
+                                    sc,
+                                    expr,
+                                    args: vec![],
+                                    next_application_candidates: vec![],
+                                }),
                                 Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
                             }
                         }
@@ -313,10 +332,17 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 match (&app.expr_state, &mut app.hc_info) {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
-                    (ExprState::Valid(_sc, expr), Some(hc_info)) => {
+                    (ExprState::Valid(ves), Some(hc_info)) => {
+                        let args = ves
+                            .args
+                            .iter()
+                            .map(|(e_hash, _ie)| {
+                                InterchangeOperand::InterchangeOperand(e_hash.clone())
+                            })
+                            .collect();
                         let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
-                            expr: expr.clone(),
-                            args: Vec::new(),
+                            expr: ves.expr.clone(),
+                            args,
                         };
                         let payload = ExternIO::encode(input).unwrap();
                         let cell_id =

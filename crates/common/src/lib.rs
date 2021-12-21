@@ -6,16 +6,16 @@ use rep_lang_runtime::{eval::FlatValue, types::Scheme};
 // TODO think carefully on what this should be.
 pub type Marker = ();
 
-// TODO is `HeaderHash` right?
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InterchangeOperand {
     // these dereference to `InterchangeEntry`
-    InterchangeOperand(HeaderHash),
+    InterchangeOperand(EntryHash),
     // these dereference to `FlatThunk`??
-    OtherOperand(HeaderHash),
+    OtherOperand(EntryHash),
 }
 
 #[hdk_entry(id = "interchange_entry")]
+#[derive(Clone)]
 pub struct InterchangeEntry {
     pub operator: Expr,
     pub operands: Vec<InterchangeOperand>,
@@ -28,7 +28,5 @@ pub struct InterchangeEntry {
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct CreateInterchangeEntryInput {
     pub expr: Expr,
-    // TODO `args` should perhaps be of type `InterchangeOperand`. that would
-    // allow us to tidily handle non-`InterchangeEntry` args.
     pub args: Vec<InterchangeOperand>,
 }

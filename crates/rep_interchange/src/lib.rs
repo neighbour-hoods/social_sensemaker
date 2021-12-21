@@ -211,10 +211,10 @@ pub fn mk_interchange_entry(
     expr: Expr,
     args: Vec<InterchangeOperand>,
 ) -> ExternResult<InterchangeEntry> {
-    let args: Vec<HeaderHash> = args
+    let args: Vec<EntryHash> = args
         .iter()
         .map(|io| match io {
-            InterchangeOperand::InterchangeOperand(hh) => hh.clone(),
+            InterchangeOperand::InterchangeOperand(eh) => eh.clone(),
             InterchangeOperand::OtherOperand(_) => todo!("OtherOperand"),
         })
         .collect();

@@ -207,9 +207,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     default_commands
                 };
 
-                let style = Style::default().add_modifier(Modifier::RAPID_BLINK);
-                let mut text = Text::from(Spans::from(msg));
-                text.patch_style(style);
+                let text = Text::from(Spans::from(msg));
                 let help_message = Paragraph::new(text);
                 f.render_widget(help_message, chunks[0]);
 

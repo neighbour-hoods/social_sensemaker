@@ -72,12 +72,12 @@ pub fn get_interchange_entries_which_unify(
     let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
     let ie_links: Vec<Link> = scheme_entry_links
         .into_iter()
-        .map(|lnk| get_links(lnk.target.clone(), None))
+        .map(|lnk| get_links(lnk.target, None))
         .collect::<ExternResult<Vec<Vec<Link>>>>()?
         .concat();
     ie_links
         .into_iter()
-        .map(|lnk| get_interchange_entry(lnk.target.clone()))
+        .map(|lnk| get_interchange_entry(lnk.target))
         .collect()
 }
 
@@ -98,7 +98,7 @@ pub(crate) fn validate_update_entry_interchange_entry(
 pub fn validate_create_update_entry_interchange_entry(
     validate_data: ValidateData,
 ) -> ExternResult<ValidateCallbackResult> {
-    let element = validate_data.element.clone();
+    let element = validate_data.element;
     let ie: InterchangeEntry = match element.into_inner().1.to_app_option()? {
         Some(ie) => ie,
         None => return Ok(ValidateCallbackResult::Valid),
@@ -293,7 +293,7 @@ pub fn mk_interchange_entry(
         term_env.insert(nm, v_ref);
     }
 
-    let full_application_vr = eval_(&mut term_env, &mut sto, &mut es, &full_application);
+    let full_application_vr = eval_(&term_env, &mut sto, &mut es, &full_application);
     let full_application_val = lookup_sto(&mut es, &full_application_vr, &mut sto);
     let full_application_flat_val = value_to_flat_value(&mut es, &full_application_val, &mut sto);
 

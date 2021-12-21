@@ -7,14 +7,12 @@ use holochain_types::{
     prelude::{CellId, InstallAppBundlePayload},
 };
 use holochain_zome_types::zome_io::ExternIO;
-use scrawl;
 use std::{
     error, io,
     path::{Path, PathBuf},
     sync::mpsc::Sender,
 };
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
-use tokio;
 use tui::{
     backend::TermionBackend,
     layout::{Constraint, Direction, Layout},
@@ -33,11 +31,10 @@ use rep_lang_runtime::{
     types::{Scheme, Type},
 };
 
-const APP_ID: &str = "rep_interchange";
-
-#[allow(dead_code)]
 mod event;
 use event::{Event, Events, HcInfo};
+
+const APP_ID: &str = "rep_interchange";
 
 #[derive(Debug, Clone)]
 pub enum ExprState {
@@ -82,17 +79,11 @@ impl ViewState {
     }
 
     fn is_creator(&self) -> bool {
-        match &self {
-            ViewState::Creator => true,
-            _ => false,
-        }
+        matches!(self, ViewState::Creator)
     }
 
     fn is_viewer(&self) -> bool {
-        match &self {
-            ViewState::Viewer(_) => true,
-            _ => false,
-        }
+        matches!(self, ViewState::Viewer(_))
     }
 }
 
@@ -163,7 +154,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             agent_pk: agent_pk.clone(),
             dna_hash,
         };
-        app.event_sender.send(Event::HcInfo(hc_info)).expect("send to succeed");
+        app.event_sender
+            .send(Event::HcInfo(hc_info))
+            .expect("send to succeed");
 
         let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.happ");
         let iabp = InstallAppBundlePayload {
@@ -243,13 +236,11 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     .map(|resp| "- ".to_string() + resp)
                     .collect::<Vec<String>>()
                     .join("\n");
-                let app_info = Paragraph::new(format!("{}", hc_responses))
-                    .style(Style::default())
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title("holochain responses (newest first)"),
-                    );
+                let app_info = Paragraph::new(hc_responses).style(Style::default()).block(
+                    Block::default()
+                        .borders(Borders::ALL)
+                        .title("holochain responses (newest first)"),
+                );
                 f.render_widget(app_info, chunks[3]);
             }
 
@@ -271,7 +262,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 f.render_widget(help_msg, chunks[0]);
 
                 let rendered_ie_s: String = ie_s
-                    .into_iter()
+                    .iter()
                     .map(|ie| format!("{:?}", ie))
                     .collect::<Vec<String>>()
                     .join("\n\n");
@@ -378,8 +369,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 if app.view_state.is_viewer() {
                     let opt_sc: Option<Scheme> = None;
                     let payload = ExternIO::encode(opt_sc).unwrap();
-                    let cell_id =
-                        CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
+                    let cell_id = CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
                     let zc = ZomeCall {
                         cell_id,
                         zome_name: "interpreter".into(),
@@ -390,7 +380,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     };
                     let result = hc_info.app_ws.zome_call(zc).await.unwrap();
                     let ie_s: Vec<InterchangeEntry> = result.decode().unwrap();
-                    app.event_sender.send(Event::GetIes(ie_s)).expect("send to succeed");
+                    app.event_sender
+                        .send(Event::GetIes(ie_s))
+                        .expect("send to succeed");
                 }
             }
             Event::HcInfo(hc_info) => {

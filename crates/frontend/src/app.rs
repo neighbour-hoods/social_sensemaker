@@ -1,12 +1,10 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use futures::{SinkExt, StreamExt};
 use holo_hash::{HeaderHash, HoloHash};
-use holochain_serialized_bytes;
 use holochain_serialized_bytes::holochain_serial;
 use holochain_serialized_bytes_derive::SerializedBytes;
 use holochain_zome_types::{call::Call, zome_io::ExternIO};
 use reqwasm::websocket::{futures::WebSocket, Message};
-use serde;
 use std::iter;
 use web_sys::HtmlInputElement as InputElement;
 use weblog::{console_error, console_log};

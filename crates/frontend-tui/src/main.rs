@@ -27,7 +27,11 @@ use tui::{
 use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
-use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
+use rep_lang_runtime::{
+    env::Env,
+    infer::infer_expr,
+    types::{Scheme, Type},
+};
 
 const APP_ID: &str = "rep_interchange";
 
@@ -315,13 +319,21 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             ))
                         } else {
                             match infer_expr(&Env::new(), &expr) {
-                                Ok(sc) => ExprState::Valid(ValidExprState {
-                                    sc,
-                                    expr,
-                                    args: vec![],
-                                    next_application_candidates: vec![],
-                                }),
                                 Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
+                                Ok(sc) => {
+                                    let _opt_arg_sc = match &sc {
+                                        Scheme(tvs, Type::TArr(arg, _)) => {
+                                            Some(Scheme(tvs.clone(), *arg.clone()))
+                                        }
+                                        _ => None,
+                                    };
+                                    ExprState::Valid(ValidExprState {
+                                        sc,
+                                        expr,
+                                        args: vec![],
+                                        next_application_candidates: vec![],
+                                    })
+                                }
                             }
                         }
                     }
@@ -333,6 +345,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     (ExprState::Invalid(_), _) => {} // invalid expr
                     (_, None) => {}                  // no hc_ws client
                     (ExprState::Valid(ves), Some(hc_info)) => {
+                        // TODO should this block go in a `spawn`?
+                        // since we are async maybe it's not necessary, and is
+                        // fine as it is.
+                        //
                         let args = ves
                             .args
                             .iter()
@@ -369,13 +385,14 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
                 if app.view_state.is_viewer() {
                     tokio::task::spawn(async move {
-                        let payload = ExternIO::encode(()).unwrap();
+                        let opt_sc: Option<Scheme> = None;
+                        let payload = ExternIO::encode(opt_sc).unwrap();
                         let cell_id =
                             CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
                         let zc = ZomeCall {
                             cell_id,
                             zome_name: "interpreter".into(),
-                            fn_name: "get_all_interchange_entries".into(),
+                            fn_name: "get_interchange_entries_which_unify".into(),
                             payload,
                             cap_secret: None,
                             provenance: hc_info.agent_pk.clone(),

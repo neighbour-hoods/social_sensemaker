@@ -66,7 +66,9 @@ struct SchemeEntry {
 }
 
 #[hdk_extern]
-pub fn get_all_interchange_entries(_: ()) -> ExternResult<Vec<InterchangeEntry>> {
+pub fn get_interchange_entries_which_unify(
+    _opt_sc: Option<Scheme>,
+) -> ExternResult<Vec<InterchangeEntry>> {
     let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
     let ie_links: Vec<Link> = scheme_entry_links
         .into_iter()

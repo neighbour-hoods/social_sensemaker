@@ -307,32 +307,34 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                 Ok(sc) => {
                                     // TODO this cloning could maybe be eliminated
                                     let mut hc_info = app.hc_info.clone().unwrap();
-                                    let opt_sc = match &sc {
-                                        Scheme(tvs, Type::TArr(arg, _)) => {
-                                            Some(Scheme(tvs.clone(), *arg.clone()))
-                                        }
-                                        _ => None,
-                                    };
-                                    // TODO deduplicate this
-                                    let payload = ExternIO::encode(opt_sc).unwrap();
-                                    let cell_id = CellId::new(
-                                        hc_info.dna_hash.clone(),
-                                        hc_info.agent_pk.clone(),
-                                    );
-                                    let zc = ZomeCall {
-                                        cell_id,
-                                        zome_name: "interpreter".into(),
-                                        fn_name: "get_interchange_entries_which_unify".into(),
-                                        payload,
-                                        cap_secret: None,
-                                        provenance: hc_info.agent_pk.clone(),
-                                    };
-                                    let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                                    let hash_ie_s: Vec<(EntryHash, InterchangeEntry)> =
-                                        result.decode().unwrap();
-                                    app.event_sender
-                                        .send(Event::SelectorIes(hash_ie_s))
-                                        .expect("send to succeed");
+                                    // for an arrow type, we extract its argument and perform a
+                                    // zome call to look for IEs which unify with the argument
+                                    if let Scheme(tvs, Type::TArr(arg, _)) = &sc {
+                                        let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
+                                        // TODO deduplicate this
+                                        let payload = ExternIO::encode(opt_target_sc).unwrap();
+                                        let cell_id = CellId::new(
+                                            hc_info.dna_hash.clone(),
+                                            hc_info.agent_pk.clone(),
+                                        );
+                                        let zc = ZomeCall {
+                                            cell_id,
+                                            zome_name: "interpreter".into(),
+                                            fn_name: "get_interchange_entries_which_unify".into(),
+                                            payload,
+                                            cap_secret: None,
+                                            provenance: hc_info.agent_pk.clone(),
+                                        };
+                                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
+                                        let hash_ie_s: Vec<(EntryHash, InterchangeEntry)> =
+                                            result.decode().unwrap();
+                                        app.event_sender
+                                            .send(Event::SelectorIes(hash_ie_s))
+                                            .expect("send to succeed");
+                                    }
+                                    // for a non-arrow type, we do not make a zome call and
+                                    // allow the (below) default empty list of IE options to
+                                    // stand. non-arrows can't be applied.
 
                                     ExprState::Valid(ValidExprState {
                                         sc,
@@ -387,8 +389,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
                 if app.view_state.is_viewer() {
                     // TODO deduplicate this
-                    let opt_sc: Option<Scheme> = None;
-                    let payload = ExternIO::encode(opt_sc).unwrap();
+                    let opt_target_sc: Option<Scheme> = None;
+                    let payload = ExternIO::encode(opt_target_sc).unwrap();
                     let cell_id = CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
                     let zc = ZomeCall {
                         cell_id,

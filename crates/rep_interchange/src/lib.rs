@@ -16,7 +16,7 @@ use rep_lang_runtime::{
         value_to_flat_value, EvalState, FlatValue, Normalizable, Sto,
     },
     infer,
-    infer::{infer_expr_with_is, InferState},
+    infer::{infer_expr_with_is, normalize, unifies, InferState},
     types::Scheme,
 };
 
@@ -67,18 +67,57 @@ struct SchemeEntry {
 
 #[hdk_extern]
 pub fn get_interchange_entries_which_unify(
-    _opt_sc: Option<Scheme>,
+    opt_target_sc: Option<Scheme>,
 ) -> ExternResult<Vec<(EntryHash, InterchangeEntry)>> {
-    // TODO implement unification / filtering
-    //
     let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
-    let ie_links: Vec<Link> = scheme_entry_links
+    let scheme_entry_hashes: Vec<EntryHash> = scheme_entry_links
         .into_iter()
-        .map(|lnk| get_links(lnk.target, None))
-        .collect::<ExternResult<Vec<Vec<Link>>>>()?
-        .concat();
-    ie_links
+        .map(|lnk| lnk.target)
+        .collect();
+    let filtered_scheme_entry_hashes: Vec<EntryHash> = match opt_target_sc {
+        // if no target Scheme, we do not filter
+        None => scheme_entry_hashes,
+        // if yes target Scheme, we filter based on unification
+        Some(target_sc) => {
+            let mut is = InferState::new();
+            let Scheme(_, normalized_target_ty) = normalize(&mut is, target_sc);
+            scheme_entry_hashes
+                .into_iter()
+                .filter(|s_eh| {
+                    let mut flag = || -> ExternResult<bool> {
+                        // retrieve `SchemeEntry` element, decode to entry
+                        let element = (match get(s_eh.clone(), GetOptions::content())? {
+                            Some(el) => Ok(el),
+                            None => Err(WasmError::Guest(format!(
+                                "could not dereference hash: {}",
+                                s_eh.clone()
+                            ))),
+                        })?;
+                        let scheme_entry: SchemeEntry =
+                            match element.into_inner().1.to_app_option()? {
+                                Some(se) => Ok(se),
+                                None => {
+                                    Err(WasmError::Guest(format!("non-present arg: {}", *s_eh)))
+                                }
+                            }?;
+                        // check unification of normalized type
+                        let Scheme(_, normalized_candidate_ty) =
+                            normalize(&mut is, scheme_entry.sc);
+                        // we are only interested in whether a type error occured
+                        Ok(unifies(normalized_target_ty.clone(), normalized_candidate_ty).is_ok())
+                    };
+                    // any `ExternResult` `Err`s are treated as disqualifiers for filtration
+                    // purposes.
+                    flag().unwrap_or(false)
+                })
+                .collect()
+        }
+    };
+    filtered_scheme_entry_hashes
         .into_iter()
+        .map(|s_eh| get_links(s_eh, None))
+        .flatten()
+        .flatten()
         .map(|lnk| get_interchange_entry(lnk.target.clone()).map(|ie| (lnk.target, ie)))
         .collect()
 }

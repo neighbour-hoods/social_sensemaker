@@ -12,9 +12,9 @@ hdk = "0.0.116"
 serde = "1"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23" }
-rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "b4468e1e8e624386c036a6aca67e7af57617bc23", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "8d417c95d6b348d336b68ff1d541c6bb49e9ee84" }
+rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "8d417c95d6b348d336b68ff1d541c6bb49e9ee84", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "8d417c95d6b348d336b68ff1d541c6bb49e9ee84", features = ["hc"] }
 
 [lib]
 path = "src/lib.rs"

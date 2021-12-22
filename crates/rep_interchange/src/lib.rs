@@ -295,6 +295,9 @@ pub fn mk_interchange_entry(
     let mut is = InferState::new();
     let mut es = EvalState::new();
     let mut type_env = Env::new();
+    // we normalize up here, before conjuring fresh names for the `args`, in order to avoid
+    // potential contamination. I'm not sure it is necessary, but doing it to be safe.
+    let normalized_expr = expr.normalize(&mut HashMap::new(), &mut es);
     let arg_named_scheme_values: Vec<(Name, Scheme, FlatValue<Marker>)> = int_entrs
         .iter()
         .map(|ie| {
@@ -312,13 +315,10 @@ pub fn mk_interchange_entry(
     );
 
     let applicator = |bd, nm: Name| app!(bd, Expr::Var(nm));
-    let full_application: Expr = {
-        let app_expr = arg_named_scheme_values
-            .iter()
-            .map(|t| t.0.clone())
-            .fold(expr.clone(), applicator);
-        app_expr.normalize(&mut HashMap::new(), &mut es)
-    };
+    let full_application: Expr = arg_named_scheme_values
+        .iter()
+        .map(|t| t.0.clone())
+        .fold(normalized_expr, applicator);
 
     // TODO substantiate whether this Scheme will have high-indexed `Tv`s, which might be
     // unintuitive / cause issues with programmatic `Scheme` matching.

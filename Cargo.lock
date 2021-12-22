@@ -1235,6 +1235,7 @@ dependencies = [
  "holochain_conductor_client",
  "holochain_types",
  "holochain_zome_types 0.0.18",
+ "pretty",
  "rand 0.8.4",
  "rep_lang_concrete_syntax",
  "rep_lang_core",

@@ -7,8 +7,9 @@ use holochain_types::{
     prelude::{CellId, InstallAppBundlePayload},
 };
 use holochain_zome_types::zome_io::ExternIO;
+use pretty::RcDoc;
 use std::{
-    error, io,
+    cmp, error, io,
     path::{Path, PathBuf},
     sync::mpsc::Sender,
 };
@@ -23,7 +24,7 @@ use tui::{
 };
 
 use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
-use rep_lang_concrete_syntax::parse::expr;
+use rep_lang_concrete_syntax::{parse::expr, pretty::ppr_expr, util::pretty::to_pretty};
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{
     env::Env,
@@ -54,6 +55,21 @@ pub struct ValidExprState {
     /// toplevel `TArr`. and the closure argument's `Scheme` unifies with all
     /// of these candidates individually).
     next_application_candidates: Vec<(EntryHash, InterchangeEntry)>,
+    /// index (if any) of our current choice from `next_application_candidates`.
+    /// invariant for value `Some(i)`, `0 <= i < next_application_candidates.len()`
+    candidate_choice_index: Option<usize>,
+}
+
+fn ppr_ves(ves: &ValidExprState) -> RcDoc<()> {
+    let docs = vec![
+        RcDoc::text("scheme:\n"),
+        ves.sc.ppr().nest(1).group(),
+        RcDoc::text("\nexpr:\n"),
+        ppr_expr(&ves.expr).nest(1).group(),
+        RcDoc::text("\nargs:\n"),
+        RcDoc::text(format!("{:?}", ves.args)).nest(1).group(),
+    ];
+    RcDoc::concat(docs)
 }
 
 impl ExprState {
@@ -177,8 +193,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     .constraints(
                         [
                             Constraint::Length(1),
-                            Constraint::Length(25),
-                            Constraint::Min(1),
+                            Constraint::Min(15),
+                            Constraint::Min(15),
+                            Constraint::Min(25),
                             Constraint::Length(6),
                         ]
                         .as_ref(),
@@ -216,15 +233,43 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     .block(Block::default().borders(Borders::ALL).title("expr input"));
                 f.render_widget(expr_input, chunks[1]);
 
-                let msgs = Paragraph::new(format!("{:?}", app.expr_state))
-                    .wrap(Wrap { trim: false })
-                    .style(Style::default())
-                    .block(
-                        Block::default()
-                            .borders(Borders::ALL)
-                            .title("feedback on expr"),
-                    );
-                f.render_widget(msgs, chunks[2]);
+                {
+                    let dims = chunks[2];
+                    let expr_state_text = match &app.expr_state {
+                        ExprState::Invalid(msg) => format!("invalid state:\n\n{}", msg),
+                        ExprState::Valid(ves) => to_pretty(ppr_ves(ves), dims.width.into()),
+                    };
+                    let expr_state_msg = Paragraph::new(expr_state_text)
+                        .wrap(Wrap { trim: false })
+                        .style(Style::default())
+                        .block(Block::default().borders(Borders::ALL).title("expr_state"));
+                    f.render_widget(expr_state_msg, dims);
+                }
+
+                {
+                    let dims = chunks[3];
+                    let mut text: Text = Text::from("");
+                    if let ExprState::Valid(ves) = &app.expr_state {
+                        let candidate_vec: Vec<Spans> = ves
+                            .next_application_candidates
+                            .iter()
+                            .enumerate()
+                            .map(|(idx, candidate)| {
+                                let mut style = Style::default();
+                                if Some(idx) == ves.candidate_choice_index {
+                                    style = style.add_modifier(Modifier::BOLD);
+                                }
+                                Spans::from(Span::styled(format!("{:?}", candidate), style))
+                            })
+                            .collect();
+                        text.extend(candidate_vec);
+                    };
+                    let msg = Paragraph::new(text)
+                        .wrap(Wrap { trim: false })
+                        .style(Style::default())
+                        .block(Block::default().borders(Borders::ALL).title("IE selector"));
+                    f.render_widget(msg, dims);
+                }
 
                 let hc_responses = app
                     .hc_responses
@@ -237,7 +282,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         .borders(Borders::ALL)
                         .title("holochain responses (newest first)"),
                 );
-                f.render_widget(app_info, chunks[3]);
+                f.render_widget(app_info, chunks[4]);
             }
 
             ViewState::Viewer(ie_s) => {
@@ -341,6 +386,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                         expr,
                                         args: vec![],
                                         next_application_candidates: vec![],
+                                        candidate_choice_index: None,
                                     })
                                 }
                             }
@@ -382,6 +428,22 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     }
                 }
             }
+            Event::Input(Key::Down) if app.view_state.is_creator() => {
+                if let ExprState::Valid(ves) = &mut app.expr_state {
+                    ves.candidate_choice_index = ves
+                        .candidate_choice_index
+                        // this allows us to do a max comparison with "1 less than the len"
+                        // without fear of underflow on an usize.
+                        .map(|i| cmp::min(i + 2, ves.next_application_candidates.len()) - 1);
+                }
+            }
+            Event::Input(Key::Up) if app.view_state.is_creator() => {
+                if let ExprState::Valid(ves) = &mut app.expr_state {
+                    ves.candidate_choice_index = ves
+                        .candidate_choice_index
+                        .map(|i| i.saturating_sub(1));
+                }
+            }
             Event::Input(Key::Char('\t')) => {
                 app.view_state = app.view_state.toggle();
                 // TODO this cloning could maybe be eliminated
@@ -415,6 +477,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             Event::SelectorIes(hash_ie_s) => {
                 app.log_hc_response("got selector IEs".into());
                 if let ExprState::Valid(ves) = &mut app.expr_state {
+                    if !hash_ie_s.is_empty() {
+                        ves.candidate_choice_index = Some(0);
+                    }
                     ves.next_application_candidates = hash_ie_s;
                 }
             }

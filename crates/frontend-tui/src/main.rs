@@ -76,6 +76,13 @@ impl ExprState {
     fn is_valid(&self) -> bool {
         matches!(self, ExprState::Valid(_))
     }
+
+    fn has_valid_candidate_idx(&self) -> bool {
+        match &self {
+            ExprState::Valid(ves) => ves.candidate_choice_index.is_some(),
+            _ => false,
+        }
+    }
 }
 
 enum ViewState {
@@ -192,7 +199,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     .margin(1)
                     .constraints(
                         [
-                            Constraint::Length(1),
+                            Constraint::Length(2),
                             Constraint::Min(15),
                             Constraint::Min(15),
                             Constraint::Min(25),
@@ -216,16 +223,24 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     Span::styled("c", Style::default().add_modifier(Modifier::BOLD)),
                     Span::raw(" to create entry"),
                 ];
+                let mut selector_commands = vec![
+                    Span::raw(", "),
+                    Span::styled("s", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" select candidate arg"),
+                ];
                 let msg = {
                     if app.expr_state.is_valid() {
                         default_commands.append(&mut valid_expr_commands);
+                    }
+                    if app.expr_state.has_valid_candidate_idx() {
+                        default_commands.append(&mut selector_commands);
                     }
                     default_commands.push(Span::raw("."));
                     default_commands
                 };
 
-                let text = Text::from(Spans::from(msg));
-                let help_message = Paragraph::new(text);
+                let help_message =
+                    Paragraph::new(Text::from(Spans::from(msg))).wrap(Wrap { trim: false });
                 f.render_widget(help_message, chunks[0]);
 
                 let expr_input = Paragraph::new(app.expr_input.as_ref())
@@ -439,9 +454,22 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             }
             Event::Input(Key::Up) if app.view_state.is_creator() => {
                 if let ExprState::Valid(ves) = &mut app.expr_state {
-                    ves.candidate_choice_index = ves
-                        .candidate_choice_index
-                        .map(|i| i.saturating_sub(1));
+                    ves.candidate_choice_index =
+                        ves.candidate_choice_index.map(|i| i.saturating_sub(1));
+                }
+            }
+            Event::Input(Key::Char('s')) if app.expr_state.has_valid_candidate_idx() => {
+                match &mut app.expr_state {
+                    ExprState::Invalid(_) => {} // should be unreachable due to match guard
+                    ExprState::Valid(ves) => {
+                        // should be safe due to match guard
+                        let idx = ves.candidate_choice_index.unwrap();
+                        // TODO is it possible to avoid cloning and pull the memory out of the Vec?
+                        let selection = ves.next_application_candidates[idx].clone();
+                        ves.next_application_candidates = vec![];
+                        ves.args.push(selection);
+                        ves.candidate_choice_index = None;
+                    }
                 }
             }
             Event::Input(Key::Char('\t')) => {

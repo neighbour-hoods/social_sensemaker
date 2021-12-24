@@ -45,13 +45,13 @@ pub enum ExprState {
 
 #[derive(Debug, Clone)]
 pub struct ValidExprState {
-    sc: Scheme,
+    expr_sc: Scheme,
     expr: Expr,
     /// any IEs we have already selected for `expr` to be applied to. Vec
     /// ordering is the order in which they will be applied.
     args: Vec<(HeaderHash, InterchangeEntry)>,
     /// IEs which have not yet been selected for application, but are
-    /// candidates (meaning that `expr` must be a closure & `sc` must have a
+    /// candidates (meaning that `expr` must be a closure & `expr_sc` must have a
     /// toplevel `TArr`. and the closure argument's `Scheme` unifies with all
     /// of these candidates individually).
     next_application_candidates: Vec<(HeaderHash, InterchangeEntry)>,
@@ -63,7 +63,7 @@ pub struct ValidExprState {
 fn ppr_ves(ves: &ValidExprState) -> RcDoc<()> {
     let docs = vec![
         RcDoc::text("scheme:\n"),
-        ves.sc.ppr().nest(1).group(),
+        ves.expr_sc.ppr().nest(1).group(),
         RcDoc::text("\nexpr:\n"),
         ppr_expr(&ves.expr).nest(1).group(),
         RcDoc::text("\nargs:\n"),
@@ -188,7 +188,7 @@ impl App {
     async fn get_selection_candidates(&mut self) {
         // zome call to look for IEs which unify with the argument
         if let ExprState::Valid(ves) = &self.expr_state {
-            if let Scheme(tvs, Type::TArr(arg, _)) = &ves.sc {
+            if let Scheme(tvs, Type::TArr(arg, _)) = &ves.expr_sc {
                 let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
                 let hash_ie_s = self.hc_info.as_mut().unwrap()
                     .get_interchange_entries_which_unify(opt_target_sc)
@@ -422,9 +422,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         } else {
                             match infer_expr(&Env::new(), &expr) {
                                 Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
-                                Ok(sc) => {
+                                Ok(expr_sc) => {
                                     ExprState::Valid(ValidExprState {
-                                        sc,
+                                        expr_sc,
                                         expr,
                                         args: vec![],
                                         next_application_candidates: vec![],

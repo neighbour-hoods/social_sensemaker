@@ -133,6 +133,21 @@ impl HcInfo {
         let result = self.app_ws.zome_call(zc).await.unwrap();
         result.decode().unwrap()
     }
+
+    async fn create_interchange_entry(&mut self, input: CreateInterchangeEntryInput) -> HeaderHash {
+        let payload = ExternIO::encode(input).unwrap();
+        let cell_id = CellId::new(self.dna_hash.clone(), self.agent_pk.clone());
+        let zc = ZomeCall {
+            cell_id,
+            zome_name: "interpreter".into(),
+            fn_name: "create_interchange_entry".into(),
+            payload,
+            cap_secret: None,
+            provenance: self.agent_pk.clone(),
+        };
+        let result = self.app_ws.zome_call(zc).await.unwrap();
+        result.decode().unwrap()
+    }
 }
 
 struct App {
@@ -400,7 +415,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                     if let Scheme(tvs, Type::TArr(arg, _)) = &sc {
                                         let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
                                         let hash_ie_s = hc_info
-                                            .get_interchange_entries_which_unify(opt_target_sc).await;
+                                            .get_interchange_entries_which_unify(opt_target_sc)
+                                            .await;
                                         app.event_sender
                                             .send(Event::SelectorIes(hash_ie_s))
                                             .expect("send to succeed");
@@ -439,19 +455,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             expr: ves.expr.clone(),
                             args,
                         };
-                        let payload = ExternIO::encode(input).unwrap();
-                        let cell_id =
-                            CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
-                        let zc = ZomeCall {
-                            cell_id,
-                            zome_name: "interpreter".into(),
-                            fn_name: "create_interchange_entry".into(),
-                            payload,
-                            cap_secret: None,
-                            provenance: hc_info.agent_pk.clone(),
-                        };
-                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                        let ie_hash: HeaderHash = result.decode().unwrap();
+                        let ie_hash = hc_info.create_interchange_entry(input).await;
                         app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
                     }
                 }
@@ -492,8 +496,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
                 if app.view_state.is_viewer() {
                     let opt_target_sc: Option<Scheme> = None;
-                    let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> =
-                        hc_info.get_interchange_entries_which_unify(opt_target_sc).await;
+                    let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> = hc_info
+                        .get_interchange_entries_which_unify(opt_target_sc)
+                        .await;
                     let ie_s = hash_ie_s.into_iter().map(|(_eh, ie)| ie).collect();
                     app.event_sender
                         .send(Event::ViewerIes(ie_s))

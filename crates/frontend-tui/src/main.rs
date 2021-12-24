@@ -114,6 +114,13 @@ impl ExprState {
             _ => false,
         }
     }
+
+    fn has_args(&self) -> bool {
+        match &self {
+            ExprState::Valid(ves) => !ves.args.is_empty(),
+            _ => false,
+        }
+    }
 }
 
 enum ViewState {
@@ -315,17 +322,25 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     Span::styled("c", Style::default().add_modifier(Modifier::BOLD)),
                     Span::raw(" to create entry"),
                 ];
-                let mut selector_commands = vec![
+                let mut select_commands = vec![
                     Span::raw(", "),
                     Span::styled("s", Style::default().add_modifier(Modifier::BOLD)),
-                    Span::raw(" select candidate arg"),
+                    Span::raw(" to select candidate arg"),
+                ];
+                let mut deselect_commands = vec![
+                    Span::raw(", "),
+                    Span::styled("d", Style::default().add_modifier(Modifier::BOLD)),
+                    Span::raw(" to deselect last arg"),
                 ];
                 let msg = {
                     if app.expr_state.is_valid() {
                         default_commands.append(&mut valid_expr_commands);
                     }
                     if app.expr_state.has_valid_candidate_idx() {
-                        default_commands.append(&mut selector_commands);
+                        default_commands.append(&mut select_commands);
+                    }
+                    if app.expr_state.has_args() {
+                        default_commands.append(&mut deselect_commands);
                     }
                     default_commands.push(Span::raw("."));
                     default_commands
@@ -521,6 +536,17 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         let selection = ves.next_application_candidates[idx].clone();
                         ves.next_application_candidates = vec![];
                         ves.args.push(selection);
+                        ves.candidate_choice_index = None;
+                    }
+                }
+                app.get_selection_candidates().await;
+            }
+            Event::Input(Key::Char('d')) if app.expr_state.has_args() => {
+                match &mut app.expr_state {
+                    ExprState::Invalid(_) => {} // should be unreachable due to match guard
+                    ExprState::Valid(ves) => {
+                        ves.next_application_candidates = vec![];
+                        ves.args.pop();
                         ves.candidate_choice_index = None;
                     }
                 }

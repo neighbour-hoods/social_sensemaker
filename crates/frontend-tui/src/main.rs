@@ -184,6 +184,21 @@ impl App {
     fn log_hc_response(&mut self, s: String) {
         self.hc_responses.insert(0, s);
     }
+
+    async fn get_selection_candidates(&mut self) {
+        // zome call to look for IEs which unify with the argument
+        if let ExprState::Valid(ves) = &self.expr_state {
+            if let Scheme(tvs, Type::TArr(arg, _)) = &ves.sc {
+                let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
+                let hash_ie_s = self.hc_info.as_mut().unwrap()
+                    .get_interchange_entries_which_unify(opt_target_sc)
+                    .await;
+                self.event_sender
+                    .send(Event::SelectorIes(hash_ie_s))
+                    .expect("send to succeed");
+            }
+        }
+    }
 }
 
 #[tokio::main]
@@ -396,7 +411,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     app.event_sender = event_sender;
                 }
                 terminal.clear().expect("clear to succeed");
-                let st = match expr().easy_parse(position::Stream::new(&app.expr_input[..])) {
+                app.expr_state = match expr().easy_parse(position::Stream::new(&app.expr_input[..])) {
                     Err(err) => ExprState::Invalid(format!("parse error:\n\n{}\n", err)),
                     Ok((expr, extra_input)) => {
                         if extra_input.is_partial() {
@@ -408,23 +423,6 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             match infer_expr(&Env::new(), &expr) {
                                 Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
                                 Ok(sc) => {
-                                    // TODO this cloning could maybe be eliminated
-                                    let mut hc_info = app.hc_info.clone().unwrap();
-                                    // for an arrow type, we extract its argument and perform a
-                                    // zome call to look for IEs which unify with the argument
-                                    if let Scheme(tvs, Type::TArr(arg, _)) = &sc {
-                                        let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
-                                        let hash_ie_s = hc_info
-                                            .get_interchange_entries_which_unify(opt_target_sc)
-                                            .await;
-                                        app.event_sender
-                                            .send(Event::SelectorIes(hash_ie_s))
-                                            .expect("send to succeed");
-                                    }
-                                    // for a non-arrow type, we do not make a zome call and
-                                    // allow the (below) default empty list of IE options to
-                                    // stand. non-arrows can't be applied.
-
                                     ExprState::Valid(ValidExprState {
                                         sc,
                                         expr,
@@ -437,7 +435,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         }
                     }
                 };
-                app.expr_state = st;
+                app.get_selection_candidates().await;
             }
             Event::Input(Key::Char('c')) if app.view_state.is_creator() => {
                 match (&app.expr_state, &mut app.hc_info) {

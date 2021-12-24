@@ -360,10 +360,10 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     let expr_state_text = match &app.expr_state {
                         ExprState::Invalid(msg) => format!("invalid state:\n\n{}", msg),
                         ExprState::Valid(ves) => {
-                            let ppr_string = to_pretty(ppr_ves(ves), dims.width.into());
                             let app_sc = ves.computed_application_sc();
+                            let ppr_string = to_pretty(ppr_ves(ves), dims.width.into());
                             // TODO figure out how to prettyprint this properly
-                            format!("{}\n\ncomputed_application_sc:\n{:?}", ppr_string, app_sc)
+                            format!("computed_application_sc:\n{:?}\n\n{}", app_sc, ppr_string)
                         }
                     };
                     let expr_state_msg = Paragraph::new(expr_state_text)

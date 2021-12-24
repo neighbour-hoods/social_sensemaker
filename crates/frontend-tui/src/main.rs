@@ -28,7 +28,7 @@ use rep_lang_concrete_syntax::{parse::expr, pretty::ppr_expr, util::pretty::to_p
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{
     env::Env,
-    infer::infer_expr,
+    infer::{close_over, infer_expr, normalize, unifies, InferState},
     types::{Scheme, Type},
 };
 
@@ -58,6 +58,37 @@ pub struct ValidExprState {
     /// index (if any) of our current choice from `next_application_candidates`.
     /// invariant for value `Some(i)`, `0 <= i < next_application_candidates.len()`
     candidate_choice_index: Option<usize>,
+}
+
+impl ValidExprState {
+    /// compute the `Scheme` which results from applying `expr_sc` to the
+    /// `Scheme`s of all `args`.
+    fn computed_application_sc(&self) -> Result<Scheme, String> {
+        let mut is = InferState::new();
+
+        let Scheme(_, normalized_expr_ty) = normalize(&mut is, self.expr_sc.clone());
+
+        let applicator =
+            |acc_ty_res: Result<Type, String>, arg_sc: Scheme| -> Result<Type, String> {
+                match acc_ty_res? {
+                    Type::TArr(fn_arg_ty, fn_ret_ty) => {
+                        // check unification of normalized type
+                        let Scheme(_, normalized_arg_ty) = normalize(&mut is, arg_sc);
+                        match unifies(normalized_arg_ty, *fn_arg_ty) {
+                            Err(msg) => Err(format!("unification error: {:?}", msg)),
+                            Ok(_) => Ok(*fn_ret_ty),
+                        }
+                    }
+                    _ => Err("arity mismatch".to_string()),
+                }
+            };
+        let full_application: Type = self
+            .args
+            .iter()
+            .map(|(_, ie)| ie.output_scheme.clone())
+            .fold(Ok(normalized_expr_ty), applicator)?;
+        Ok(close_over(full_application))
+    }
 }
 
 fn ppr_ves(ves: &ValidExprState) -> RcDoc<()> {
@@ -188,9 +219,12 @@ impl App {
     async fn get_selection_candidates(&mut self) {
         // zome call to look for IEs which unify with the argument
         if let ExprState::Valid(ves) = &self.expr_state {
-            if let Scheme(tvs, Type::TArr(arg, _)) = &ves.expr_sc {
+            if let Ok(Scheme(tvs, Type::TArr(arg, _))) = ves.computed_application_sc() {
                 let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
-                let hash_ie_s = self.hc_info.as_mut().unwrap()
+                let hash_ie_s = self
+                    .hc_info
+                    .as_mut()
+                    .unwrap()
                     .get_interchange_entries_which_unify(opt_target_sc)
                     .await;
                 self.event_sender
@@ -310,7 +344,12 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     let dims = chunks[2];
                     let expr_state_text = match &app.expr_state {
                         ExprState::Invalid(msg) => format!("invalid state:\n\n{}", msg),
-                        ExprState::Valid(ves) => to_pretty(ppr_ves(ves), dims.width.into()),
+                        ExprState::Valid(ves) => {
+                            let ppr_string = to_pretty(ppr_ves(ves), dims.width.into());
+                            let app_sc = ves.computed_application_sc();
+                            // TODO figure out how to prettyprint this properly
+                            format!("{}\n\ncomputed_application_sc:\n{:?}", ppr_string, app_sc)
+                        }
                     };
                     let expr_state_msg = Paragraph::new(expr_state_text)
                         .wrap(Wrap { trim: false })
@@ -411,7 +450,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     app.event_sender = event_sender;
                 }
                 terminal.clear().expect("clear to succeed");
-                app.expr_state = match expr().easy_parse(position::Stream::new(&app.expr_input[..])) {
+                app.expr_state = match expr().easy_parse(position::Stream::new(&app.expr_input[..]))
+                {
                     Err(err) => ExprState::Invalid(format!("parse error:\n\n{}\n", err)),
                     Ok((expr, extra_input)) => {
                         if extra_input.is_partial() {
@@ -422,15 +462,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         } else {
                             match infer_expr(&Env::new(), &expr) {
                                 Err(err) => ExprState::Invalid(format!("type error: {:?}", err)),
-                                Ok(expr_sc) => {
-                                    ExprState::Valid(ValidExprState {
-                                        expr_sc,
-                                        expr,
-                                        args: vec![],
-                                        next_application_candidates: vec![],
-                                        candidate_choice_index: None,
-                                    })
-                                }
+                                Ok(expr_sc) => ExprState::Valid(ValidExprState {
+                                    expr_sc,
+                                    expr,
+                                    args: vec![],
+                                    next_application_candidates: vec![],
+                                    candidate_choice_index: None,
+                                }),
                             }
                         }
                     }
@@ -486,6 +524,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         ves.candidate_choice_index = None;
                     }
                 }
+                app.get_selection_candidates().await;
             }
             Event::Input(Key::Char('\t')) => {
                 app.view_state = app.view_state.toggle();

@@ -3898,7 +3898,7 @@ dependencies = [
 [[package]]
 name = "rep_lang_concrete_syntax"
 version = "0.1.0"
-source = "git+https://github.com/sacredcapital/rep_lang.git?rev=8d417c95d6b348d336b68ff1d541c6bb49e9ee84#8d417c95d6b348d336b68ff1d541c6bb49e9ee84"
+source = "git+https://github.com/sacredcapital/rep_lang.git?rev=edac4320f6dc441ad2a873a32d986920fbc300b4#edac4320f6dc441ad2a873a32d986920fbc300b4"
 dependencies = [
  "combine",
  "pretty",
@@ -3910,7 +3910,7 @@ dependencies = [
 [[package]]
 name = "rep_lang_core"
 version = "0.1.0"
-source = "git+https://github.com/sacredcapital/rep_lang.git?rev=8d417c95d6b348d336b68ff1d541c6bb49e9ee84#8d417c95d6b348d336b68ff1d541c6bb49e9ee84"
+source = "git+https://github.com/sacredcapital/rep_lang.git?rev=edac4320f6dc441ad2a873a32d986920fbc300b4#edac4320f6dc441ad2a873a32d986920fbc300b4"
 dependencies = [
  "holochain_serialized_bytes_derive",
  "quickcheck",
@@ -3921,7 +3921,7 @@ dependencies = [
 [[package]]
 name = "rep_lang_runtime"
 version = "0.1.0"
-source = "git+https://github.com/sacredcapital/rep_lang.git?rev=8d417c95d6b348d336b68ff1d541c6bb49e9ee84#8d417c95d6b348d336b68ff1d541c6bb49e9ee84"
+source = "git+https://github.com/sacredcapital/rep_lang.git?rev=edac4320f6dc441ad2a873a32d986920fbc300b4#edac4320f6dc441ad2a873a32d986920fbc300b4"
 dependencies = [
  "byteorder",
  "combine",

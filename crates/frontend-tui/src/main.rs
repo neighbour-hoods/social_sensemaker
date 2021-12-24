@@ -3,7 +3,7 @@ use holo_hash::HeaderHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
-    dna::DnaBundle,
+    dna::{AgentPubKey, DnaBundle, DnaHash},
     prelude::{CellId, InstallAppBundlePayload},
 };
 use holochain_zome_types::zome_io::ExternIO;
@@ -33,7 +33,7 @@ use rep_lang_runtime::{
 };
 
 mod event;
-use event::{Event, Events, HcInfo};
+use event::{Event, Events};
 
 const APP_ID: &str = "rep_interchange";
 
@@ -107,6 +107,14 @@ impl ViewState {
     }
 }
 
+#[derive(Clone)]
+pub struct HcInfo {
+    pub admin_ws: AdminWebsocket,
+    pub app_ws: AppWebsocket,
+    pub agent_pk: AgentPubKey,
+    pub dna_hash: DnaHash,
+}
+
 struct App {
     /// the text which may parse to an `Expr`.
     expr_input: String,
@@ -117,8 +125,8 @@ struct App {
     /// out of scope and be collected).
     /// when the TUI has control of the screen & input, this should always be
     /// `Some`.
-    opt_events: Option<Events>,
-    event_sender: Sender<Event>,
+    opt_events: Option<Events<HcInfo>>,
+    event_sender: Sender<Event<HcInfo>>,
     hc_info: Option<HcInfo>,
     hc_responses: Vec<String>,
     view_state: ViewState,

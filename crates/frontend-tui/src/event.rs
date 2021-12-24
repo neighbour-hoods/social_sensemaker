@@ -1,6 +1,4 @@
 use holo_hash::HeaderHash;
-use holochain_conductor_client::{AdminWebsocket, AppWebsocket};
-use holochain_types::dna::{AgentPubKey, DnaHash};
 use std::io;
 use std::sync::mpsc::{self, Receiver, Sender};
 use std::thread;
@@ -9,31 +7,23 @@ use termion::input::TermRead;
 
 use common::InterchangeEntry;
 
-pub enum Event {
+pub enum Event<HI> {
     Input(Key),
-    HcInfo(HcInfo),
+    HcInfo(HI),
     ViewerIes(Vec<InterchangeEntry>),
     SelectorIes(Vec<(HeaderHash, InterchangeEntry)>),
 }
 
-#[derive(Clone)]
-pub struct HcInfo {
-    pub admin_ws: AdminWebsocket,
-    pub app_ws: AppWebsocket,
-    pub agent_pk: AgentPubKey,
-    pub dna_hash: DnaHash,
-}
-
 /// A small event handler that wrap termion input and tick events. Each event
 /// type is handled in its own thread and returned to a common `Receiver`
-pub struct Events {
-    rx: Receiver<Event>,
+pub struct Events<HI> {
+    rx: Receiver<Event<HI>>,
     #[allow(dead_code)]
     input_handle: thread::JoinHandle<()>,
 }
 
-impl Events {
-    pub fn mk() -> (Events, Sender<Event>) {
+impl<HI: 'static + std::marker::Send> Events<HI> {
+    pub fn mk() -> (Events<HI>, Sender<Event<HI>>) {
         let (tx, rx) = mpsc::channel();
         let input_handle = {
             let tx = tx.clone();
@@ -50,7 +40,7 @@ impl Events {
         (Events { rx, input_handle }, tx)
     }
 
-    pub fn next(&self) -> Result<Event, mpsc::RecvError> {
+    pub fn next(&self) -> Result<Event<HI>, mpsc::RecvError> {
         self.rx.recv()
     }
 }

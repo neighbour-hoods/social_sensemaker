@@ -1,5 +1,5 @@
 use combine::{stream::position, EasyParser, StreamOnce};
-use holo_hash::EntryHash;
+use holo_hash::HeaderHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
@@ -49,12 +49,12 @@ pub struct ValidExprState {
     expr: Expr,
     /// any IEs we have already selected for `expr` to be applied to. Vec
     /// ordering is the order in which they will be applied.
-    args: Vec<(EntryHash, InterchangeEntry)>,
+    args: Vec<(HeaderHash, InterchangeEntry)>,
     /// IEs which have not yet been selected for application, but are
     /// candidates (meaning that `expr` must be a closure & `sc` must have a
     /// toplevel `TArr`. and the closure argument's `Scheme` unifies with all
     /// of these candidates individually).
-    next_application_candidates: Vec<(EntryHash, InterchangeEntry)>,
+    next_application_candidates: Vec<(HeaderHash, InterchangeEntry)>,
     /// index (if any) of our current choice from `next_application_candidates`.
     /// invariant for value `Some(i)`, `0 <= i < next_application_candidates.len()`
     candidate_choice_index: Option<usize>,
@@ -386,7 +386,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                             provenance: hc_info.agent_pk.clone(),
                                         };
                                         let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                                        let hash_ie_s: Vec<(EntryHash, InterchangeEntry)> =
+                                        let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> =
                                             result.decode().unwrap();
                                         app.event_sender
                                             .send(Event::SelectorIes(hash_ie_s))
@@ -438,7 +438,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             provenance: hc_info.agent_pk.clone(),
                         };
                         let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                        let ie_hash: EntryHash = result.decode().unwrap();
+                        let ie_hash: HeaderHash = result.decode().unwrap();
                         app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
                     }
                 }
@@ -491,7 +491,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         provenance: hc_info.agent_pk.clone(),
                     };
                     let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                    let hash_ie_s: Vec<(EntryHash, InterchangeEntry)> = result.decode().unwrap();
+                    let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> = result.decode().unwrap();
                     let ie_s = hash_ie_s.into_iter().map(|(_eh, ie)| ie).collect();
                     app.event_sender
                         .send(Event::ViewerIes(ie_s))

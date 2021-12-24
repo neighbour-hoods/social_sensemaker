@@ -1,4 +1,4 @@
-use holo_hash::EntryHash;
+use holo_hash::HeaderHash;
 use holochain_conductor_client::{AdminWebsocket, AppWebsocket};
 use holochain_types::dna::{AgentPubKey, DnaHash};
 use std::io;
@@ -13,7 +13,7 @@ pub enum Event {
     Input(Key),
     HcInfo(HcInfo),
     ViewerIes(Vec<InterchangeEntry>),
-    SelectorIes(Vec<(EntryHash, InterchangeEntry)>),
+    SelectorIes(Vec<(HeaderHash, InterchangeEntry)>),
 }
 
 #[derive(Clone)]

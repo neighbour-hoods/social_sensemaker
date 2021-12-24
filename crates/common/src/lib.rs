@@ -9,9 +9,9 @@ pub type Marker = ();
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InterchangeOperand {
     // these dereference to `InterchangeEntry`
-    InterchangeOperand(EntryHash),
+    InterchangeOperand(HeaderHash),
     // these dereference to `FlatThunk`??
-    OtherOperand(EntryHash),
+    OtherOperand(HeaderHash),
 }
 
 #[hdk_entry(id = "interchange_entry")]

@@ -1,7 +1,7 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use std::collections::HashMap;
 
-use hdk::prelude::*;
+use hdk::{entry::must_get_valid_element, prelude::*};
 
 use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand, Marker};
 use rep_lang_concrete_syntax::parse::expr;
@@ -68,7 +68,7 @@ struct SchemeEntry {
 #[hdk_extern]
 pub fn get_interchange_entries_which_unify(
     opt_target_sc: Option<Scheme>,
-) -> ExternResult<Vec<(EntryHash, InterchangeEntry)>> {
+) -> ExternResult<Vec<(HeaderHash, InterchangeEntry)>> {
     let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
     let scheme_entry_hashes: Vec<EntryHash> = scheme_entry_links
         .into_iter()
@@ -118,7 +118,7 @@ pub fn get_interchange_entries_which_unify(
         .map(|s_eh| get_links(s_eh, None))
         .flatten()
         .flatten()
-        .map(|lnk| get_interchange_entry(lnk.target.clone()).map(|ie| (lnk.target, ie)))
+        .map(|lnk| get_interchange_entry(lnk.target))
         .collect()
 }
 
@@ -199,7 +199,7 @@ pub fn create_interchange_entry_parse(
 }
 
 #[hdk_extern]
-pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<InterchangeEntry> {
+pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, InterchangeEntry)> {
     let element = (match get(arg_hash.clone(), GetOptions::content())? {
         Some(el) => Ok(el),
         None => Err(WasmError::Guest(format!(
@@ -207,14 +207,15 @@ pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<InterchangeEnt
             arg_hash
         ))),
     })?;
+    let hh = element.header_address().clone();
     match element.into_inner().1.to_app_option()? {
-        Some(ie) => Ok(ie),
+        Some(ie) => Ok((hh, ie)),
         None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
     }
 }
 
 #[hdk_extern]
-pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<EntryHash> {
+pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
     let ie = mk_interchange_entry(input.expr, input.args)?;
 
     // create SchemeRoot (if needed)
@@ -246,23 +247,22 @@ pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternRes
     let ie_hash = hash_entry(&ie)?;
     match get(ie_hash.clone(), GetOptions::content())? {
         None => {
-            let _hh = create_entry(&ie)?;
-            create_link(scheme_entry_hash, ie_hash.clone(), LinkTag::new(OWNER_TAG))?;
+            let hh = create_entry(&ie)?;
+            create_link(scheme_entry_hash, ie_hash, LinkTag::new(OWNER_TAG))?;
+            Ok(hh)
         }
-        Some(_) => {}
-    };
-
-    Ok(ie_hash)
+        Some(element) => Ok(element.header_address().clone()),
+    }
 }
 
 pub fn mk_interchange_entry(
     expr: Expr,
     args: Vec<InterchangeOperand>,
 ) -> ExternResult<InterchangeEntry> {
-    let args: Vec<EntryHash> = args
+    let arg_hh_s: Vec<HeaderHash> = args
         .iter()
         .map(|io| match io {
-            InterchangeOperand::InterchangeOperand(eh) => eh.clone(),
+            InterchangeOperand::InterchangeOperand(hh) => hh.clone(),
             InterchangeOperand::OtherOperand(_) => todo!("OtherOperand"),
         })
         .collect();
@@ -273,18 +273,12 @@ pub fn mk_interchange_entry(
             WasmError::Guest(format!("type error in `expr`: {:?}", type_error))
         })?;
 
-    // dereference `args`
-    let int_entrs: Vec<InterchangeEntry> = args
+    // dereference `arg_hh_s`
+    let int_entrs: Vec<InterchangeEntry> = arg_hh_s
         .iter()
         .cloned()
         .map(|arg_hash| {
-            let element = (match get(arg_hash.clone(), GetOptions::content())? {
-                Some(el) => Ok(el),
-                None => Err(WasmError::Guest(format!(
-                    "could not dereference arg: {}",
-                    arg_hash
-                ))),
-            })?;
+            let element = must_get_valid_element(arg_hash.clone())?;
             match element.into_inner().1.to_app_option()? {
                 Some(ie) => Ok(ie),
                 None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
@@ -345,7 +339,7 @@ pub fn mk_interchange_entry(
 
     let new_ie: InterchangeEntry = InterchangeEntry {
         operator: expr,
-        operands: args
+        operands: arg_hh_s
             .into_iter()
             .map(InterchangeOperand::InterchangeOperand)
             .collect(),

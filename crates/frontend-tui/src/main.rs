@@ -115,6 +115,26 @@ pub struct HcInfo {
     pub dna_hash: DnaHash,
 }
 
+impl HcInfo {
+    async fn get_interchange_entries_which_unify(
+        &mut self,
+        opt_target_sc: Option<Scheme>,
+    ) -> Vec<(HeaderHash, InterchangeEntry)> {
+        let payload = ExternIO::encode(opt_target_sc).unwrap();
+        let cell_id = CellId::new(self.dna_hash.clone(), self.agent_pk.clone());
+        let zc = ZomeCall {
+            cell_id,
+            zome_name: "interpreter".into(),
+            fn_name: "get_interchange_entries_which_unify".into(),
+            payload,
+            cap_secret: None,
+            provenance: self.agent_pk.clone(),
+        };
+        let result = self.app_ws.zome_call(zc).await.unwrap();
+        result.decode().unwrap()
+    }
+}
+
 struct App {
     /// the text which may parse to an `Expr`.
     expr_input: String,
@@ -379,23 +399,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                                     // zome call to look for IEs which unify with the argument
                                     if let Scheme(tvs, Type::TArr(arg, _)) = &sc {
                                         let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
-                                        // TODO deduplicate this
-                                        let payload = ExternIO::encode(opt_target_sc).unwrap();
-                                        let cell_id = CellId::new(
-                                            hc_info.dna_hash.clone(),
-                                            hc_info.agent_pk.clone(),
-                                        );
-                                        let zc = ZomeCall {
-                                            cell_id,
-                                            zome_name: "interpreter".into(),
-                                            fn_name: "get_interchange_entries_which_unify".into(),
-                                            payload,
-                                            cap_secret: None,
-                                            provenance: hc_info.agent_pk.clone(),
-                                        };
-                                        let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                                        let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> =
-                                            result.decode().unwrap();
+                                        let hash_ie_s = hc_info
+                                            .get_interchange_entries_which_unify(opt_target_sc).await;
                                         app.event_sender
                                             .send(Event::SelectorIes(hash_ie_s))
                                             .expect("send to succeed");
@@ -486,20 +491,9 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 let mut hc_info = app.hc_info.clone().unwrap();
 
                 if app.view_state.is_viewer() {
-                    // TODO deduplicate this
                     let opt_target_sc: Option<Scheme> = None;
-                    let payload = ExternIO::encode(opt_target_sc).unwrap();
-                    let cell_id = CellId::new(hc_info.dna_hash.clone(), hc_info.agent_pk.clone());
-                    let zc = ZomeCall {
-                        cell_id,
-                        zome_name: "interpreter".into(),
-                        fn_name: "get_interchange_entries_which_unify".into(),
-                        payload,
-                        cap_secret: None,
-                        provenance: hc_info.agent_pk.clone(),
-                    };
-                    let result = hc_info.app_ws.zome_call(zc).await.unwrap();
-                    let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> = result.decode().unwrap();
+                    let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> =
+                        hc_info.get_interchange_entries_which_unify(opt_target_sc).await;
                     let ie_s = hash_ie_s.into_iter().map(|(_eh, ie)| ie).collect();
                     app.event_sender
                         .send(Event::ViewerIes(ie_s))

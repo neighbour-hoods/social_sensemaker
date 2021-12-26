@@ -5,3 +5,5 @@ edition = "2018"
 
 [dependencies]
 holochain = { version = "0.0.121", features = ["test_utils"] }
+
+common = { path = "../common" }

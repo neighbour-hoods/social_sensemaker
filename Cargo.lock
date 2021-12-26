@@ -621,7 +621,8 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
- "hdk",
+ "hdk_derive",
+ "holochain_types 0.0.19",
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rep_lang_runtime",
@@ -4530,6 +4531,7 @@ dependencies = [
 name = "rep_interchange_sweettest"
 version = "0.1.0"
 dependencies = [
+ "common",
  "holochain",
 ]
 

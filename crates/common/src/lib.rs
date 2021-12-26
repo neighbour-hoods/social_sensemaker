@@ -1,4 +1,5 @@
-use hdk::prelude::*;
+use hdk_derive::*;
+use holochain_types::*;
 
 use rep_lang_core::abstract_syntax::{Expr, Gas};
 use rep_lang_runtime::{eval::FlatValue, types::Scheme};

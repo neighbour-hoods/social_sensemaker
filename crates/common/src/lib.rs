@@ -6,6 +6,14 @@ use rep_lang_runtime::{eval::FlatValue, types::Scheme};
 // TODO think carefully on what this should be.
 pub type Marker = ();
 
+#[hdk_entry]
+pub struct SchemeRoot;
+
+#[hdk_entry]
+pub struct SchemeEntry {
+    pub sc: Scheme,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum InterchangeOperand {
     // these dereference to `InterchangeEntry`

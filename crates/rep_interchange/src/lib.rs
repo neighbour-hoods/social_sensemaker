@@ -3,7 +3,10 @@ use std::collections::HashMap;
 
 use hdk::{entry::must_get_valid_element, prelude::*};
 
-use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand, Marker};
+use common::{
+    CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand, Marker, SchemeEntry,
+    SchemeRoot,
+};
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::{
     abstract_syntax::{Expr, Name},
@@ -55,14 +58,6 @@ fn test_output(params: Params) -> ExternResult<bool> {
             }
         }
     }
-}
-
-#[hdk_entry]
-struct SchemeRoot;
-
-#[hdk_entry]
-struct SchemeEntry {
-    sc: Scheme,
 }
 
 #[hdk_extern]

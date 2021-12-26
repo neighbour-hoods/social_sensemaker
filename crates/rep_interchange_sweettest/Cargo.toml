@@ -1,0 +1,10 @@
+[package]
+name = "rep_interchange_sweettest"
+version = "0.1.0"
+edition = "2018"
+
+[dependencies]
+holochain = "0.0.117"
+
+common = { path = "../common" }
+rep_interchange = { path = "../rep_interchange" }

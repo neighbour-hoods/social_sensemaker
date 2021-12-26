@@ -5,7 +5,7 @@ authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
 
 [dependencies]
-hdk = "0.0.116"
+hdk = "0.0.117"
 serde = "1"
 
 rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7eb11b7d688e44048ffd95b3dde87973352aaf1f" }

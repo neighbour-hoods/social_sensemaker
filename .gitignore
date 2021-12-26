@@ -3,3 +3,12 @@
 node_modules
 
 happs/**/*.dna
+happs/**/*.happ
+happs/**/*.wasm
+.hc
+.hc_live_*
+
+ui/pkg/
+
+# nix
+result*

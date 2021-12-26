@@ -15,7 +15,7 @@ const buildRunner = () => new Orchestrator({
 
 // DNA loader, to be used with `buildTestScenario` when constructing DNAs for testing
 const getDNA = ((dnas) => (name) => (dnas[name]))({
-  'rep_interchange': path.resolve(__dirname, '../happs/rep_interchange/rep_dsl_test_dna.dna'),
+  'rep_interchange': path.resolve(__dirname, '../happs/rep_interchange/rep_interchange.dna'),
 })
 
 // temporary method for RSM until conductor can interpret consistency
@@ -45,14 +45,19 @@ runner.registerScenario('Basic DSL program compilation', async (scenario, t) => 
     ],
   ])
 //  const appCellIds = firstHapp.cells.map(c => c.cellNick.match(/(\w+)\.dna$/)[1])
-  
+
   const repInterchangeApp = firstHapp.cells[0]
 
-  const result = await repInterchangeApp.call('interpreter', 'test_output', { param: "thing" })
+  const resultGood = await repInterchangeApp.call('interpreter', 'test_output', { params_string: "(lam [x] (if x 1 2))" })
   await scenario.consistency()
-  console.log('did a call!', result)
+  console.log('good call', resultGood)
+  t.equal(resultGood, true)
 
-  t.equal(result, true)
+  // the commonalities here can be abstracted
+  const resultBad = await repInterchangeApp.call('interpreter', 'test_output', { params_string: "$$$$$!" })
+  await scenario.consistency()
+  console.log('bad call:', resultBad)
+  t.equal(resultBad, false)
 })
 
 runner.run()

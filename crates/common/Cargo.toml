@@ -1,21 +1,13 @@
 [package]
-name = "rep_interchange"
+name = "common"
 version = "0.1.0"
 authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-combine = "4.5.2"
 hdk = "0.0.116"
 serde = "1"
 
-common = { path = "../common" }
 rep_lang_concrete_syntax = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "7eb11b7d688e44048ffd95b3dde87973352aaf1f" }
 rep_lang_core = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "7eb11b7d688e44048ffd95b3dde87973352aaf1f", features = ["hc"] }
 rep_lang_runtime = { git = "https://github.com/sacredcapital/rep_lang.git", rev = "7eb11b7d688e44048ffd95b3dde87973352aaf1f", features = ["hc"] }
-
-[lib]
-path = "src/lib.rs"
-crate-type = ["cdylib", "rlib"]

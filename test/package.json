@@ -10,8 +10,8 @@
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
-    "@holochain/tryorama": "^0.4.3",
+    "@holochain/tryorama": "^0.4.5",
     "faucet": "^0.0.1",
-    "tape": "^5.2.2"
+    "tape": "^5.3.1"
   }
 }

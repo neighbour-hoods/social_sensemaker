@@ -2,6 +2,22 @@
 
 integrating `rep_lang` & Holochain.
 
+== submodules
+
+either:
+
+[source]
+----
+git clone --recurse-submodules $URL
+----
+
+or, after cloning:
+
+[source]
+----
+git submodule update --init
+----
+
 == entering dev environment
 
 [source]
@@ -18,6 +34,10 @@ alternately, use https://github.com/nix-community/lorri[`lorri`] and https://git
 npm run build
 
 # perhaps this can go in package.json?
+npm install
+
+# also
+cd test/
 npm install
 
 npm run test

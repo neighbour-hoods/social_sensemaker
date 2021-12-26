@@ -3,4 +3,5 @@ members = [
   "crates/common",
   "crates/frontend-tui",
   "crates/rep_interchange",
+  "crates/rep_interchange_sweettest",
 ]

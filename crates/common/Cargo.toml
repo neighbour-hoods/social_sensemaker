@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
 
-[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+[dependencies]
 hdk = "0.0.117"
 serde = "1"
 

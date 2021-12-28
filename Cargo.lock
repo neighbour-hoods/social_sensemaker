@@ -2332,8 +2332,7 @@ dependencies = [
 [[package]]
 name = "holochain_wasmer_common"
 version = "0.0.73"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5af45652fd4b0e5b1ed2a721e5b0007d6334ee1e11677e918d7252c4f5a95bd0"
+source = "git+https://github.com/holochain/holochain-wasmer.git?branch=debug/v0.0.73-wasmer-build-error#51210d043f709e02021211a7174bc93a6b031bca"
 dependencies = [
  "holochain_serialized_bytes",
  "serde",
@@ -2344,8 +2343,7 @@ dependencies = [
 [[package]]
 name = "holochain_wasmer_guest"
 version = "0.0.73"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "265c2dec85c91d10b01473d8163f3a841a14b47d78d764b7f6625a53f1dc1868"
+source = "git+https://github.com/holochain/holochain-wasmer.git?branch=debug/v0.0.73-wasmer-build-error#51210d043f709e02021211a7174bc93a6b031bca"
 dependencies = [
  "holochain_serialized_bytes",
  "holochain_wasmer_common",
@@ -2357,8 +2355,7 @@ dependencies = [
 [[package]]
 name = "holochain_wasmer_host"
 version = "0.0.73"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f695556f79ae652cd55867aa3872757854a8e028c02f969a4e17215a60ad253a"
+source = "git+https://github.com/holochain/holochain-wasmer.git?branch=debug/v0.0.73-wasmer-build-error#51210d043f709e02021211a7174bc93a6b031bca"
 dependencies = [
  "bimap",
  "holochain_serialized_bytes",
@@ -2369,6 +2366,14 @@ dependencies = [
  "serde",
  "tracing",
  "wasmer",
+ "wasmer-compiler",
+ "wasmer-compiler-cranelift",
+ "wasmer-derive",
+ "wasmer-engine",
+ "wasmer-engine-dylib",
+ "wasmer-engine-universal",
+ "wasmer-types",
+ "wasmer-vm",
 ]
 
 [[package]]
@@ -4517,15 +4522,6 @@ version = "0.1.0"
 dependencies = [
  "common",
  "holochain",
- "wasmer",
- "wasmer-compiler",
- "wasmer-compiler-cranelift",
- "wasmer-derive",
- "wasmer-engine",
- "wasmer-engine-dylib",
- "wasmer-engine-universal",
- "wasmer-types",
- "wasmer-vm",
 ]
 
 [[package]]

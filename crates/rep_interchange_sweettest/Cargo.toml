@@ -6,4 +6,15 @@ edition = "2018"
 [dependencies]
 holochain = "0.0.121"
 
+# TODO: test putting these into the holochain crate
+wasmer = "=2.0.0"
+wasmer-compiler = "=2.0.0"
+wasmer-compiler-cranelift = "=2.0.0"
+wasmer-derive = "=2.0.0"
+wasmer-engine = "=2.0.0"
+wasmer-engine-dylib = "=2.0.0"
+wasmer-engine-universal = "=2.0.0"
+wasmer-types = "=2.0.0"
+wasmer-vm = "=2.0.0"
+
 common = { path = "../common" }

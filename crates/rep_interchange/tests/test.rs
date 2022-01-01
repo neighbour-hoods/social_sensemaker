@@ -7,13 +7,12 @@
 // use holochain::test_utils::wait_for_integration_with_others_10s;
 // use holochain::test_utils::WaitOps;
 
-#[test]
 #[cfg(feature = "test_utils")]
 #[tokio::test(flavor = "multi_thread")]
-async fn test_0() -> anyhow::Result<()> {
-    use std::sync::Arc;
+pub async fn test0() -> anyhow::Result<()> {
     use holochain::test_utils::{consistency_10s, inline_zomes::simple_create_read_zome};
     use kitsune_p2p::KitsuneP2pConfig;
+    use std::sync::Arc;
 
     let _g = observability::test_run().ok();
     const NUM_CONDUCTORS: usize = 3;

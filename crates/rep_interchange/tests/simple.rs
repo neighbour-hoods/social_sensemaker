@@ -8,15 +8,6 @@ use holochain::sweettest::{SweetConductorBatch, SweetDnaFile};
 // use holochain::test_utils::WaitOps;
 
 #[tokio::test(flavor = "multi_thread")]
-pub async fn basic() {
-}
-
-#[tokio::test(flavor = "multi_thread", worker_threads = 1)]
-async fn my_test() {
-    assert!(true);
-}
-
-#[tokio::test(flavor = "multi_thread")]
 pub async fn test0() -> anyhow::Result<()> {
     use holochain::test_utils::{consistency_10s, inline_zomes::simple_create_read_zome};
     use kitsune_p2p::KitsuneP2pConfig;

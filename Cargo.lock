@@ -4521,6 +4521,7 @@ name = "rep_interchange_sweettest"
 version = "0.1.0"
 dependencies = [
  "common",
+ "hdk",
  "holochain",
 ]
 

@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+hdk = "0.0.117"
 holochain = "0.0.121"
 
 common = { path = "../common" }

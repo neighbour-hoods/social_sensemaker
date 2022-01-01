@@ -1,7 +1,7 @@
 use hdk::prelude::*;
 use holochain::conductor::config::ConductorConfig;
 // use holochain::sweettest::{SweetConductor, SweetNetwork, SweetZome};
-use holochain::sweettest::{SweetConductorBatch, SweetDnaFile};
+use holochain::sweettest::{SweetAppBatch, SweetConductorBatch, SweetDnaFile};
 // use holochain::test_utils::host_fn_caller::Post;
 // use holochain::test_utils::wait_for_integration_1m;
 // use holochain::test_utils::wait_for_integration_with_others_10s;
@@ -85,8 +85,6 @@ pub async fn test_creation_retrieval_ie() -> anyhow::Result<()> {
 #[tokio::test(flavor = "multi_thread")]
 pub async fn test_round_robin_incrementation() -> anyhow::Result<()> {
     use holochain::test_utils::consistency_10s;
-    use kitsune_p2p::KitsuneP2pConfig;
-    use std::sync::Arc;
 
     use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
     use rep_lang_core::{
@@ -98,24 +96,7 @@ pub async fn test_round_robin_incrementation() -> anyhow::Result<()> {
     const NUM_CONDUCTORS: usize = 4;
     const ROUND_ROBIN_COUNT: usize = 51;
 
-    let _g = observability::test_run().ok();
-
-    let mut tuning =
-        kitsune_p2p_types::config::tuning_params_struct::KitsuneP2pTuningParams::default();
-    tuning.gossip_strategy = "none".to_string();
-
-    let mut network = KitsuneP2pConfig::default();
-    network.tuning_params = Arc::new(tuning);
-    let mut config = ConductorConfig::default();
-    config.network = Some(network);
-    let mut conductors = SweetConductorBatch::from_config(NUM_CONDUCTORS, config).await;
-
-    let path = Path::new("../../happs/rep_interchange/rep_interchange.dna");
-    let dna_file = SweetDnaFile::from_bundle(path).await.unwrap();
-
-    let apps = conductors.setup_app(APP_ID, &[dna_file]).await.unwrap();
-    conductors.exchange_peer_info().await;
-
+    let (conductors, apps) = setup_conductors_cells(NUM_CONDUCTORS).await;
     let cells = apps.cells_flattened();
 
     let init_ciei = CreateInterchangeEntryInput {
@@ -166,4 +147,32 @@ pub async fn test_round_robin_incrementation() -> anyhow::Result<()> {
     );
 
     Ok(())
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// helpers
+////////////////////////////////////////////////////////////////////////////////
+async fn setup_conductors_cells(num_conductors: usize) -> (SweetConductorBatch, SweetAppBatch) {
+    use kitsune_p2p::KitsuneP2pConfig;
+    use std::sync::Arc;
+
+    let _g = observability::test_run().ok();
+
+    let mut tuning =
+        kitsune_p2p_types::config::tuning_params_struct::KitsuneP2pTuningParams::default();
+    tuning.gossip_strategy = "none".to_string();
+
+    let mut network = KitsuneP2pConfig::default();
+    network.tuning_params = Arc::new(tuning);
+    let mut config = ConductorConfig::default();
+    config.network = Some(network);
+    let mut conductors = SweetConductorBatch::from_config(num_conductors, config).await;
+
+    let path = Path::new("../../happs/rep_interchange/rep_interchange.dna");
+    let dna_file = SweetDnaFile::from_bundle(path).await.unwrap();
+
+    let apps = conductors.setup_app(APP_ID, &[dna_file]).await.unwrap();
+    conductors.exchange_peer_info().await;
+
+    (conductors, apps)
 }

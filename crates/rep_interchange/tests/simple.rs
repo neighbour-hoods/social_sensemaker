@@ -149,6 +149,96 @@ pub async fn test_round_robin_incrementation() -> anyhow::Result<()> {
     Ok(())
 }
 
+/// test arity-2 functions with `fib`.
+/// the fibonacci sequences starts off `0, 1, 1, 2, 3, 5, 8, 13 ...`. each term is
+/// the sum of the previous 2 terms. we start off by creating 2
+/// `InterchangeEntry`s with values `0 :: Int` & `1 :: Int`, respectively.
+#[tokio::test(flavor = "multi_thread")]
+pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
+    use holochain::test_utils::consistency_10s;
+
+    use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
+    use rep_lang_core::abstract_syntax::{Expr, Lit, PrimOp};
+    use rep_lang_runtime::eval::{FlatValue, Value};
+
+    const NUM_CONDUCTORS: usize = 5;
+    const ROUND_ROBIN_COUNT: usize = 37;
+
+    let (conductors, apps) = setup_conductors_cells(NUM_CONDUCTORS).await;
+    let cells = apps.cells_flattened();
+
+    // TODO can the commonalities be abstracted? unsure about async closure
+    // capturing env.
+    let mut hh_0 = {
+        let init_ciei = CreateInterchangeEntryInput {
+            expr: Expr::Lit(Lit::LInt(0)),
+            args: vec![],
+        };
+        let init_hh: HeaderHash = conductors[0]
+            .call(
+                &cells[0].zome(ZOME_NAME),
+                "create_interchange_entry",
+                init_ciei,
+            )
+            .await;
+        init_hh
+    };
+    let mut hh_1 = {
+        let init_ciei = CreateInterchangeEntryInput {
+            expr: Expr::Lit(Lit::LInt(1)),
+            args: vec![],
+        };
+        let init_hh: HeaderHash = conductors[0]
+            .call(
+                &cells[0].zome(ZOME_NAME),
+                "create_interchange_entry",
+                init_ciei,
+            )
+            .await;
+        init_hh
+    };
+
+    for idx in 1..ROUND_ROBIN_COUNT {
+        // await consistency
+        consistency_10s(&cells).await;
+
+        let ciei = CreateInterchangeEntryInput {
+            expr: Expr::Prim(PrimOp::Add),
+            args: vec![
+                InterchangeOperand::InterchangeOperand(hh_0.clone()),
+                InterchangeOperand::InterchangeOperand(hh_1.clone()),
+            ],
+        };
+
+        let new_hh: HeaderHash = conductors[idx % NUM_CONDUCTORS]
+            .call(
+                &cells[idx % NUM_CONDUCTORS].zome(ZOME_NAME),
+                "create_interchange_entry",
+                ciei,
+            )
+            .await;
+
+        hh_0 = hh_1;
+        hh_1 = new_hh;
+    }
+
+    // check final value
+    consistency_10s(&cells).await;
+    let (_final_ie_hash, final_ie): (EntryHash, InterchangeEntry) = conductors[0]
+        .call(
+            &cells[0].zome(ZOME_NAME),
+            "get_interchange_entry_by_headerhash",
+            hh_1,
+        )
+        .await;
+    assert_eq!(
+        final_ie.output_flat_value,
+        FlatValue(Value::VInt(nth_fib(ROUND_ROBIN_COUNT as i64)))
+    );
+
+    Ok(())
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // helpers
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,4 +265,16 @@ async fn setup_conductors_cells(num_conductors: usize) -> (SweetConductorBatch, 
     conductors.exchange_peer_info().await;
 
     (conductors, apps)
+}
+
+fn nth_fib(mut n: i64) -> i64 {
+    let mut x0 = 0;
+    let mut x1 = 1;
+    while n > 1 {
+        n -= 1;
+        let tmp = x0 + x1;
+        x0 = x1;
+        x1 = tmp;
+    }
+    x1
 }

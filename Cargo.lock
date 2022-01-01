@@ -4509,21 +4509,13 @@ version = "0.1.0"
 dependencies = [
  "combine",
  "common",
+ "futures",
  "hdk",
+ "holochain",
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rep_lang_runtime",
  "serde",
-]
-
-[[package]]
-name = "rep_interchange_sweettest"
-version = "0.1.0"
-dependencies = [
- "common",
- "futures",
- "hdk",
- "holochain",
  "tokio",
 ]
 

@@ -16,6 +16,14 @@ rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.
 rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3d06e84338c8f9635046b629211e4811ef9ff216", features = ["hc"] }
 rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3d06e84338c8f9635046b629211e4811ef9ff216", features = ["hc"] }
 
+[dev-dependencies]
+hdk = "0.0.117"
+holochain = { version = "0.0.121", default-features = false, features = ["test_utils"] }
+tokio = {version = "1.11", features = ["full"]}
+futures = { version = "0.3.1", default-features = false }
+#
+common = { path = "../common" }
+
 [lib]
 path = "src/lib.rs"
 crate-type = ["cdylib", "rlib"]

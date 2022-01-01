@@ -239,6 +239,96 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
     Ok(())
 }
 
+#[tokio::test(flavor = "multi_thread")]
+pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
+    use holochain::test_utils::consistency_10s;
+
+    use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
+    use rep_lang_core::{
+        abstract_syntax::{Expr, Lit, Name, PrimOp},
+        app,
+    };
+    use rep_lang_runtime::eval::{FlatValue, Value};
+
+    const NUM_CONDUCTORS: usize = 5;
+    const ROUND_ROBIN_COUNT: usize = 37;
+
+    let (conductors, apps) = setup_conductors_cells(NUM_CONDUCTORS).await;
+    let cells = apps.cells_flattened();
+
+    let init_ciei = CreateInterchangeEntryInput {
+        expr: Expr::Lit(Lit::LInt(1)),
+        args: vec![],
+    };
+    let hh: HeaderHash = conductors[0]
+        .call(
+            &cells[0].zome(ZOME_NAME),
+            "create_interchange_entry",
+            init_ciei,
+        )
+        .await;
+
+    let mut args = vec![InterchangeOperand::InterchangeOperand(hh)];
+    for idx in 0..=ROUND_ROBIN_COUNT {
+        // await consistency
+        consistency_10s(&cells).await;
+
+        let expr = {
+            // generate fresh names
+            let names: Vec<Name> = (0..args.len())
+                .map(|n| Name(format!("arg_{}", n)))
+                .collect();
+
+            // wrap said fresh names into `Expr`s
+            let name_vars = names.clone().into_iter().map(Expr::Var);
+
+            // fold a summation over the args, with accumulator 0
+            let app_f = |acc, arg| app!(app!(Expr::Prim(PrimOp::Add), acc), arg);
+            let app = name_vars.fold(Expr::Lit(Lit::LInt(0)), app_f);
+
+            // fold over the generated freshnames to construct a lambda which will bind the
+            // names used in the applicaton
+            let lam_f = |bd, nm| Expr::Lam(nm, Box::new(bd));
+            names.into_iter().rev().fold(app, lam_f)
+        };
+        let ciei = CreateInterchangeEntryInput {
+            expr,
+            args: args.clone(),
+        };
+
+        let new_hh: HeaderHash = conductors[idx % NUM_CONDUCTORS]
+            .call(
+                &cells[idx % NUM_CONDUCTORS].zome(ZOME_NAME),
+                "create_interchange_entry",
+                ciei,
+            )
+            .await;
+
+        args.push(InterchangeOperand::InterchangeOperand(new_hh));
+    }
+
+    let final_hh = match args.last().expect("args should be non-empty") {
+        InterchangeOperand::InterchangeOperand(hh) => hh,
+        _ => panic!("InterchangeOperand::OtherOperand not supported"),
+    };
+
+    // check final value
+    consistency_10s(&cells).await;
+    let (_final_ie_hash, final_ie): (EntryHash, InterchangeEntry) = conductors[0]
+        .call(
+            &cells[0].zome(ZOME_NAME),
+            "get_interchange_entry_by_headerhash",
+            final_hh,
+        )
+        .await;
+    assert_eq!(
+        final_ie.output_flat_value,
+        FlatValue(Value::VInt(nth_sum_all(ROUND_ROBIN_COUNT as u32)))
+    );
+
+    Ok(())
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 // helpers
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,4 +367,8 @@ fn nth_fib(mut n: i64) -> i64 {
         x1 = tmp;
     }
     x1
+}
+
+fn nth_sum_all(n: u32) -> i64 {
+    2_i64.pow(n)
 }

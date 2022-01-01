@@ -6,12 +6,19 @@ use holochain::sweettest::{SweetConductorBatch, SweetDnaFile};
 // use holochain::test_utils::wait_for_integration_1m;
 // use holochain::test_utils::wait_for_integration_with_others_10s;
 // use holochain::test_utils::WaitOps;
+use std::path::Path;
+
+const APP_ID: &str = "rep_interchange";
+const ZOME_NAME: &str = "interpreter";
 
 #[tokio::test(flavor = "multi_thread")]
 pub async fn test0() -> anyhow::Result<()> {
-    use holochain::test_utils::{consistency_10s, inline_zomes::simple_create_read_zome};
+    use holochain::test_utils::consistency_10s;
     use kitsune_p2p::KitsuneP2pConfig;
     use std::sync::Arc;
+
+    use common::{CreateInterchangeEntryInput, InterchangeEntry};
+    use rep_lang_core::abstract_syntax::{Expr, Lit};
 
     let _g = observability::test_run().ok();
     const NUM_CONDUCTORS: usize = 3;
@@ -26,31 +33,51 @@ pub async fn test0() -> anyhow::Result<()> {
     config.network = Some(network);
     let mut conductors = SweetConductorBatch::from_config(NUM_CONDUCTORS, config).await;
 
-    let (dna_file, _) = SweetDnaFile::unique_from_inline_zome("zome1", simple_create_read_zome())
-        .await
-        .unwrap();
+    let path = Path::new("../../happs/rep_interchange/rep_interchange.dna");
+    let dna_file = SweetDnaFile::from_bundle(path).await.unwrap();
 
-    let apps = conductors.setup_app("app", &[dna_file]).await.unwrap();
+    let apps = conductors.setup_app(APP_ID, &[dna_file]).await.unwrap();
     conductors.exchange_peer_info().await;
 
     let ((alice,), (bobbo,), (carol,)) = apps.into_tuples();
 
-    // Call the "create" zome fn on Alice's app
-    let hash: HeaderHash = conductors[0].call(&alice.zome("zome1"), "create", ()).await;
+    let expr = Expr::Lit(Lit::LInt(0));
+    let ciei = CreateInterchangeEntryInput {
+        expr: expr.clone(),
+        args: vec![],
+    };
+    let hh: HeaderHash = conductors[0]
+        .call(&alice.zome(ZOME_NAME), "create_interchange_entry", ciei)
+        .await;
 
-    // Wait long enough for Bob to receive gossip
+    // wait for gossip to propagate
+    // TODO figure out how to avoid an arbitrary hardcoded delay. can we check for consistency
+    // async?
     consistency_10s(&[&alice, &bobbo, &carol]).await;
 
-    // Verify that bobbo can run "read" on his cell and get alice's Header
-    let element: Option<Element> = conductors[1].call(&bobbo.zome("zome1"), "read", hash).await;
-    let element = element.expect("Element was None: bobbo couldn't `get` it");
+    {
+        // assert correct retrieval
+        let (_ie_hash, ie): (EntryHash, InterchangeEntry) = conductors[1]
+            .call(
+                &bobbo.zome(ZOME_NAME),
+                "get_interchange_entry_by_headerhash",
+                hh.clone(),
+            )
+            .await;
+        assert_eq!(ie.operator, expr.clone());
+    }
 
-    // Assert that the Element bobbo sees matches what alice committed
-    assert_eq!(element.header().author(), alice.agent_pubkey());
-    assert_eq!(
-        *element.entry(),
-        ElementEntry::Present(Entry::app(().try_into().unwrap()).unwrap())
-    );
+    {
+        // assert correct retrieval
+        let (_ie_hash, ie): (EntryHash, InterchangeEntry) = conductors[2]
+            .call(
+                &carol.zome(ZOME_NAME),
+                "get_interchange_entry_by_headerhash",
+                hh,
+            )
+            .await;
+        assert_eq!(ie.operator, expr);
+    }
 
     Ok(())
 }

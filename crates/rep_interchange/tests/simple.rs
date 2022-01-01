@@ -1,13 +1,21 @@
-// use hdk::prelude::*;
-// use holochain::conductor::config::ConductorConfig;
+use hdk::prelude::*;
+use holochain::conductor::config::ConductorConfig;
 // use holochain::sweettest::{SweetConductor, SweetNetwork, SweetZome};
-// use holochain::sweettest::{SweetConductorBatch, SweetDnaFile};
+use holochain::sweettest::{SweetConductorBatch, SweetDnaFile};
 // use holochain::test_utils::host_fn_caller::Post;
 // use holochain::test_utils::wait_for_integration_1m;
 // use holochain::test_utils::wait_for_integration_with_others_10s;
 // use holochain::test_utils::WaitOps;
 
-#[cfg(feature = "test_utils")]
+#[tokio::test(flavor = "multi_thread")]
+pub async fn basic() {
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 1)]
+async fn my_test() {
+    assert!(true);
+}
+
 #[tokio::test(flavor = "multi_thread")]
 pub async fn test0() -> anyhow::Result<()> {
     use holochain::test_utils::{consistency_10s, inline_zomes::simple_create_read_zome};

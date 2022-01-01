@@ -4507,11 +4507,15 @@ dependencies = [
 name = "rep_interchange"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "combine",
  "common",
  "futures",
  "hdk",
  "holochain",
+ "kitsune_p2p 0.0.18",
+ "kitsune_p2p_types",
+ "observability",
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rep_lang_runtime",

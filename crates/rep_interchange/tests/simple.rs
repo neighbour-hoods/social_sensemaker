@@ -268,14 +268,14 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
         )
         .await;
 
-    let mut args = vec![InterchangeOperand::InterchangeOperand(hh)];
+    let mut arg_hh_s = vec![hh];
     for idx in 0..=ROUND_ROBIN_COUNT {
         // await consistency
         consistency_10s(&cells).await;
 
         let expr = {
             // generate fresh names
-            let names: Vec<Name> = (0..args.len())
+            let names: Vec<Name> = (0..arg_hh_s.len())
                 .map(|n| Name(format!("arg_{}", n)))
                 .collect();
 
@@ -293,7 +293,11 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
         };
         let ciei = CreateInterchangeEntryInput {
             expr,
-            args: args.clone(),
+            args: arg_hh_s
+                .iter()
+                .cloned()
+                .map(InterchangeOperand::InterchangeOperand)
+                .collect(),
         };
 
         let new_hh: HeaderHash = conductors[idx % NUM_CONDUCTORS]
@@ -304,13 +308,10 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
             )
             .await;
 
-        args.push(InterchangeOperand::InterchangeOperand(new_hh));
+        arg_hh_s.push(new_hh);
     }
 
-    let final_hh = match args.last().expect("args should be non-empty") {
-        InterchangeOperand::InterchangeOperand(hh) => hh,
-        _ => panic!("InterchangeOperand::OtherOperand not supported"),
-    };
+    let final_hh = arg_hh_s.last().expect("args should be non-empty");
 
     // check final value
     consistency_10s(&cells).await;

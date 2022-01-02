@@ -42,3 +42,19 @@ npm install
 
 npm run test
 ----
+
+== sweettest tests
+
+[source]
+----
+$ npm run build
+$ npm run pack
+
+# INFO
+# cargo test depends on having the .happ around to be installed.
+# this is due to Holochain having a high degree of "dynamism" in how it runs happs.
+# I don't think we can do anything more "compile time" ish instead...
+# in CI, for later, we will need to make sure the main build completes and the
+# artifacts are available to the test suite...
+$ cargo test
+----

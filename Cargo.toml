@@ -6,6 +6,8 @@ members = [
 ]
 
 [patch.crates-io]
-holochain_wasmer_host = { git = "https://github.com/holochain/holochain-wasmer.git", branch = "debug/v0.0.73-wasmer-build-error" }
-holochain_wasmer_guest = { git = "https://github.com/holochain/holochain-wasmer.git", branch = "debug/v0.0.73-wasmer-build-error" }
-holochain_wasmer_common = { git = "https://github.com/holochain/holochain-wasmer.git", branch = "debug/v0.0.73-wasmer-build-error" }
+
+# we are pinning to a fork of the repe because naersk seemed to have issues with the non-default branch
+holochain_wasmer_host = { git = "https://github.com/neighbour-hoods/holochain-wasmer.git", rev = "336b7ea3ec503dae9e275f41acd3aa2e5a9076cc" }
+holochain_wasmer_guest = { git = "https://github.com/neighbour-hoods/holochain-wasmer.git", rev = "336b7ea3ec503dae9e275f41acd3aa2e5a9076cc" }
+holochain_wasmer_common = { git = "https://github.com/neighbour-hoods/holochain-wasmer.git", rev = "336b7ea3ec503dae9e275f41acd3aa2e5a9076cc" }

@@ -2332,7 +2332,7 @@ dependencies = [
 [[package]]
 name = "holochain_wasmer_common"
 version = "0.0.73"
-source = "git+https://github.com/holochain/holochain-wasmer.git?branch=debug/v0.0.73-wasmer-build-error#51210d043f709e02021211a7174bc93a6b031bca"
+source = "git+https://github.com/neighbour-hoods/holochain-wasmer.git?rev=336b7ea3ec503dae9e275f41acd3aa2e5a9076cc#336b7ea3ec503dae9e275f41acd3aa2e5a9076cc"
 dependencies = [
  "holochain_serialized_bytes",
  "serde",
@@ -2343,7 +2343,7 @@ dependencies = [
 [[package]]
 name = "holochain_wasmer_guest"
 version = "0.0.73"
-source = "git+https://github.com/holochain/holochain-wasmer.git?branch=debug/v0.0.73-wasmer-build-error#51210d043f709e02021211a7174bc93a6b031bca"
+source = "git+https://github.com/neighbour-hoods/holochain-wasmer.git?rev=336b7ea3ec503dae9e275f41acd3aa2e5a9076cc#336b7ea3ec503dae9e275f41acd3aa2e5a9076cc"
 dependencies = [
  "holochain_serialized_bytes",
  "holochain_wasmer_common",
@@ -2355,7 +2355,7 @@ dependencies = [
 [[package]]
 name = "holochain_wasmer_host"
 version = "0.0.73"
-source = "git+https://github.com/holochain/holochain-wasmer.git?branch=debug/v0.0.73-wasmer-build-error#51210d043f709e02021211a7174bc93a6b031bca"
+source = "git+https://github.com/neighbour-hoods/holochain-wasmer.git?rev=336b7ea3ec503dae9e275f41acd3aa2e5a9076cc#336b7ea3ec503dae9e275f41acd3aa2e5a9076cc"
 dependencies = [
  "bimap",
  "holochain_serialized_bytes",

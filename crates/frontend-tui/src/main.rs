@@ -13,6 +13,7 @@ use std::{
     path::{Path, PathBuf},
     sync::mpsc::Sender,
 };
+use structopt::StructOpt;
 use termion::{event::Key, input::MouseTerminal, raw::IntoRawMode, screen::AlternateScreen};
 use tui::{
     backend::TermionBackend,
@@ -244,6 +245,9 @@ impl App {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn error::Error>> {
+    // cli arg parsing
+    let args = Cli::from_args();
+
     // terminal initialization
     let stdout = io::stdout().into_raw_mode()?;
     let stdout = MouseTerminal::from(stdout);
@@ -254,12 +258,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     let mut app = App::new();
 
     {
-        let app_ws = AppWebsocket::connect("ws://127.0.0.1:9999".into())
+        let app_ws = AppWebsocket::connect(format!("ws://127.0.0.1:{}", args.hc_app_port))
             .await
             .expect("connect to succeed");
-        let mut admin_ws = AdminWebsocket::connect("ws://127.0.0.1:9000".into())
-            .await
-            .expect("connect to succeed");
+        let mut admin_ws =
+            AdminWebsocket::connect(format!("ws://127.0.0.1:{}", args.hc_admin_port))
+                .await
+                .expect("connect to succeed");
         let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
         let dna_hash = {
             let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
@@ -590,3 +595,32 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
     }
     Ok(())
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// CLI arg parsing
+////////////////////////////////////////////////////////////////////////////////
+
+#[derive(StructOpt, Debug)]
+#[structopt(about = HELP)]
+struct Cli {
+    /// Holochain app port
+    #[structopt(long, short = "p", default_value = "9999")]
+    hc_app_port: u64,
+
+    /// Holochain admin port
+    #[structopt(long, short = "f", default_value = "9000")]
+    hc_admin_port: u64,
+}
+
+const HELP: &str = r#"
+############################
+#                          #
+# ██████╗░██╗░░░░░██████╗░ #
+# ██╔══██╗██║░░░░░██╔══██╗ #
+# ██████╔╝██║░░░░░██████╔╝ #
+# ██╔══██╗██║░░░░░██╔═══╝░ #
+# ██║░░██║███████╗██║░░░░░ #
+# ╚═╝░░╚═╝╚══════╝╚═╝░░░░░ #
+#                          #
+############################
+"#;

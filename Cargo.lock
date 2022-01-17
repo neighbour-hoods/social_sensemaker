@@ -1308,6 +1308,7 @@ dependencies = [
  "rep_lang_runtime",
  "scrawl",
  "serde_json",
+ "structopt",
  "termion",
  "tokio",
  "tui",

@@ -29,18 +29,24 @@ alternately, use https://github.com/nix-community/lorri[`lorri`] and https://git
 
 == building & running
 
+building:
+
 [source]
 ----
-npm run build
-
 # perhaps this can go in package.json?
 npm install
 
-# also
-cd test/
-npm install
+npm run fe:build
+npm run hc:build
+npm run hc:pack
+----
 
-npm run test
+running:
+
+[source]
+----
+npm run fe:run
+npm run hc:run
 ----
 
 == sweettest tests

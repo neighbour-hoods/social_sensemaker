@@ -436,7 +436,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
                 let rendered_ie_s: String = ie_s
                     .iter()
-                    .map(|ie| format!("{:?}", ie))
+                    .map(|ie| to_pretty(ie.ppr(), chunks[1].width.into()))
                     .collect::<Vec<String>>()
                     .join("\n\n");
 

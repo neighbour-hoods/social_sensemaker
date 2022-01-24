@@ -601,6 +601,7 @@ name = "common"
 version = "0.1.0"
 dependencies = [
  "hdk",
+ "pretty",
  "rep_lang_concrete_syntax",
  "rep_lang_core",
  "rep_lang_runtime",

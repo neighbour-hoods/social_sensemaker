@@ -152,6 +152,37 @@ pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<InterchangeEn
     mk_interchange_entry(full_lam, operands)
 }
 
+/// assumes that the first `HeaderHash` is the operator, and that successive
+/// `HeaderHash`es are operands. applies them in that order. does not check
+/// whether types match up.
+pub fn mk_application_ie(hh_s: Vec<HeaderHash>) -> ExternResult<InterchangeEntry> {
+    // there must be at least an operator
+    if hh_s.len() <= 1 {
+        return Err(WasmError::Guest("no operator provided".into()));
+    }
+
+    let mut es = EvalState::new();
+
+    let fresh_names: Vec<Name> = hh_s.iter().map(|_| es.fresh_name()).collect();
+
+    let apply_vars = |acc, nm: &Name| app!(acc, Expr::Var(nm.clone()));
+    // we pull out the operator, so it may be applied to the others
+    let init_acc = Expr::Var(fresh_names[0].clone());
+    // we skip the operator, since it's the init_acc
+    let app_body = fresh_names.iter().skip(1).fold(init_acc, apply_vars);
+
+    // create the outer lambda, successively wrapping a lambda which
+    // binds each fresh name.
+    let wrap_lambda = |acc, nm| lam!(nm, acc);
+    let full_lam = fresh_names.into_iter().rev().fold(app_body, wrap_lambda);
+
+    let operands = hh_s
+        .into_iter()
+        .map(InterchangeOperand::InterchangeOperand)
+        .collect();
+    mk_interchange_entry(full_lam, operands)
+}
+
 #[hdk_extern]
 pub(crate) fn validate_create_entry_interchange_entry(
     validate_data: ValidateData,

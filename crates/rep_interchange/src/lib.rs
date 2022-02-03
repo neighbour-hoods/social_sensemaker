@@ -64,7 +64,14 @@ fn test_output(params: Params) -> ExternResult<bool> {
 pub fn get_interchange_entries_which_unify(
     opt_target_sc: Option<Scheme>,
 ) -> ExternResult<Vec<(HeaderHash, InterchangeEntry)>> {
-    let scheme_entry_links = get_links(hash_entry(SchemeRoot)?, None)?;
+    get_linked_interchange_entries_which_unify((hash_entry(SchemeRoot)?, opt_target_sc))
+}
+
+#[hdk_extern]
+pub fn get_linked_interchange_entries_which_unify(
+    (target_hash, opt_target_sc): (EntryHash, Option<Scheme>),
+) -> ExternResult<Vec<(HeaderHash, InterchangeEntry)>> {
+    let scheme_entry_links = get_links(target_hash, None)?;
     let scheme_entry_hashes: Vec<EntryHash> = scheme_entry_links
         .into_iter()
         .map(|lnk| lnk.target)

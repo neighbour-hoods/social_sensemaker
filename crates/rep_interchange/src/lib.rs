@@ -9,8 +9,8 @@ use common::{
 };
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::{
-    abstract_syntax::{Expr, Name},
-    app,
+    abstract_syntax::{Expr, Name, PrimOp},
+    app, lam,
 };
 use rep_lang_runtime::{
     env::Env,
@@ -122,6 +122,34 @@ pub fn get_linked_interchange_entries_which_unify(
         .flatten()
         .map(|lnk| get_interchange_entry(lnk.target))
         .collect()
+}
+
+/// this function creates an `InterchangeEntry`, whose `Scheme` is essentially
+/// `forall a. List a`.
+///
+/// all IEs should have compatible `Scheme`s. this function will not check that,
+/// but if `create_entry` is used later & type inference fails, the IE won't be
+/// created.
+pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<InterchangeEntry> {
+    let mut es = EvalState::new();
+
+    let fresh_names: Vec<Name> = ies.iter().map(|_| es.fresh_name()).collect();
+
+    // construct the list by `Cons`ing each element onto the accumulator
+    let add_cons =
+        |acc, nm: &Name| app!(Expr::Prim(PrimOp::Cons), app!(Expr::Var(nm.clone()), acc));
+    let app_body = fresh_names.iter().fold(Expr::Prim(PrimOp::Nil), add_cons);
+
+    // create the outer lambda, successively wrapping a lambda which
+    // binds each fresh name.
+    let wrap_lambda = |acc, nm| lam!(nm, acc);
+    let full_lam = fresh_names.into_iter().rev().fold(app_body, wrap_lambda);
+
+    let operands = ies
+        .into_iter()
+        .map(InterchangeOperand::InterchangeOperand)
+        .collect();
+    mk_interchange_entry(full_lam, operands)
 }
 
 #[hdk_extern]

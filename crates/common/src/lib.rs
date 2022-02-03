@@ -108,3 +108,11 @@ pub struct CreateInterchangeEntryInput {
     pub expr: Expr,
     pub args: Vec<InterchangeOperand>,
 }
+
+#[hdk_entry]
+pub struct SchemeRoot;
+
+#[hdk_entry]
+pub struct SchemeEntry {
+    pub sc: Scheme,
+}

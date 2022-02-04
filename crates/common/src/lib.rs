@@ -437,3 +437,23 @@ pub fn create_interchange_entry_full(
         Some(element) => Ok((element.header_address().clone(), ie)),
     }
 }
+
+#[hdk_extern]
+pub fn get_interchange_entry_by_headerhash(
+    arg_hash: HeaderHash,
+) -> ExternResult<(EntryHash, InterchangeEntry)> {
+    let element = (match get(arg_hash.clone(), GetOptions::content())? {
+        Some(el) => Ok(el),
+        None => Err(WasmError::Guest(format!(
+            "could not dereference arg: {}",
+            arg_hash
+        ))),
+    })?;
+    match element.into_inner().1.to_app_option()? {
+        Some(ie) => {
+            let ie_hash = hash_entry(&ie)?;
+            Ok((ie_hash, ie))
+        }
+        None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
+    }
+}

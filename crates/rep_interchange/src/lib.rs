@@ -3,11 +3,10 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use hdk::prelude::*;
 
 use common::{
-    create_interchange_entry_full, get_linked_interchange_entries_which_unify,
-    mk_interchange_entry, CreateInterchangeEntryInput, InterchangeEntry, SchemeEntry, SchemeRoot,
+    create_interchange_entry_full, mk_interchange_entry, CreateInterchangeEntryInput,
+    InterchangeEntry, SchemeEntry,
 };
 use rep_lang_concrete_syntax::parse::expr;
-use rep_lang_runtime::types::Scheme;
 
 entry_defs![
     Path::entry_def(),
@@ -42,13 +41,6 @@ fn test_output(params: Params) -> ExternResult<bool> {
             }
         }
     }
-}
-
-#[hdk_extern]
-pub fn get_interchange_entries_which_unify(
-    opt_target_sc: Option<Scheme>,
-) -> ExternResult<Vec<(HeaderHash, InterchangeEntry)>> {
-    get_linked_interchange_entries_which_unify((hash_entry(SchemeRoot)?, opt_target_sc))
 }
 
 #[hdk_extern]

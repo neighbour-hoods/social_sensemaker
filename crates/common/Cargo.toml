@@ -5,6 +5,7 @@ authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
 
 [dependencies]
+combine = "4.5.2"
 hdk = "0.0.117"
 pretty = "0.10.0"
 serde = "1"

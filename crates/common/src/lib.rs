@@ -1,8 +1,9 @@
+use combine::{stream::position, EasyParser, StreamOnce};
 use hdk::{entry::must_get_valid_element, prelude::*};
 use pretty::RcDoc;
 use std::collections::HashMap;
 
-use rep_lang_concrete_syntax::pretty::ppr_expr;
+use rep_lang_concrete_syntax::{parse::expr, pretty::ppr_expr};
 use rep_lang_core::{
     abstract_syntax::{Expr, Gas, Name, PrimOp},
     app, lam,
@@ -16,6 +17,8 @@ use rep_lang_runtime::{
     infer::{self, infer_expr_with_is, normalize, unifies, InferState},
     types::Scheme,
 };
+
+pub const OWNER_TAG: &str = "rep_interchange_owner";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();
@@ -356,4 +359,81 @@ pub fn mk_interchange_entry(
         start_gas: es.current_gas_count(),
     };
     Ok(new_ie)
+}
+
+#[derive(Debug, Serialize, Deserialize, SerializedBytes)]
+pub struct CreateInterchangeEntryInputParse {
+    pub expr: String,
+    pub args: Vec<String>,
+}
+
+/// INFO this is incomplete and doesn't currently parse the `args`
+#[hdk_extern]
+pub fn create_interchange_entry_parse(
+    input: CreateInterchangeEntryInputParse,
+) -> ExternResult<(HeaderHash, InterchangeEntry)> {
+    let (hash, ie) = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
+        Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
+        Ok((expr, extra_input)) => {
+            if extra_input.is_partial() {
+                Err(WasmError::Guest(format!(
+                    "error: unconsumed input: {:?}",
+                    extra_input
+                )))
+            } else {
+                debug!("ast: {:?}\n", expr);
+                create_interchange_entry_full(CreateInterchangeEntryInput {
+                    expr,
+                    // TODO parse `input.args`.
+                    // parsing a HeaderHash seems like it should be possible, but I've not done
+                    // it before. we might also want some indicator of which of
+                    // InterchangeOperand constructor is desired?
+                    args: Vec::new(),
+                })
+            }
+        }
+    }?;
+    Ok((hash, ie))
+}
+
+pub fn create_interchange_entry_full(
+    input: CreateInterchangeEntryInput,
+) -> ExternResult<(HeaderHash, InterchangeEntry)> {
+    let ie = mk_interchange_entry(input.expr, input.args)?;
+
+    // create SchemeRoot (if needed)
+    match get(hash_entry(&SchemeRoot)?, GetOptions::content())? {
+        None => {
+            let _hh = create_entry(&SchemeRoot)?;
+        }
+        Some(_) => {}
+    };
+
+    // create Scheme entry & link from SchemeRoot (if needed)
+    let scheme_entry = SchemeEntry {
+        sc: ie.output_scheme.clone(),
+    };
+    let scheme_entry_hash = hash_entry(&scheme_entry)?;
+    match get(scheme_entry_hash.clone(), GetOptions::content())? {
+        None => {
+            let _hh = create_entry(&scheme_entry)?;
+            create_link(
+                hash_entry(SchemeRoot)?,
+                scheme_entry_hash.clone(),
+                LinkTag::new(OWNER_TAG),
+            )?;
+        }
+        Some(_) => {}
+    };
+
+    // create IE & link from Scheme entry (if needed)
+    let ie_hash = hash_entry(&ie)?;
+    match get(ie_hash.clone(), GetOptions::content())? {
+        None => {
+            let hh = create_entry(&ie)?;
+            create_link(scheme_entry_hash, ie_hash, LinkTag::new(OWNER_TAG))?;
+            Ok((hh, ie))
+        }
+        Some(element) => Ok((element.header_address().clone(), ie)),
+    }
 }

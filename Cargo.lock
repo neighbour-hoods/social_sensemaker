@@ -600,6 +600,7 @@ dependencies = [
 name = "common"
 version = "0.1.0"
 dependencies = [
+ "combine",
  "hdk",
  "pretty",
  "rep_lang_concrete_syntax",

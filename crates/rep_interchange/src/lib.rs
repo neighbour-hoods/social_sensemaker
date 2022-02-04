@@ -105,6 +105,7 @@ pub struct CreateInterchangeEntryInputParse {
     args: Vec<String>,
 }
 
+/// INFO this is incomplete and doesn't currently parse the `args`
 #[hdk_extern]
 pub fn create_interchange_entry_parse(
     input: CreateInterchangeEntryInputParse,
@@ -121,6 +122,10 @@ pub fn create_interchange_entry_parse(
                 debug!("ast: {:?}\n", expr);
                 create_interchange_entry(CreateInterchangeEntryInput {
                     expr,
+                    // TODO parse `input.args`.
+                    // parsing a HeaderHash seems like it should be possible, but I've not done
+                    // it before. we might also want some indicator of which of
+                    // InterchangeOperand constructor is desired?
                     args: Vec::new(),
                 })
             }

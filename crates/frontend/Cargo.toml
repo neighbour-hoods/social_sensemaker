@@ -25,6 +25,6 @@ web-sys = "0.3.55"
 yew = { git = "https://github.com/yewstack/yew.git", rev = "9c8692262bb21360f69e5ef9440e4eb1252695d4" }
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "f3f3efb31e83cbd5287f4acc0827c4bcfd2d7bb4" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "f3f3efb31e83cbd5287f4acc0827c4bcfd2d7bb4", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "f3f3efb31e83cbd5287f4acc0827c4bcfd2d7bb4", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "eb06e6cef812820c40f40d08ac05680d6d3b7323" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "eb06e6cef812820c40f40d08ac05680d6d3b7323", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "eb06e6cef812820c40f40d08ac05680d6d3b7323", features = ["hc"] }

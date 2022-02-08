@@ -141,6 +141,8 @@ pub fn get_interchange_entries_which_unify(
     get_linked_interchange_entries_which_unify((hash_entry(SchemeRoot)?, opt_target_sc))
 }
 
+// this doesn't really make sense, because the only structure which is guaranteed to have
+// the proper Scheme linking layout is the `SchemeRoot`.
 #[hdk_extern]
 pub fn get_linked_interchange_entries_which_unify(
     (target_hash, opt_target_sc): (EntryHash, Option<Scheme>),
@@ -388,7 +390,6 @@ pub fn create_interchange_entry_parse(
                     extra_input
                 )))
             } else {
-                debug!("ast: {:?}\n", expr);
                 create_interchange_entry_full(CreateInterchangeEntryInput {
                     expr,
                     // TODO parse `input.args`.

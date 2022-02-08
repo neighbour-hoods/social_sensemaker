@@ -117,7 +117,7 @@ impl InterchangeEntry {
     }
 }
 
-/// input to `create_interchange_entry`
+/// input to `create_interchange_entry_full`
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
 pub struct CreateInterchangeEntryInput {
     pub expr: Expr,
@@ -379,7 +379,7 @@ pub struct CreateInterchangeEntryInputParse {
 pub fn create_interchange_entry_parse(
     input: CreateInterchangeEntryInputParse,
 ) -> ExternResult<(HeaderHash, InterchangeEntry)> {
-    let (hash, ie) = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
+    let (hh, _eh, ie) = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
         Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
         Ok((expr, extra_input)) => {
             if extra_input.is_partial() {
@@ -400,12 +400,12 @@ pub fn create_interchange_entry_parse(
             }
         }
     }?;
-    Ok((hash, ie))
+    Ok((hh, ie))
 }
 
 pub fn create_interchange_entry_full(
     input: CreateInterchangeEntryInput,
-) -> ExternResult<(HeaderHash, InterchangeEntry)> {
+) -> ExternResult<(HeaderHash, EntryHash, InterchangeEntry)> {
     let ie = mk_interchange_entry(input.expr, input.args)?;
 
     // create SchemeRoot (if needed)
@@ -434,14 +434,14 @@ pub fn create_interchange_entry_full(
     };
 
     // create IE & link from Scheme entry (if needed)
-    let ie_hash = hash_entry(&ie)?;
-    match get(ie_hash.clone(), GetOptions::content())? {
+    let ie_eh = hash_entry(&ie)?;
+    match get(ie_eh.clone(), GetOptions::content())? {
         None => {
             let hh = create_entry(&ie)?;
-            create_link(scheme_entry_hash, ie_hash, LinkTag::new(OWNER_TAG))?;
-            Ok((hh, ie))
+            create_link(scheme_entry_hash, ie_eh.clone(), LinkTag::new(OWNER_TAG))?;
+            Ok((hh, ie_eh, ie))
         }
-        Some(element) => Ok((element.header_address().clone(), ie)),
+        Some(element) => Ok((element.header_address().clone(), ie_eh, ie)),
     }
 }
 

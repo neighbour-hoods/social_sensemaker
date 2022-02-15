@@ -12,9 +12,9 @@ hdk = "0.0.117"
 serde = "1"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "eb06e6cef812820c40f40d08ac05680d6d3b7323" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "eb06e6cef812820c40f40d08ac05680d6d3b7323", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "eb06e6cef812820c40f40d08ac05680d6d3b7323", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01", features = ["hc"] }
 
 [dev-dependencies]
 anyhow = "1.0.26"

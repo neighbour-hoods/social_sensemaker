@@ -213,7 +213,7 @@ pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<InterchangeEn
 
     // construct the list by `Cons`ing each element onto the accumulator
     let add_cons =
-        |acc, nm: &Name| app!(Expr::Prim(PrimOp::Cons), app!(Expr::Var(nm.clone()), acc));
+        |acc, nm: &Name| app!(app!(Expr::Prim(PrimOp::Cons), Expr::Var(nm.clone())), acc);
     let app_body = fresh_names.iter().fold(Expr::Prim(PrimOp::Nil), add_cons);
 
     // create the outer lambda, successively wrapping a lambda which

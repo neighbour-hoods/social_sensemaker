@@ -1,4 +1,4 @@
-= rep_interchange
+= social_sensemaker
 
 integrating `rep_lang` & Holochain.
 
@@ -57,13 +57,13 @@ npm run hc:run
 npm run hc:clean
 
 # terminal 1-1
-hc sandbox -f=9009 generate happs/rep_interchange -r=9999 network mdns
+hc sandbox -f=9009 generate happs/social_sensemaker -r=9999 network mdns
 
 # terminal 1-2
 cargo run --bin rlp -- -f 9009 -p 9999 2> /tmp/rlp1.log
 
 # terminal 2-1
-hc sandbox -f=9008 generate happs/rep_interchange -r=9998 network mdns
+hc sandbox -f=9008 generate happs/social_sensemaker -r=9998 network mdns
 
 # terminal 2-2
 cargo run --bin rlp -- -f 9008 -p 9998 2> /tmp/rlp2.log

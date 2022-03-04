@@ -267,7 +267,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 .expect("connect to succeed");
         let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
         let dna_hash = {
-            let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
+            let path = Path::new("./happs/social_sensemaker/social_sensemaker.dna");
             let bundle = DnaBundle::read_from_file(path).await.unwrap();
             let (_dna_file, dna_hash) = bundle.into_dna_file(None, None).await.unwrap();
             dna_hash
@@ -282,7 +282,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             .send(Event::HcInfo(hc_info))
             .expect("send to succeed");
 
-        let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.happ");
+        let pathbuf = PathBuf::from("./happs/social_sensemaker/social_sensemaker.happ");
         let iabp = InstallAppBundlePayload {
             source: AppBundleSource::Path(pathbuf),
             agent_key: agent_pk,

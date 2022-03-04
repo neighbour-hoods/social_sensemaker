@@ -1,5 +1,5 @@
 [package]
-name = "rep_interchange"
+name = "social_sensemaker"
 version = "0.1.0"
 authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"

@@ -33,7 +33,7 @@ pub async fn test_creation_retrieval_ie() -> anyhow::Result<()> {
     config.network = Some(network);
     let mut conductors = SweetConductorBatch::from_config(NUM_CONDUCTORS, config).await;
 
-    let path = Path::new("../../happs/rep_interchange/rep_interchange.dna");
+    let path = Path::new("../../happs/social_sensemaker/social_sensemaker.dna");
     let dna_file = SweetDnaFile::from_bundle(path).await.unwrap();
 
     let apps = conductors.setup_app(APP_ID, &[dna_file]).await.unwrap();
@@ -349,7 +349,7 @@ async fn setup_conductors_cells(num_conductors: usize) -> (SweetConductorBatch, 
     config.network = Some(network);
     let mut conductors = SweetConductorBatch::from_config(num_conductors, config).await;
 
-    let path = Path::new("../../happs/rep_interchange/rep_interchange.dna");
+    let path = Path::new("../../happs/social_sensemaker/social_sensemaker.dna");
     let dna_file = SweetDnaFile::from_bundle(path).await.unwrap();
 
     let apps = conductors.setup_app(APP_ID, &[dna_file]).await.unwrap();

@@ -4507,26 +4507,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "rep_interchange"
-version = "0.1.0"
-dependencies = [
- "anyhow",
- "combine",
- "common",
- "futures",
- "hdk",
- "holochain",
- "kitsune_p2p 0.0.18",
- "kitsune_p2p_types",
- "observability",
- "rep_lang_concrete_syntax",
- "rep_lang_core",
- "rep_lang_runtime",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "rep_lang_concrete_syntax"
 version = "0.1.0"
 source = "git+https://github.com/neighbour-hoods/rep_lang.git?rev=3cadc2eebe7c315844527de4bab7398108a17b57#3cadc2eebe7c315844527de4bab7398108a17b57"
@@ -5026,6 +5006,26 @@ name = "smallvec"
 version = "1.6.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "fe0f37c9e8f3c5a4a66ad655a93c74daac4ad00c441533bf5c6e7990bb42604e"
+
+[[package]]
+name = "social_sensemaker"
+version = "0.1.0"
+dependencies = [
+ "anyhow",
+ "combine",
+ "common",
+ "futures",
+ "hdk",
+ "holochain",
+ "kitsune_p2p 0.0.18",
+ "kitsune_p2p_types",
+ "observability",
+ "rep_lang_concrete_syntax",
+ "rep_lang_core",
+ "rep_lang_runtime",
+ "serde",
+ "tokio",
+]
 
 [[package]]
 name = "socket2"

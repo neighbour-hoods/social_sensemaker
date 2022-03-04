@@ -18,41 +18,41 @@ use rep_lang_runtime::{
     types::Scheme,
 };
 
-pub const OWNER_TAG: &str = "rep_interchange_owner";
+pub const OWNER_TAG: &str = "rep_sensemaker_owner";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum InterchangeOperand {
-    // these dereference to `InterchangeEntry`
-    InterchangeOperand(HeaderHash),
+pub enum SensemakerOperand {
+    // these dereference to `SensemakerEntry`
+    SensemakerOperand(HeaderHash),
     // these dereference to `FlatThunk`??
     OtherOperand(HeaderHash),
 }
 
-impl InterchangeOperand {
+impl SensemakerOperand {
     pub fn ppr(&self) -> RcDoc<()> {
         match &self {
-            InterchangeOperand::InterchangeOperand(hh) => {
-                RcDoc::text(format!("InterchangeOperand({})", hh))
+            SensemakerOperand::SensemakerOperand(hh) => {
+                RcDoc::text(format!("SensemakerOperand({})", hh))
             }
-            InterchangeOperand::OtherOperand(hh) => RcDoc::text(format!("OtherOperand({})", hh)),
+            SensemakerOperand::OtherOperand(hh) => RcDoc::text(format!("OtherOperand({})", hh)),
         }
     }
 }
 
-#[hdk_entry(id = "interchange_entry")]
+#[hdk_entry(id = "sensemaker_entry")]
 #[derive(Clone)]
-pub struct InterchangeEntry {
+pub struct SensemakerEntry {
     pub operator: Expr,
-    pub operands: Vec<InterchangeOperand>,
+    pub operands: Vec<SensemakerOperand>,
     pub output_scheme: Scheme,
     pub output_flat_value: FlatValue<Marker>,
     pub start_gas: Gas,
 }
 
-impl InterchangeEntry {
+impl SensemakerEntry {
     pub fn ppr(&self) -> RcDoc<()> {
         let docs = vec![
             RcDoc::line(),
@@ -109,7 +109,7 @@ impl InterchangeEntry {
             .group(),
         ];
         RcDoc::concat(vec![
-            RcDoc::text("InterchangeEntry {"),
+            RcDoc::text("SensemakerEntry {"),
             RcDoc::concat(docs).nest(2),
             RcDoc::line(),
             RcDoc::text("}"),
@@ -117,11 +117,11 @@ impl InterchangeEntry {
     }
 }
 
-/// input to `create_interchange_entry_full`
+/// input to `create_sensemaker_entry_full`
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
-pub struct CreateInterchangeEntryInput {
+pub struct CreateSensemakerEntryInput {
     pub expr: Expr,
-    pub args: Vec<InterchangeOperand>,
+    pub args: Vec<SensemakerOperand>,
 }
 
 #[hdk_entry]
@@ -135,18 +135,18 @@ pub struct SchemeEntry {
 // functions
 
 #[hdk_extern]
-pub fn get_interchange_entries_which_unify(
+pub fn get_sensemaker_entries_which_unify(
     opt_target_sc: Option<Scheme>,
-) -> ExternResult<Vec<(HeaderHash, InterchangeEntry)>> {
-    get_linked_interchange_entries_which_unify((hash_entry(SchemeRoot)?, opt_target_sc))
+) -> ExternResult<Vec<(HeaderHash, SensemakerEntry)>> {
+    get_linked_sensemaker_entries_which_unify((hash_entry(SchemeRoot)?, opt_target_sc))
 }
 
 // this doesn't really make sense, because the only structure which is guaranteed to have
 // the proper Scheme linking layout is the `SchemeRoot`.
 #[hdk_extern]
-pub fn get_linked_interchange_entries_which_unify(
+pub fn get_linked_sensemaker_entries_which_unify(
     (target_hash, opt_target_sc): (EntryHash, Option<Scheme>),
-) -> ExternResult<Vec<(HeaderHash, InterchangeEntry)>> {
+) -> ExternResult<Vec<(HeaderHash, SensemakerEntry)>> {
     let scheme_entry_links = get_links(target_hash, None)?;
     let scheme_entry_hashes: Vec<EntryHash> = scheme_entry_links
         .into_iter()
@@ -196,17 +196,17 @@ pub fn get_linked_interchange_entries_which_unify(
         .map(|s_eh| get_links(s_eh, None))
         .flatten()
         .flatten()
-        .map(|lnk| get_interchange_entry(lnk.target))
+        .map(|lnk| get_sensemaker_entry(lnk.target))
         .collect()
 }
 
-/// this function creates an `InterchangeEntry`, whose `Scheme` is essentially
+/// this function creates an `SensemakerEntry`, whose `Scheme` is essentially
 /// `forall a. List a`.
 ///
 /// all IEs should have compatible `Scheme`s. this function will not check that,
 /// but if `create_entry` is used later & type inference fails, the IE won't be
 /// created.
-pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<InterchangeEntry> {
+pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<SensemakerEntry> {
     let mut es = EvalState::new();
 
     let fresh_names: Vec<Name> = ies.iter().map(|_| es.fresh_name()).collect();
@@ -223,15 +223,15 @@ pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<InterchangeEn
 
     let operands = ies
         .into_iter()
-        .map(InterchangeOperand::InterchangeOperand)
+        .map(SensemakerOperand::SensemakerOperand)
         .collect();
-    mk_interchange_entry(full_lam, operands)
+    mk_sensemaker_entry(full_lam, operands)
 }
 
 /// assumes that the first `HeaderHash` is the operator, and that successive
 /// `HeaderHash`es are operands. applies them in that order. does not check
 /// whether types match up.
-pub fn mk_application_ie(hh_s: Vec<HeaderHash>) -> ExternResult<InterchangeEntry> {
+pub fn mk_application_ie(hh_s: Vec<HeaderHash>) -> ExternResult<SensemakerEntry> {
     // there must be at least an operator
     if hh_s.len() <= 1 {
         return Err(WasmError::Guest("no operator provided".into()));
@@ -254,13 +254,13 @@ pub fn mk_application_ie(hh_s: Vec<HeaderHash>) -> ExternResult<InterchangeEntry
 
     let operands = hh_s
         .into_iter()
-        .map(InterchangeOperand::InterchangeOperand)
+        .map(SensemakerOperand::SensemakerOperand)
         .collect();
-    mk_interchange_entry(full_lam, operands)
+    mk_sensemaker_entry(full_lam, operands)
 }
 
 #[hdk_extern]
-pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, InterchangeEntry)> {
+pub fn get_sensemaker_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, SensemakerEntry)> {
     let element = (match get(arg_hash.clone(), GetOptions::content())? {
         Some(el) => Ok(el),
         None => Err(WasmError::Guest(format!(
@@ -275,15 +275,15 @@ pub fn get_interchange_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, I
     }
 }
 
-pub fn mk_interchange_entry(
+pub fn mk_sensemaker_entry(
     expr: Expr,
-    args: Vec<InterchangeOperand>,
-) -> ExternResult<InterchangeEntry> {
+    args: Vec<SensemakerOperand>,
+) -> ExternResult<SensemakerEntry> {
     let arg_hh_s: Vec<HeaderHash> = args
         .iter()
         .map(|io| match io {
-            InterchangeOperand::InterchangeOperand(hh) => hh.clone(),
-            InterchangeOperand::OtherOperand(_) => todo!("OtherOperand"),
+            SensemakerOperand::SensemakerOperand(hh) => hh.clone(),
+            SensemakerOperand::OtherOperand(_) => todo!("OtherOperand"),
         })
         .collect();
 
@@ -294,7 +294,7 @@ pub fn mk_interchange_entry(
         })?;
 
     // dereference `arg_hh_s`
-    let int_entrs: Vec<InterchangeEntry> = arg_hh_s
+    let int_entrs: Vec<SensemakerEntry> = arg_hh_s
         .iter()
         .cloned()
         .map(|arg_hash| {
@@ -357,11 +357,11 @@ pub fn mk_interchange_entry(
     let full_application_val = lookup_sto(&mut es, &full_application_vr, &mut sto);
     let full_application_flat_val = value_to_flat_value(&mut es, &full_application_val, &mut sto);
 
-    let new_ie: InterchangeEntry = InterchangeEntry {
+    let new_ie: SensemakerEntry = SensemakerEntry {
         operator: expr,
         operands: arg_hh_s
             .into_iter()
-            .map(InterchangeOperand::InterchangeOperand)
+            .map(SensemakerOperand::SensemakerOperand)
             .collect(),
         output_scheme: full_application_sc,
         output_flat_value: full_application_flat_val,
@@ -371,16 +371,16 @@ pub fn mk_interchange_entry(
 }
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
-pub struct CreateInterchangeEntryInputParse {
+pub struct CreateSensemakerEntryInputParse {
     pub expr: String,
     pub args: Vec<String>,
 }
 
 /// INFO this is incomplete and doesn't currently parse the `args`
 #[hdk_extern]
-pub fn create_interchange_entry_parse(
-    input: CreateInterchangeEntryInputParse,
-) -> ExternResult<(HeaderHash, InterchangeEntry)> {
+pub fn create_sensemaker_entry_parse(
+    input: CreateSensemakerEntryInputParse,
+) -> ExternResult<(HeaderHash, SensemakerEntry)> {
     let (hh, _eh, ie) = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
         Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
         Ok((expr, extra_input)) => {
@@ -390,12 +390,12 @@ pub fn create_interchange_entry_parse(
                     extra_input
                 )))
             } else {
-                create_interchange_entry_full(CreateInterchangeEntryInput {
+                create_sensemaker_entry_full(CreateSensemakerEntryInput {
                     expr,
                     // TODO parse `input.args`.
                     // parsing a HeaderHash seems like it should be possible, but I've not done
                     // it before. we might also want some indicator of which of
-                    // InterchangeOperand constructor is desired?
+                    // SensemakerOperand constructor is desired?
                     args: Vec::new(),
                 })
             }
@@ -404,10 +404,10 @@ pub fn create_interchange_entry_parse(
     Ok((hh, ie))
 }
 
-pub fn create_interchange_entry_full(
-    input: CreateInterchangeEntryInput,
-) -> ExternResult<(HeaderHash, EntryHash, InterchangeEntry)> {
-    let ie = mk_interchange_entry(input.expr, input.args)?;
+pub fn create_sensemaker_entry_full(
+    input: CreateSensemakerEntryInput,
+) -> ExternResult<(HeaderHash, EntryHash, SensemakerEntry)> {
+    let ie = mk_sensemaker_entry(input.expr, input.args)?;
 
     // create SchemeRoot (if needed)
     match get(hash_entry(&SchemeRoot)?, GetOptions::content())? {
@@ -447,9 +447,9 @@ pub fn create_interchange_entry_full(
 }
 
 #[hdk_extern]
-pub fn get_interchange_entry_by_headerhash(
+pub fn get_sensemaker_entry_by_headerhash(
     arg_hash: HeaderHash,
-) -> ExternResult<(EntryHash, InterchangeEntry)> {
+) -> ExternResult<(EntryHash, SensemakerEntry)> {
     let element = (match get(arg_hash.clone(), GetOptions::content())? {
         Some(el) => Ok(el),
         None => Err(WasmError::Guest(format!(

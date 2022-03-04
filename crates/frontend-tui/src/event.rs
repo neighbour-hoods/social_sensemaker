@@ -5,13 +5,13 @@ use std::thread;
 use termion::event::Key;
 use termion::input::TermRead;
 
-use common::InterchangeEntry;
+use common::SensemakerEntry;
 
 pub enum Event<HI> {
     Input(Key),
     HcInfo(HI),
-    ViewerIes(Vec<InterchangeEntry>),
-    SelectorIes(Vec<(HeaderHash, InterchangeEntry)>),
+    ViewerIes(Vec<SensemakerEntry>),
+    SelectorIes(Vec<(HeaderHash, SensemakerEntry)>),
 }
 
 /// A small event handler that wrap termion input and tick events. Each event

@@ -3,14 +3,14 @@ use combine::{stream::position, EasyParser, StreamOnce};
 use hdk::prelude::*;
 
 use common::{
-    create_interchange_entry_full, mk_interchange_entry, CreateInterchangeEntryInput,
-    InterchangeEntry, SchemeEntry,
+    create_sensemaker_entry_full, mk_sensemaker_entry, CreateSensemakerEntryInput, SchemeEntry,
+    SensemakerEntry,
 };
 use rep_lang_concrete_syntax::parse::expr;
 
 entry_defs![
     Path::entry_def(),
-    InterchangeEntry::entry_def(),
+    SensemakerEntry::entry_def(),
     SchemeEntry::entry_def()
 ];
 
@@ -44,33 +44,33 @@ fn test_output(params: Params) -> ExternResult<bool> {
 }
 
 #[hdk_extern]
-pub(crate) fn validate_create_entry_interchange_entry(
+pub(crate) fn validate_create_entry_sensemaker_entry(
     validate_data: ValidateData,
 ) -> ExternResult<ValidateCallbackResult> {
-    validate_create_update_entry_interchange_entry(validate_data)
+    validate_create_update_entry_sensemaker_entry(validate_data)
 }
 
 #[hdk_extern]
-pub(crate) fn validate_update_entry_interchange_entry(
+pub(crate) fn validate_update_entry_sensemaker_entry(
     validate_data: ValidateData,
 ) -> ExternResult<ValidateCallbackResult> {
-    validate_create_update_entry_interchange_entry(validate_data)
+    validate_create_update_entry_sensemaker_entry(validate_data)
 }
 
-pub fn validate_create_update_entry_interchange_entry(
+pub fn validate_create_update_entry_sensemaker_entry(
     validate_data: ValidateData,
 ) -> ExternResult<ValidateCallbackResult> {
     let element = validate_data.element;
-    let ie: InterchangeEntry = match element.into_inner().1.to_app_option()? {
+    let ie: SensemakerEntry = match element.into_inner().1.to_app_option()? {
         Some(ie) => ie,
         None => return Ok(ValidateCallbackResult::Valid),
     };
 
-    let computed_ie = mk_interchange_entry(ie.operator, ie.operands)?;
+    let computed_ie = mk_sensemaker_entry(ie.operator, ie.operands)?;
 
     if computed_ie.output_scheme != ie.output_scheme {
         return Ok(ValidateCallbackResult::Invalid(format!(
-            "InterchangeEntry scheme mismatch:\
+            "SensemakerEntry scheme mismatch:\
         \ncomputed: {:?}\
         \nreceived: {:?}",
             computed_ie.output_scheme, ie.output_scheme
@@ -79,7 +79,7 @@ pub fn validate_create_update_entry_interchange_entry(
 
     if computed_ie.output_flat_value != ie.output_flat_value {
         return Ok(ValidateCallbackResult::Invalid(format!(
-            "InterchangeEntry value mismatch:\
+            "SensemakerEntry value mismatch:\
         \ncomputed: {:?}\
         \nreceived: {:?}",
             computed_ie.output_flat_value, ie.output_flat_value
@@ -90,6 +90,6 @@ pub fn validate_create_update_entry_interchange_entry(
 }
 
 #[hdk_extern]
-pub fn create_interchange_entry(input: CreateInterchangeEntryInput) -> ExternResult<HeaderHash> {
-    create_interchange_entry_full(input).map(|t| t.0)
+pub fn create_sensemaker_entry(input: CreateSensemakerEntryInput) -> ExternResult<HeaderHash> {
+    create_sensemaker_entry_full(input).map(|t| t.0)
 }

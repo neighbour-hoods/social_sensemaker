@@ -1,8 +1,9 @@
 [package]
-name = "rep_interchange"
+name = "social_sensemaker"
 version = "0.1.0"
 authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
+license-file = "../../LICENSE"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -12,9 +13,9 @@ hdk = "0.0.117"
 serde = "1"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57", features = ["hc"] }
 
 [dev-dependencies]
 anyhow = "1.0.26"

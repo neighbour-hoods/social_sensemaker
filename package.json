@@ -1,5 +1,5 @@
 {
-  "name": "rep_interchange",
+  "name": "social_sensemaker",
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
@@ -12,11 +12,11 @@
     "fe:build": "cargo build -p frontend-tui",
     "fe:run": "cargo run --bin rlp",
     "test": "cd test && npm test",
-    "hc:build": "cargo build -p rep_interchange --release --target wasm32-unknown-unknown && cp $CARGO_TARGET_DIR/wasm32-unknown-unknown/release/rep_interchange.wasm ./happs/rep_interchange",
-    "hc:pack": "hc dna pack happs/rep_interchange && hc app pack happs/rep_interchange",
+    "hc:build": "cargo build -p social_sensemaker --release --target wasm32-unknown-unknown && cp $CARGO_TARGET_DIR/wasm32-unknown-unknown/release/social_sensemaker.wasm ./happs/social_sensemaker",
+    "hc:pack": "hc dna pack happs/social_sensemaker && hc app pack happs/social_sensemaker",
     "hc:clean": "rm -rf .hc*",
-    "hc:run": "hc sandbox -f=9000 generate happs/rep_interchange -r=9999 network mdns"
+    "hc:run": "hc sandbox -f=9000 generate happs/social_sensemaker -r=9999 network mdns"
   },
   "author": "",
-  "license": "ISC"
+  "license": "SEE LICENSE IN LICENSE"
 }

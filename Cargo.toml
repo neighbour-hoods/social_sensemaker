@@ -2,7 +2,7 @@
 members = [
   "crates/common",
   "crates/frontend-tui",
-  "crates/rep_interchange",
+  "crates/social_sensemaker",
 ]
 
 [patch.crates-io]

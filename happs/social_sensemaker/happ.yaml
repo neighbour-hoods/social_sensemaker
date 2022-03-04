@@ -1,6 +1,6 @@
 ---
 manifest_version: "1"
-name: rep_interchange
+name: social_sensemaker
 description: ~
 roles:
   - id: main
@@ -8,7 +8,7 @@ roles:
       strategy: create
       deferred: false
     dna:
-      bundled: "./rep_interchange.dna"
+      bundled: "./social_sensemaker.dna"
       properties: ~
       uuid: ~
       version: ~

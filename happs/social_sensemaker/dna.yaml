@@ -1,8 +1,8 @@
 manifest_version: "1"
-name: "rep_interchange"
+name: "social_sensemaker"
 uuid: ""
 properties: null
 zomes:
   - name: interpreter
-    bundled: "./rep_interchange.wasm"
+    bundled: "./social_sensemaker.wasm"
     #    properties:

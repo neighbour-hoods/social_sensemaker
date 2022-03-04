@@ -24,7 +24,7 @@ use tui::{
     Terminal,
 };
 
-use common::{CreateInterchangeEntryInput, InterchangeEntry, InterchangeOperand};
+use common::{CreateSensemakerEntryInput, SensemakerEntry, SensemakerOperand};
 use rep_lang_concrete_syntax::{parse::expr, pretty::ppr_expr, util::pretty::to_pretty};
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{
@@ -36,7 +36,7 @@ use rep_lang_runtime::{
 mod event;
 use event::{Event, Events};
 
-const APP_ID: &str = "rep_interchange";
+const APP_ID: &str = "rep_sensemaker";
 
 #[derive(Debug, Clone)]
 pub enum ExprState {
@@ -50,12 +50,12 @@ pub struct ValidExprState {
     expr: Expr,
     /// any IEs we have already selected for `expr` to be applied to. Vec
     /// ordering is the order in which they will be applied.
-    args: Vec<(HeaderHash, InterchangeEntry)>,
+    args: Vec<(HeaderHash, SensemakerEntry)>,
     /// IEs which have not yet been selected for application, but are
     /// candidates (meaning that `expr` must be a closure & `expr_sc` must have a
     /// toplevel `TArr`. and the closure argument's `Scheme` unifies with all
     /// of these candidates individually).
-    next_application_candidates: Vec<(HeaderHash, InterchangeEntry)>,
+    next_application_candidates: Vec<(HeaderHash, SensemakerEntry)>,
     /// index (if any) of our current choice from `next_application_candidates`.
     /// invariant for value `Some(i)`, `0 <= i < next_application_candidates.len()`
     candidate_choice_index: Option<usize>,
@@ -125,7 +125,7 @@ impl ExprState {
 }
 
 enum ViewState {
-    Viewer(Vec<InterchangeEntry>),
+    Viewer(Vec<SensemakerEntry>),
     Creator,
 }
 
@@ -155,16 +155,16 @@ pub struct HcInfo {
 }
 
 impl HcInfo {
-    async fn get_interchange_entries_which_unify(
+    async fn get_sensemaker_entries_which_unify(
         &mut self,
         opt_target_sc: Option<Scheme>,
-    ) -> Vec<(HeaderHash, InterchangeEntry)> {
+    ) -> Vec<(HeaderHash, SensemakerEntry)> {
         let payload = ExternIO::encode(opt_target_sc).unwrap();
         let cell_id = CellId::new(self.dna_hash.clone(), self.agent_pk.clone());
         let zc = ZomeCall {
             cell_id,
             zome_name: "interpreter".into(),
-            fn_name: "get_interchange_entries_which_unify".into(),
+            fn_name: "get_sensemaker_entries_which_unify".into(),
             payload,
             cap_secret: None,
             provenance: self.agent_pk.clone(),
@@ -173,13 +173,13 @@ impl HcInfo {
         result.decode().unwrap()
     }
 
-    async fn create_interchange_entry(&mut self, input: CreateInterchangeEntryInput) -> HeaderHash {
+    async fn create_sensemaker_entry(&mut self, input: CreateSensemakerEntryInput) -> HeaderHash {
         let payload = ExternIO::encode(input).unwrap();
         let cell_id = CellId::new(self.dna_hash.clone(), self.agent_pk.clone());
         let zc = ZomeCall {
             cell_id,
             zome_name: "interpreter".into(),
-            fn_name: "create_interchange_entry".into(),
+            fn_name: "create_sensemaker_entry".into(),
             payload,
             cap_secret: None,
             provenance: self.agent_pk.clone(),
@@ -233,7 +233,7 @@ impl App {
                     .hc_info
                     .as_mut()
                     .unwrap()
-                    .get_interchange_entries_which_unify(opt_target_sc)
+                    .get_sensemaker_entries_which_unify(opt_target_sc)
                     .await;
                 self.event_sender
                     .send(Event::SelectorIes(hash_ie_s))
@@ -267,7 +267,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 .expect("connect to succeed");
         let agent_pk = admin_ws.generate_agent_pub_key().await.unwrap();
         let dna_hash = {
-            let path = Path::new("./happs/rep_interchange/rep_interchange.dna");
+            let path = Path::new("./happs/social_sensemaker/social_sensemaker.dna");
             let bundle = DnaBundle::read_from_file(path).await.unwrap();
             let (_dna_file, dna_hash) = bundle.into_dna_file(None, None).await.unwrap();
             dna_hash
@@ -282,7 +282,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
             .send(Event::HcInfo(hc_info))
             .expect("send to succeed");
 
-        let pathbuf = PathBuf::from("./happs/rep_interchange/rep_interchange.happ");
+        let pathbuf = PathBuf::from("./happs/social_sensemaker/social_sensemaker.happ");
         let iabp = InstallAppBundlePayload {
             source: AppBundleSource::Path(pathbuf),
             agent_key: agent_pk,
@@ -509,14 +509,14 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             .args
                             .iter()
                             .map(|(e_hash, _ie)| {
-                                InterchangeOperand::InterchangeOperand(e_hash.clone())
+                                SensemakerOperand::SensemakerOperand(e_hash.clone())
                             })
                             .collect();
-                        let input = CreateInterchangeEntryInput {
+                        let input = CreateSensemakerEntryInput {
                             expr: ves.expr.clone(),
                             args,
                         };
-                        let ie_hash = hc_info.create_interchange_entry(input).await;
+                        let ie_hash = hc_info.create_sensemaker_entry(input).await;
                         app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
                     }
                 }
@@ -569,8 +569,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
                 if app.view_state.is_viewer() {
                     let opt_target_sc: Option<Scheme> = None;
-                    let hash_ie_s: Vec<(HeaderHash, InterchangeEntry)> = hc_info
-                        .get_interchange_entries_which_unify(opt_target_sc)
+                    let hash_ie_s: Vec<(HeaderHash, SensemakerEntry)> = hc_info
+                        .get_sensemaker_entries_which_unify(opt_target_sc)
                         .await;
                     let ie_s = hash_ie_s.into_iter().map(|(_eh, ie)| ie).collect();
                     app.event_sender

@@ -52,7 +52,7 @@
 
         packages.holonix = holonixMain;
 
-        packages.rep_interchange-cargo2nix =
+        packages.social_sensemaker-cargo2nix =
           let
             # create nixpkgs that contains rustBuilder from cargo2nix overlay
             crossPkgs = import nixpkgs {
@@ -73,15 +73,15 @@
             # create the workspace & dependencies package set
             rustPkgs = crossPkgs.rustBuilder.makePackageSet' {
               rustChannel = rustVersion;
-              packageFun = import ./crates/rep_interchange/Cargo.nix;
+              packageFun = import ./crates/social_sensemaker/Cargo.nix;
               target = "wasm32-unknown-unknown";
             };
 
           in
 
-          rustPkgs.workspace.rep_interchange {};
+          rustPkgs.workspace.social_sensemaker {};
 
-        packages.rep_interchange-naersk =
+        packages.social_sensemaker-naersk =
           let
             wasmTarget = "wasm32-unknown-unknown";
 
@@ -98,22 +98,22 @@
               src = ./.;
               copyLibs = true;
               CARGO_BUILD_TARGET = wasmTarget;
-              cargoBuildOptions = (opts: opts ++ ["--package=rep_interchange"]);
+              cargoBuildOptions = (opts: opts ++ ["--package=social_sensemaker"]);
             };
 
           in
 
           pkgs.stdenv.mkDerivation {
-            name = "rep_interchange-happ";
+            name = "social_sensemaker-happ";
             buildInputs = [
               holonixMain.pkgs.holochainBinaries.hc
             ];
             unpackPhase = "true";
             installPhase = ''
               mkdir $out
-              cp ${ri-wasm}/lib/rep_interchange.wasm $out
-              cp ${happs/rep_interchange/dna.yaml} $out/dna.yaml
-              cp ${happs/rep_interchange/happ.yaml} $out/happ.yaml
+              cp ${ri-wasm}/lib/social_sensemaker.wasm $out
+              cp ${happs/social_sensemaker/dna.yaml} $out/dna.yaml
+              cp ${happs/social_sensemaker/happ.yaml} $out/happ.yaml
               hc dna pack $out
               hc app pack $out
             '';

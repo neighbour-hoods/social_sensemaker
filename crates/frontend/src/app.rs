@@ -10,7 +10,7 @@ use web_sys::HtmlInputElement as InputElement;
 use weblog::{console_error, console_log};
 use yew::{events::KeyboardEvent, html, html::Scope, prelude::*};
 
-use common::CreateInterchangeEntryInput;
+use common::CreateSensemakerEntryInput;
 use rep_lang_concrete_syntax::parse::expr;
 use rep_lang_core::abstract_syntax::Expr;
 use rep_lang_runtime::{env::Env, infer::infer_expr, types::Scheme};
@@ -118,12 +118,12 @@ impl Component for Model {
                         let mut ws2 = ws.clone();
                         let req_id = self.next_request_id();
                         ctx.link().send_future(async move {
-                            let input: CreateInterchangeEntryInput = CreateInterchangeEntryInput {
+                            let input: CreateSensemakerEntryInput = CreateSensemakerEntryInput {
                                 expr,
                                 args: Vec::new(),
                             };
                             let input_bytes = ExternIO::encode(input).unwrap();
-                            let input2: CreateInterchangeEntryInput =
+                            let input2: CreateSensemakerEntryInput =
                                 ExternIO::decode(&input_bytes).unwrap();
                             console_log!(format!("{:?}", input2));
                             let agent_pk_bytes: Vec<u8> = iter::repeat(1).take(36).collect();
@@ -131,7 +131,7 @@ impl Component for Model {
                             let call = Call::new(
                                 None,
                                 "interpreter".into(),
-                                "create_interchange_entry".into(),
+                                "create_sensemaker_entry".into(),
                                 None,
                                 input_bytes,
                                 agent_pk,

@@ -75,8 +75,8 @@ create an IE in terminal 1-2 and see it appear in terminal 2-2.
 
 [source]
 ----
-$ npm run build
-$ npm run pack
+$ npm run hc:build
+$ npm run hc:pack
 
 # INFO
 # cargo test depends on having the .happ around to be installed.

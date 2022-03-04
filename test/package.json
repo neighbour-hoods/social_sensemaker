@@ -8,7 +8,7 @@
     "test": "WASM_LOG=debug RUST_LOG=error RUST_BACKTRACE=1 tape test_*.js | faucet"
   },
   "author": "",
-  "license": "UNLICENSED",
+  "license": "SEE LICENSE IN ../LICENSE",
   "devDependencies": {
     "@holochain/tryorama": "^0.4.5",
     "faucet": "^0.0.1",

@@ -18,5 +18,5 @@
     "hc:run": "hc sandbox -f=9000 generate happs/rep_interchange -r=9999 network mdns"
   },
   "author": "",
-  "license": "ISC"
+  "license": "SEE LICENSE IN LICENSE"
 }

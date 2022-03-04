@@ -3,6 +3,7 @@ name = "common"
 version = "0.1.0"
 authors = ["Michael Hueschen <m@mhueschen.space>"]
 edition = "2018"
+license-file = "../../LICENSE"
 
 [dependencies]
 combine = "4.5.2"

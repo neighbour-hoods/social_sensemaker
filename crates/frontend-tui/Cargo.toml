@@ -26,6 +26,6 @@ tui = "0.16.0"
 xdg = "2.4.0"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01" }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "7ebd5b212ee995bd1f4f7f1a8dbe5a60bb75dd01" }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }

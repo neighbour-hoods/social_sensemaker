@@ -48,10 +48,10 @@ pub enum ExprState {
 pub struct ValidExprState {
     expr_sc: Scheme,
     expr: Expr,
-    /// any IEs we have already selected for `expr` to be applied to. Vec
+    /// any SEs we have already selected for `expr` to be applied to. Vec
     /// ordering is the order in which they will be applied.
     args: Vec<(HeaderHash, SensemakerEntry)>,
-    /// IEs which have not yet been selected for application, but are
+    /// SEs which have not yet been selected for application, but are
     /// candidates (meaning that `expr` must be a closure & `expr_sc` must have a
     /// toplevel `TArr`. and the closure argument's `Scheme` unifies with all
     /// of these candidates individually).
@@ -86,7 +86,7 @@ impl ValidExprState {
         let full_application: Type = self
             .args
             .iter()
-            .map(|(_, ie)| ie.output_scheme.clone())
+            .map(|(_, se)| se.output_scheme.clone())
             .fold(Ok(normalized_expr_ty), applicator)?;
         Ok(close_over(full_application))
     }
@@ -225,18 +225,18 @@ impl App {
     }
 
     async fn get_selection_candidates(&mut self) {
-        // zome call to look for IEs which unify with the argument
+        // zome call to look for SEs which unify with the argument
         if let ExprState::Valid(ves) = &self.expr_state {
             if let Ok(Scheme(tvs, Type::TArr(arg, _))) = ves.computed_application_sc() {
                 let opt_target_sc = Some(Scheme(tvs.clone(), *arg.clone()));
-                let hash_ie_s = self
+                let hash_se_s = self
                     .hc_info
                     .as_mut()
                     .unwrap()
                     .get_sensemaker_entries_which_unify(opt_target_sc)
                     .await;
                 self.event_sender
-                    .send(Event::SelectorIes(hash_ie_s))
+                    .send(Event::SelectorSes(hash_se_s))
                     .expect("send to succeed");
             }
         }
@@ -404,7 +404,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                     let msg = Paragraph::new(text)
                         .wrap(Wrap { trim: false })
                         .style(Style::default())
-                        .block(Block::default().borders(Borders::ALL).title("IE selector"));
+                        .block(Block::default().borders(Borders::ALL).title("SE selector"));
                     f.render_widget(msg, dims);
                 }
 
@@ -422,7 +422,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 f.render_widget(app_info, chunks[4]);
             }
 
-            ViewState::Viewer(ie_s) => {
+            ViewState::Viewer(se_s) => {
                 let chunks = Layout::default()
                     .direction(Direction::Vertical)
                     .margin(1)
@@ -439,13 +439,13 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 let help_msg = Paragraph::new(Text::from(Spans::from(help_spans)));
                 f.render_widget(help_msg, chunks[0]);
 
-                let rendered_ie_s: String = ie_s
+                let rendered_se_s: String = se_s
                     .iter()
-                    .map(|ie| to_pretty(ie.ppr(), chunks[1].width.into()))
+                    .map(|se| to_pretty(se.ppr(), chunks[1].width.into()))
                     .collect::<Vec<String>>()
                     .join("\n\n");
 
-                let block = Paragraph::new(rendered_ie_s)
+                let block = Paragraph::new(rendered_se_s)
                     .wrap(Wrap { trim: false })
                     .style(Style::default())
                     .block(Block::default().borders(Borders::ALL).title("viewer"));
@@ -508,7 +508,7 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                         let args = ves
                             .args
                             .iter()
-                            .map(|(e_hash, _ie)| {
+                            .map(|(e_hash, _se)| {
                                 SensemakerOperand::SensemakerOperand(e_hash.clone())
                             })
                             .collect();
@@ -516,8 +516,8 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                             expr: ves.expr.clone(),
                             args,
                         };
-                        let ie_hash = hc_info.create_sensemaker_entry(input).await;
-                        app.log_hc_response(format!("create: ie_hash: {:?}", ie_hash));
+                        let se_hash = hc_info.create_sensemaker_entry(input).await;
+                        app.log_hc_response(format!("create: se_hash: {:?}", se_hash));
                     }
                 }
             }
@@ -569,12 +569,12 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
 
                 if app.view_state.is_viewer() {
                     let opt_target_sc: Option<Scheme> = None;
-                    let hash_ie_s: Vec<(HeaderHash, SensemakerEntry)> = hc_info
+                    let hash_se_s: Vec<(HeaderHash, SensemakerEntry)> = hc_info
                         .get_sensemaker_entries_which_unify(opt_target_sc)
                         .await;
-                    let ie_s = hash_ie_s.into_iter().map(|(_eh, ie)| ie).collect();
+                    let se_s = hash_se_s.into_iter().map(|(_eh, se)| se).collect();
                     app.event_sender
-                        .send(Event::ViewerIes(ie_s))
+                        .send(Event::ViewerSes(se_s))
                         .expect("send to succeed");
                 }
             }
@@ -582,18 +582,18 @@ async fn main() -> Result<(), Box<dyn error::Error>> {
                 app.hc_info = Some(hc_info);
                 app.log_hc_response("hc_info: connected".into());
             }
-            Event::SelectorIes(hash_ie_s) => {
-                app.log_hc_response("got selector IEs".into());
+            Event::SelectorSes(hash_se_s) => {
+                app.log_hc_response("got selector SEs".into());
                 if let ExprState::Valid(ves) = &mut app.expr_state {
-                    if !hash_ie_s.is_empty() {
+                    if !hash_se_s.is_empty() {
                         ves.candidate_choice_index = Some(0);
                     }
-                    ves.next_application_candidates = hash_ie_s;
+                    ves.next_application_candidates = hash_se_s;
                 }
             }
-            Event::ViewerIes(ie_s) => {
-                app.log_hc_response("got viewer IEs".into());
-                app.view_state = ViewState::Viewer(ie_s);
+            Event::ViewerSes(se_s) => {
+                app.log_hc_response("got viewer SEs".into());
+                app.view_state = ViewState::Viewer(se_s);
             }
             _ => {}
         }

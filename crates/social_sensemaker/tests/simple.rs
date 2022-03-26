@@ -12,7 +12,7 @@ const APP_ID: &str = "rep_sensemaker";
 const ZOME_NAME: &str = "interpreter";
 
 #[tokio::test(flavor = "multi_thread")]
-pub async fn test_creation_retrieval_ie() -> anyhow::Result<()> {
+pub async fn test_creation_retrieval_se() -> anyhow::Result<()> {
     use holochain::test_utils::consistency_10s;
     use kitsune_p2p::KitsuneP2pConfig;
     use std::sync::Arc;
@@ -42,12 +42,12 @@ pub async fn test_creation_retrieval_ie() -> anyhow::Result<()> {
     let ((alice,), (bobbo,), (carol,)) = apps.into_tuples();
 
     let expr = Expr::Lit(Lit::LInt(0));
-    let ciei = CreateSensemakerEntryInput {
+    let csei = CreateSensemakerEntryInput {
         expr: expr.clone(),
         args: vec![],
     };
     let hh: HeaderHash = conductors[0]
-        .call(&alice.zome(ZOME_NAME), "create_sensemaker_entry", ciei)
+        .call(&alice.zome(ZOME_NAME), "create_sensemaker_entry", csei)
         .await;
 
     // wait for gossip to propagate
@@ -57,26 +57,26 @@ pub async fn test_creation_retrieval_ie() -> anyhow::Result<()> {
 
     {
         // assert correct retrieval
-        let (_ie_hash, ie): (EntryHash, SensemakerEntry) = conductors[1]
+        let (_se_hash, se): (EntryHash, SensemakerEntry) = conductors[1]
             .call(
                 &bobbo.zome(ZOME_NAME),
                 "get_sensemaker_entry_by_headerhash",
                 hh.clone(),
             )
             .await;
-        assert_eq!(ie.operator, expr.clone());
+        assert_eq!(se.operator, expr.clone());
     }
 
     {
         // assert correct retrieval
-        let (_ie_hash, ie): (EntryHash, SensemakerEntry) = conductors[2]
+        let (_se_hash, se): (EntryHash, SensemakerEntry) = conductors[2]
             .call(
                 &carol.zome(ZOME_NAME),
                 "get_sensemaker_entry_by_headerhash",
                 hh,
             )
             .await;
-        assert_eq!(ie.operator, expr);
+        assert_eq!(se.operator, expr);
     }
 
     Ok(())
@@ -99,7 +99,7 @@ pub async fn test_round_robin_incrementation() -> anyhow::Result<()> {
     let (conductors, apps) = setup_conductors_cells(NUM_CONDUCTORS).await;
     let cells = apps.cells_flattened();
 
-    let init_ciei = CreateSensemakerEntryInput {
+    let init_csei = CreateSensemakerEntryInput {
         expr: Expr::Lit(Lit::LInt(0)),
         args: vec![],
     };
@@ -107,42 +107,42 @@ pub async fn test_round_robin_incrementation() -> anyhow::Result<()> {
         .call(
             &cells[0].zome(ZOME_NAME),
             "create_sensemaker_entry",
-            init_ciei,
+            init_csei,
         )
         .await;
 
-    let mut last_ie_hh = hh;
+    let mut last_se_hh = hh;
     for idx in 0..ROUND_ROBIN_COUNT {
         // await consistency
         consistency_10s(&cells).await;
 
-        let ciei = CreateSensemakerEntryInput {
+        let csei = CreateSensemakerEntryInput {
             expr: app!(Expr::Prim(PrimOp::Add), Expr::Lit(Lit::LInt(1))),
-            args: vec![SensemakerOperand::SensemakerOperand(last_ie_hh)],
+            args: vec![SensemakerOperand::SensemakerOperand(last_se_hh)],
         };
 
         let new_hh: HeaderHash = conductors[idx % NUM_CONDUCTORS]
             .call(
                 &cells[idx % NUM_CONDUCTORS].zome(ZOME_NAME),
                 "create_sensemaker_entry",
-                ciei,
+                csei,
             )
             .await;
 
-        last_ie_hh = new_hh;
+        last_se_hh = new_hh;
     }
 
     // check final value
     consistency_10s(&cells).await;
-    let (_final_ie_hash, final_ie): (EntryHash, SensemakerEntry) = conductors[0]
+    let (_final_se_hash, final_se): (EntryHash, SensemakerEntry) = conductors[0]
         .call(
             &cells[0].zome(ZOME_NAME),
             "get_sensemaker_entry_by_headerhash",
-            last_ie_hh,
+            last_se_hh,
         )
         .await;
     assert_eq!(
-        final_ie.output_flat_value,
+        final_se.output_flat_value,
         FlatValue(Value::VInt(ROUND_ROBIN_COUNT as i64))
     );
 
@@ -170,7 +170,7 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
     // TODO can the commonalities be abstracted? unsure about async closure
     // capturing env.
     let mut hh_0 = {
-        let init_ciei = CreateSensemakerEntryInput {
+        let init_csei = CreateSensemakerEntryInput {
             expr: Expr::Lit(Lit::LInt(0)),
             args: vec![],
         };
@@ -178,13 +178,13 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
             .call(
                 &cells[0].zome(ZOME_NAME),
                 "create_sensemaker_entry",
-                init_ciei,
+                init_csei,
             )
             .await;
         init_hh
     };
     let mut hh_1 = {
-        let init_ciei = CreateSensemakerEntryInput {
+        let init_csei = CreateSensemakerEntryInput {
             expr: Expr::Lit(Lit::LInt(1)),
             args: vec![],
         };
@@ -192,7 +192,7 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
             .call(
                 &cells[0].zome(ZOME_NAME),
                 "create_sensemaker_entry",
-                init_ciei,
+                init_csei,
             )
             .await;
         init_hh
@@ -202,7 +202,7 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
         // await consistency
         consistency_10s(&cells).await;
 
-        let ciei = CreateSensemakerEntryInput {
+        let csei = CreateSensemakerEntryInput {
             expr: Expr::Prim(PrimOp::Add),
             args: vec![
                 SensemakerOperand::SensemakerOperand(hh_0.clone()),
@@ -214,7 +214,7 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
             .call(
                 &cells[idx % NUM_CONDUCTORS].zome(ZOME_NAME),
                 "create_sensemaker_entry",
-                ciei,
+                csei,
             )
             .await;
 
@@ -224,7 +224,7 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
 
     // check final value
     consistency_10s(&cells).await;
-    let (_final_ie_hash, final_ie): (EntryHash, SensemakerEntry) = conductors[0]
+    let (_final_se_hash, final_se): (EntryHash, SensemakerEntry) = conductors[0]
         .call(
             &cells[0].zome(ZOME_NAME),
             "get_sensemaker_entry_by_headerhash",
@@ -232,7 +232,7 @@ pub async fn test_round_robin_fibonacci() -> anyhow::Result<()> {
         )
         .await;
     assert_eq!(
-        final_ie.output_flat_value,
+        final_se.output_flat_value,
         FlatValue(Value::VInt(nth_fib(ROUND_ROBIN_COUNT as i64)))
     );
 
@@ -256,7 +256,7 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
     let (conductors, apps) = setup_conductors_cells(NUM_CONDUCTORS).await;
     let cells = apps.cells_flattened();
 
-    let init_ciei = CreateSensemakerEntryInput {
+    let init_csei = CreateSensemakerEntryInput {
         expr: Expr::Lit(Lit::LInt(1)),
         args: vec![],
     };
@@ -264,7 +264,7 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
         .call(
             &cells[0].zome(ZOME_NAME),
             "create_sensemaker_entry",
-            init_ciei,
+            init_csei,
         )
         .await;
 
@@ -291,7 +291,7 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
             let lam_f = |bd, nm| Expr::Lam(nm, Box::new(bd));
             names.into_iter().rev().fold(app, lam_f)
         };
-        let ciei = CreateSensemakerEntryInput {
+        let csei = CreateSensemakerEntryInput {
             expr,
             args: arg_hh_s
                 .iter()
@@ -304,7 +304,7 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
             .call(
                 &cells[idx % NUM_CONDUCTORS].zome(ZOME_NAME),
                 "create_sensemaker_entry",
-                ciei,
+                csei,
             )
             .await;
 
@@ -315,7 +315,7 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
 
     // check final value
     consistency_10s(&cells).await;
-    let (_final_ie_hash, final_ie): (EntryHash, SensemakerEntry) = conductors[0]
+    let (_final_se_hash, final_se): (EntryHash, SensemakerEntry) = conductors[0]
         .call(
             &cells[0].zome(ZOME_NAME),
             "get_sensemaker_entry_by_headerhash",
@@ -323,7 +323,7 @@ pub async fn test_round_robin_arity_n_sum() -> anyhow::Result<()> {
         )
         .await;
     assert_eq!(
-        final_ie.output_flat_value,
+        final_se.output_flat_value,
         FlatValue(Value::VInt(nth_sum_all(ROUND_ROBIN_COUNT as u32)))
     );
 

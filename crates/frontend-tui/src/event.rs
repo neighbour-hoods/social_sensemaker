@@ -10,8 +10,8 @@ use common::SensemakerEntry;
 pub enum Event<HI> {
     Input(Key),
     HcInfo(HI),
-    ViewerIes(Vec<SensemakerEntry>),
-    SelectorIes(Vec<(HeaderHash, SensemakerEntry)>),
+    ViewerSes(Vec<SensemakerEntry>),
+    SelectorSes(Vec<(HeaderHash, SensemakerEntry)>),
 }
 
 /// A small event handler that wrap termion input and tick events. Each event

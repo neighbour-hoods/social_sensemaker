@@ -163,10 +163,10 @@ impl Component for Model {
                                     } = resp
                                     {
                                         if resp_id == req_id {
-                                            let ie_hash: HeaderHash =
+                                            let se_hash: HeaderHash =
                                                 holochain_serialized_bytes::decode(&resp_data)
                                                     .unwrap();
-                                            return Msg::CreateExprResponse(Ok(ie_hash));
+                                            return Msg::CreateExprResponse(Ok(se_hash));
                                         }
                                     }
                                     return Msg::CreateExprResponse(Err(format!(

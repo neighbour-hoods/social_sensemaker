@@ -203,13 +203,13 @@ pub fn get_linked_sensemaker_entries_which_unify(
 /// this function creates an `SensemakerEntry`, whose `Scheme` is essentially
 /// `forall a. List a`.
 ///
-/// all IEs should have compatible `Scheme`s. this function will not check that,
-/// but if `create_entry` is used later & type inference fails, the IE won't be
+/// all SEs should have compatible `Scheme`s. this function will not check that,
+/// but if `create_entry` is used later & type inference fails, the SE won't be
 /// created.
-pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<SensemakerEntry> {
+pub fn pack_ses_into_list_se(ses: Vec<HeaderHash>) -> ExternResult<SensemakerEntry> {
     let mut es = EvalState::new();
 
-    let fresh_names: Vec<Name> = ies.iter().map(|_| es.fresh_name()).collect();
+    let fresh_names: Vec<Name> = ses.iter().map(|_| es.fresh_name()).collect();
 
     // construct the list by `Cons`ing each element onto the accumulator
     let add_cons =
@@ -221,7 +221,7 @@ pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<SensemakerEnt
     let wrap_lambda = |acc, nm| lam!(nm, acc);
     let full_lam = fresh_names.into_iter().rev().fold(app_body, wrap_lambda);
 
-    let operands = ies
+    let operands = ses
         .into_iter()
         .map(SensemakerOperand::SensemakerOperand)
         .collect();
@@ -231,7 +231,7 @@ pub fn pack_ies_into_list_ie(ies: Vec<HeaderHash>) -> ExternResult<SensemakerEnt
 /// assumes that the first `HeaderHash` is the operator, and that successive
 /// `HeaderHash`es are operands. applies them in that order. does not check
 /// whether types match up.
-pub fn mk_application_ie(hh_s: Vec<HeaderHash>) -> ExternResult<SensemakerEntry> {
+pub fn mk_application_se(hh_s: Vec<HeaderHash>) -> ExternResult<SensemakerEntry> {
     // there must be at least an operator
     if hh_s.len() <= 1 {
         return Err(WasmError::Guest("no operator provided".into()));
@@ -270,7 +270,7 @@ pub fn get_sensemaker_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, Se
     })?;
     let hh = element.header_address().clone();
     match element.into_inner().1.to_app_option()? {
-        Some(ie) => Ok((hh, ie)),
+        Some(se) => Ok((hh, se)),
         None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
     }
 }
@@ -300,7 +300,7 @@ pub fn mk_sensemaker_entry(
         .map(|arg_hash| {
             let element = must_get_valid_element(arg_hash.clone())?;
             match element.into_inner().1.to_app_option()? {
-                Some(ie) => Ok(ie),
+                Some(se) => Ok(se),
                 None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
             }
         })
@@ -314,11 +314,11 @@ pub fn mk_sensemaker_entry(
     let normalized_expr = expr.normalize(&mut HashMap::new(), &mut es);
     let arg_named_scheme_values: Vec<(Name, Scheme, FlatValue<Marker>)> = int_entrs
         .iter()
-        .map(|ie| {
+        .map(|se| {
             (
                 es.fresh_name(),
-                infer::normalize(&mut is, ie.output_scheme.clone()),
-                ie.output_flat_value.normalize(&mut HashMap::new(), &mut es),
+                infer::normalize(&mut is, se.output_scheme.clone()),
+                se.output_flat_value.normalize(&mut HashMap::new(), &mut es),
             )
         })
         .collect();
@@ -357,7 +357,7 @@ pub fn mk_sensemaker_entry(
     let full_application_val = lookup_sto(&mut es, &full_application_vr, &mut sto);
     let full_application_flat_val = value_to_flat_value(&mut es, &full_application_val, &mut sto);
 
-    let new_ie: SensemakerEntry = SensemakerEntry {
+    let new_se: SensemakerEntry = SensemakerEntry {
         operator: expr,
         operands: arg_hh_s
             .into_iter()
@@ -367,7 +367,7 @@ pub fn mk_sensemaker_entry(
         output_flat_value: full_application_flat_val,
         start_gas: es.current_gas_count(),
     };
-    Ok(new_ie)
+    Ok(new_se)
 }
 
 #[derive(Debug, Serialize, Deserialize, SerializedBytes)]
@@ -381,7 +381,7 @@ pub struct CreateSensemakerEntryInputParse {
 pub fn create_sensemaker_entry_parse(
     input: CreateSensemakerEntryInputParse,
 ) -> ExternResult<(HeaderHash, SensemakerEntry)> {
-    let (hh, _eh, ie) = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
+    let (hh, _eh, se) = match expr().easy_parse(position::Stream::new(&input.expr[..])) {
         Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
         Ok((expr, extra_input)) => {
             if extra_input.is_partial() {
@@ -401,13 +401,13 @@ pub fn create_sensemaker_entry_parse(
             }
         }
     }?;
-    Ok((hh, ie))
+    Ok((hh, se))
 }
 
 pub fn create_sensemaker_entry_full(
     input: CreateSensemakerEntryInput,
 ) -> ExternResult<(HeaderHash, EntryHash, SensemakerEntry)> {
-    let ie = mk_sensemaker_entry(input.expr, input.args)?;
+    let se = mk_sensemaker_entry(input.expr, input.args)?;
 
     // create SchemeRoot (if needed)
     match get(hash_entry(&SchemeRoot)?, GetOptions::content())? {
@@ -419,7 +419,7 @@ pub fn create_sensemaker_entry_full(
 
     // create Scheme entry & link from SchemeRoot (if needed)
     let scheme_entry = SchemeEntry {
-        sc: ie.output_scheme.clone(),
+        sc: se.output_scheme.clone(),
     };
     let scheme_entry_hash = hash_entry(&scheme_entry)?;
     match get(scheme_entry_hash.clone(), GetOptions::content())? {
@@ -434,15 +434,15 @@ pub fn create_sensemaker_entry_full(
         Some(_) => {}
     };
 
-    // create IE & link from Scheme entry (if needed)
-    let ie_eh = hash_entry(&ie)?;
-    match get(ie_eh.clone(), GetOptions::content())? {
+    // create SE & link from Scheme entry (if needed)
+    let se_eh = hash_entry(&se)?;
+    match get(se_eh.clone(), GetOptions::content())? {
         None => {
-            let hh = create_entry(&ie)?;
-            create_link(scheme_entry_hash, ie_eh.clone(), LinkTag::new(OWNER_TAG))?;
-            Ok((hh, ie_eh, ie))
+            let hh = create_entry(&se)?;
+            create_link(scheme_entry_hash, se_eh.clone(), LinkTag::new(OWNER_TAG))?;
+            Ok((hh, se_eh, se))
         }
-        Some(element) => Ok((element.header_address().clone(), ie_eh, ie)),
+        Some(element) => Ok((element.header_address().clone(), se_eh, se)),
     }
 }
 
@@ -458,9 +458,9 @@ pub fn get_sensemaker_entry_by_headerhash(
         ))),
     })?;
     match element.into_inner().1.to_app_option()? {
-        Some(ie) => {
-            let ie_hash = hash_entry(&ie)?;
-            Ok((ie_hash, ie))
+        Some(se) => {
+            let se_hash = hash_entry(&se)?;
+            Ok((se_hash, se))
         }
         None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
     }

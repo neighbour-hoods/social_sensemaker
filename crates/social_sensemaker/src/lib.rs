@@ -61,28 +61,28 @@ pub fn validate_create_update_entry_sensemaker_entry(
     validate_data: ValidateData,
 ) -> ExternResult<ValidateCallbackResult> {
     let element = validate_data.element;
-    let ie: SensemakerEntry = match element.into_inner().1.to_app_option()? {
-        Some(ie) => ie,
+    let se: SensemakerEntry = match element.into_inner().1.to_app_option()? {
+        Some(se) => se,
         None => return Ok(ValidateCallbackResult::Valid),
     };
 
-    let computed_ie = mk_sensemaker_entry(ie.operator, ie.operands)?;
+    let computed_se = mk_sensemaker_entry(se.operator, se.operands)?;
 
-    if computed_ie.output_scheme != ie.output_scheme {
+    if computed_se.output_scheme != se.output_scheme {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "SensemakerEntry scheme mismatch:\
         \ncomputed: {:?}\
         \nreceived: {:?}",
-            computed_ie.output_scheme, ie.output_scheme
+            computed_se.output_scheme, se.output_scheme
         )));
     }
 
-    if computed_ie.output_flat_value != ie.output_flat_value {
+    if computed_se.output_flat_value != se.output_flat_value {
         return Ok(ValidateCallbackResult::Invalid(format!(
             "SensemakerEntry value mismatch:\
         \ncomputed: {:?}\
         \nreceived: {:?}",
-            computed_ie.output_flat_value, ie.output_flat_value
+            computed_se.output_flat_value, se.output_flat_value
         )));
     }
 

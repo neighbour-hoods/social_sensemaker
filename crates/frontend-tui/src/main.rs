@@ -36,7 +36,7 @@ use rep_lang_runtime::{
 mod event;
 use event::{Event, Events};
 
-const APP_ID: &str = "rep_sensemaker";
+const APP_ID: &str = "sensemaker";
 
 #[derive(Debug, Clone)]
 pub enum ExprState {

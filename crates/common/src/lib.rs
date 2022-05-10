@@ -18,7 +18,7 @@ use rep_lang_runtime::{
     types::Scheme,
 };
 
-pub const OWNER_TAG: &str = "rep_sensemaker_owner";
+pub const OWNER_TAG: &str = "sensemaker_owner";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();

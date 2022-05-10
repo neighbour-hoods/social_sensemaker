@@ -8,7 +8,7 @@ use holochain::sweettest::{SweetAppBatch, SweetConductorBatch, SweetDnaFile};
 // use holochain::test_utils::WaitOps;
 use std::path::Path;
 
-const APP_ID: &str = "rep_sensemaker";
+const APP_ID: &str = "sensemaker";
 const ZOME_NAME: &str = "interpreter";
 
 #[tokio::test(flavor = "multi_thread")]

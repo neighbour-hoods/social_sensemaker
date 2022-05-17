@@ -7,10 +7,10 @@ license-file = "../../LICENSE"
 
 [dependencies]
 combine = "4.5.2"
-hdk = "0.0.131"
+hdk = "0.0.132"
 pretty = "0.10.0"
 serde = "1"
 
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "51dbb289a1444c22d991aa91bf3e56ca97360bbb" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "51dbb289a1444c22d991aa91bf3e56ca97360bbb", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "51dbb289a1444c22d991aa91bf3e56ca97360bbb", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }

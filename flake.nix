@@ -7,7 +7,7 @@
       flake = false;
     };
     rust-overlay.url = "github:oxalica/rust-overlay";
-    cargo2nix.url = "github:cargo2nix/cargo2nix/host-platform-build-rs";
+    cargo2nix.url = "github:cargo2nix/cargo2nix";
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
@@ -25,7 +25,7 @@
           overlays = [ rust-overlay.overlay ];
         };
 
-        rustVersion = "1.55.0";
+        rustVersion = "1.59.0";
 
       in
 

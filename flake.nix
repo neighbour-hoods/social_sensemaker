@@ -18,7 +18,9 @@
   outputs = { nixpkgs, flake-utils, holonix, rust-overlay, cargo2nix, naersk, ... }:
     flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux" "x86_64-darwin"] (system:
       let
-        holonixMain = import holonix { };
+        holonixMain = import holonix {
+          holochainVersionId = "v0_0_139";
+        };
 
         pkgs = import nixpkgs {
           inherit system;

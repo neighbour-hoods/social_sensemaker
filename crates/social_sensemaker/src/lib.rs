@@ -60,28 +60,30 @@ pub(crate) fn validate_update_entry_sensemaker_entry(
 pub fn validate_create_update_entry_sensemaker_entry(
     op: Op,
 ) -> ExternResult<ValidateCallbackResult> {
-
-    // op ensures entry will not be an option
     let entry: Entry = match op {
-        Op::StoreEntry { 
-            entry: entry@Entry::App(_),
-            header: _, 
+        Op::StoreEntry {
+            entry: entry @ Entry::App(_),
+            header: _,
         } => entry,
-        Op::RegisterUpdate { 
-            update: _, 
-            new_entry, 
-            original_header: _, 
-            original_entry: _ } => new_entry,
-        _ => return Ok(ValidateCallbackResult::Invalid("Unexpected op: not StoreEntry or RegisterUpdate".into())),
+        Op::RegisterUpdate {
+            update: _,
+            new_entry,
+            original_header: _,
+            original_entry: _,
+        } => new_entry,
+        _ => {
+            return Ok(ValidateCallbackResult::Invalid(
+                "Unexpected op: not StoreEntry or RegisterUpdate".into(),
+            ))
+        }
     };
-    
+
     let se: SensemakerEntry = match entry_to_struct(&entry)? {
         Some(se) => Ok(se),
         None => Err(WasmError::Guest(format!(
             "Couldn't convert Entry {:?} into SensemakerEntry",
             entry
-            ))
-        )
+        ))),
     }?;
 
     let computed_se = mk_sensemaker_entry(se.operator, se.operands)?;

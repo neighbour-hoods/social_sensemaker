@@ -3,7 +3,7 @@
     nixpkgs.url = "github:nixos/nixpkgs/nixos-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     holonix = {
-      url = "github:holochain/holonix";
+      url = "github:holochain/holonix?rev=8c7d145719afde9e31033118490c2e007c1d81dc";
       flake = false;
     };
     rust-overlay.url = "github:oxalica/rust-overlay";

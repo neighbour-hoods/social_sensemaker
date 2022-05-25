@@ -9,22 +9,22 @@ license-file = "../../LICENSE"
 
 [dependencies]
 combine = "4.5.2"
-hdk = "0.0.117"
+hdk = "0.0.132"
 serde = "1"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
 
 [dev-dependencies]
 anyhow = "1.0.26"
 futures = { version = "0.3.1", default-features = false }
-hdk = "0.0.117"
-holochain = { version = "0.0.121", default-features = false, features = ["test_utils"] }
+hdk = "0.0.132"
+holochain = { version = "0.0.139", default-features = false, features = ["test_utils"] }
 observability = "0.1.3"
-kitsune_p2p = "0.0.18"
-kitsune_p2p_types ="0.0.15"
+kitsune_p2p = "0.0.32"
+kitsune_p2p_types ="0.0.24"
 tokio = {version = "1.11", features = ["full"]}
 #
 common = { path = "../common" }

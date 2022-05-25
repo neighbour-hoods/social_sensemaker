@@ -12,9 +12,9 @@ path = "src/main.rs"
 combine = "4.5.2"
 futures = "0.3"
 holo_hash = { version = "0.0.14", default-features = false }
-holochain_conductor_client = { git = "https://github.com/holochain/conductor-client-rust.git", rev = "148477fdee025090bfd7a8face48a0eed3dd5788" }
-holochain_types = "0.0.19"
-holochain_zome_types = { version = "0.0.18", default-features = false }
+holochain_client = { git = "https://github.com/holochain/holochain-client-rust.git", rev = "77fae4a989fd75d5a01580e0226f733a65a1716f" }
+holochain_types = "0.0.37"
+holochain_zome_types = { version = "0.0.33", default-features = false }
 pretty = "0.10.0"
 rand = "0.8.4"
 scrawl = "1.1.0"
@@ -26,6 +26,6 @@ tui = "0.16.0"
 xdg = "2.4.0"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }

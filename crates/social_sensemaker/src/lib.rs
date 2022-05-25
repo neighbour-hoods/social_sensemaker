@@ -45,26 +45,46 @@ fn test_output(params: Params) -> ExternResult<bool> {
 
 #[hdk_extern]
 pub(crate) fn validate_create_entry_sensemaker_entry(
-    validate_data: ValidateData,
+    op: Op,
 ) -> ExternResult<ValidateCallbackResult> {
-    validate_create_update_entry_sensemaker_entry(validate_data)
+    validate_create_update_entry_sensemaker_entry(op)
 }
 
 #[hdk_extern]
 pub(crate) fn validate_update_entry_sensemaker_entry(
-    validate_data: ValidateData,
+    op: Op,
 ) -> ExternResult<ValidateCallbackResult> {
-    validate_create_update_entry_sensemaker_entry(validate_data)
+    validate_create_update_entry_sensemaker_entry(op)
 }
 
 pub fn validate_create_update_entry_sensemaker_entry(
-    validate_data: ValidateData,
+    op: Op,
 ) -> ExternResult<ValidateCallbackResult> {
-    let element = validate_data.element;
-    let se: SensemakerEntry = match element.into_inner().1.to_app_option()? {
-        Some(se) => se,
-        None => return Ok(ValidateCallbackResult::Valid),
+    let entry: Entry = match op {
+        Op::StoreEntry {
+            entry: entry @ Entry::App(_),
+            header: _,
+        } => entry,
+        Op::RegisterUpdate {
+            update: _,
+            new_entry,
+            original_header: _,
+            original_entry: _,
+        } => new_entry,
+        _ => {
+            return Ok(ValidateCallbackResult::Invalid(
+                "Unexpected op: not StoreEntry or RegisterUpdate".into(),
+            ))
+        }
     };
+
+    let se: SensemakerEntry = match entry_to_struct(&entry)? {
+        Some(se) => Ok(se),
+        None => Err(WasmError::Guest(format!(
+            "Couldn't convert Entry {:?} into SensemakerEntry",
+            entry
+        ))),
+    }?;
 
     let computed_se = mk_sensemaker_entry(se.operator, se.operands)?;
 
@@ -92,4 +112,13 @@ pub fn validate_create_update_entry_sensemaker_entry(
 #[hdk_extern]
 pub fn create_sensemaker_entry(input: CreateSensemakerEntryInput) -> ExternResult<HeaderHash> {
     create_sensemaker_entry_full(input).map(|t| t.0)
+}
+
+pub fn entry_to_struct<A: TryFrom<SerializedBytes, Error = SerializedBytesError>>(
+    entry: &Entry,
+) -> Result<Option<A>, SerializedBytesError> {
+    match entry {
+        Entry::App(eb) => Ok(Some(A::try_from(SerializedBytes::from(eb.to_owned()))?)),
+        _ => Ok(None),
+    }
 }

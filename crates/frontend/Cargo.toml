@@ -11,10 +11,10 @@ crate-type = ["rlib", "cdylib"]
 [dependencies]
 combine = "4.5.2"
 futures = "0.3"
-holo_hash = { version = "0.0.8", default-features = false }
+holo_hash = { version = "0.0.25", default-features = false }
 holochain_serialized_bytes = "0.0.51"
 holochain_serialized_bytes_derive = "0.0.51"
-holochain_zome_types = { version = "0.0.11", default-features = false }
+holochain_zome_types = { version = "0.0.33", default-features = false }
 reqwasm = { git = "https://github.com/hamza1311/reqwasm.git", rev = "fe1036f57829be5e1dcdfbc2f4d2138b4749f601" }
 serde = "1.0"
 serde_bytes = "0.11.5"
@@ -26,6 +26,6 @@ web-sys = "0.3.55"
 yew = { git = "https://github.com/yewstack/yew.git", rev = "9c8692262bb21360f69e5ef9440e4eb1252695d4" }
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "3cadc2eebe7c315844527de4bab7398108a17b57", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }

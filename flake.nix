@@ -7,25 +7,27 @@
       flake = false;
     };
     rust-overlay.url = "github:oxalica/rust-overlay";
-    cargo2nix.url = "github:cargo2nix/cargo2nix/host-platform-build-rs";
+    cargo2nix.url = "github:cargo2nix/cargo2nix";
     flake-compat = {
       url = "github:edolstra/flake-compat";
       flake = false;
     };
-    naersk.url = "github:mhuesch/naersk";
+    naersk.url = "github:nix-community/naersk";
   };
 
   outputs = { nixpkgs, flake-utils, holonix, rust-overlay, cargo2nix, naersk, ... }:
-    flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux"] (system:
+    flake-utils.lib.eachSystem ["x86_64-linux" "aarch64-linux" "x86_64-darwin"] (system:
       let
-        holonixMain = import holonix { };
+        holonixMain = import holonix {
+          holochainVersionId = "v0_0_139";
+        };
 
         pkgs = import nixpkgs {
           inherit system;
           overlays = [ rust-overlay.overlay ];
         };
 
-        rustVersion = "1.55.0";
+        rustVersion = "1.60.0";
 
       in
 
@@ -41,7 +43,7 @@
             miniserve
             nodePackages.rollup
             wasm-pack
-            cargo2nix.defaultPackage.${system}
+            # cargo2nix.defaultPackage.${system}
           ]);
 
           shellHook = ''

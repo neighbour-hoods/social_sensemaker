@@ -1,6 +1,6 @@
 use combine::{stream::position, EasyParser, StreamOnce};
 use holo_hash::HeaderHash;
-use holochain_conductor_client::{AdminWebsocket, AppWebsocket, ZomeCall};
+use holochain_client::{AdminWebsocket, AppWebsocket, ZomeCall};
 use holochain_types::{
     app::AppBundleSource,
     dna::{AgentPubKey, DnaBundle, DnaHash},

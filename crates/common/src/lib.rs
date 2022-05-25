@@ -150,7 +150,11 @@ pub fn get_linked_sensemaker_entries_which_unify(
     let scheme_entry_links = get_links(target_hash, None)?;
     let scheme_entry_hashes: Vec<EntryHash> = scheme_entry_links
         .into_iter()
-        .map(|lnk| lnk.target)
+        .map(|lnk| {
+            lnk.target
+                .into_entry_hash()
+                .expect("Link target should be Entry.")
+        })
         .collect();
     let filtered_scheme_entry_hashes: Vec<EntryHash> = match opt_target_sc {
         // if no target Scheme, we do not filter
@@ -196,7 +200,13 @@ pub fn get_linked_sensemaker_entries_which_unify(
         .map(|s_eh| get_links(s_eh, None))
         .flatten()
         .flatten()
-        .map(|lnk| get_sensemaker_entry(lnk.target))
+        .map(|lnk| {
+            get_sensemaker_entry(
+                lnk.target
+                    .into_entry_hash()
+                    .expect("Link target should be Entry."),
+            )
+        })
         .collect()
 }
 
@@ -428,6 +438,7 @@ pub fn create_sensemaker_entry_full(
             create_link(
                 hash_entry(SchemeRoot)?,
                 scheme_entry_hash.clone(),
+                LinkType::new(0),
                 LinkTag::new(OWNER_TAG),
             )?;
         }
@@ -439,7 +450,12 @@ pub fn create_sensemaker_entry_full(
     match get(se_eh.clone(), GetOptions::content())? {
         None => {
             let hh = create_entry(&se)?;
-            create_link(scheme_entry_hash, se_eh.clone(), LinkTag::new(OWNER_TAG))?;
+            create_link(
+                scheme_entry_hash,
+                se_eh.clone(),
+                LinkType::new(0),
+                LinkTag::new(OWNER_TAG),
+            )?;
             Ok((hh, se_eh, se))
         }
         Some(element) => Ok((element.header_address().clone(), se_eh, se)),

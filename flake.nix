@@ -43,7 +43,7 @@
             miniserve
             nodePackages.rollup
             wasm-pack
-            cargo2nix.defaultPackage.${system}
+            # cargo2nix.defaultPackage.${system}
           ]);
 
           shellHook = ''

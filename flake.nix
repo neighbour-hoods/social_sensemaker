@@ -20,6 +20,9 @@
       let
         holonixMain = import holonix {
           holochainVersionId = "v0_0_139";
+          include = {
+            rust = false;
+          };
         };
 
         pkgs = import nixpkgs {
@@ -28,6 +31,8 @@
         };
 
         rustVersion = "1.60.0";
+
+        wasmTarget = "wasm32-unknown-unknown";
 
       in
 
@@ -44,6 +49,9 @@
             nodePackages.rollup
             wasm-pack
             # cargo2nix.defaultPackage.${system}
+            (rust-bin.stable.${rustVersion}.default.override {
+              targets = [ wasmTarget ];
+            })
           ]);
 
           shellHook = ''
@@ -85,8 +93,6 @@
 
         packages.social_sensemaker-naersk =
           let
-            wasmTarget = "wasm32-unknown-unknown";
-
             rust = pkgs.rust-bin.stable.${rustVersion}.default.override {
               targets = [ wasmTarget ];
             };

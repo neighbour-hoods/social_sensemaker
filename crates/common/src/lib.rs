@@ -18,6 +18,8 @@ use rep_lang_runtime::{
     types::Scheme,
 };
 
+pub mod util;
+
 pub const OWNER_TAG: &str = "sensemaker_owner";
 
 // TODO think carefully on what this should be.

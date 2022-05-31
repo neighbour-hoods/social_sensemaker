@@ -14,12 +14,16 @@
     in
     flake-utils.lib.eachSystem nh-supported-systems (system:
       let
-        pkgs = nh-nix-env.values.pkgs;
+        pkgs = nh-nix-env.values.${system}.pkgs;
       in
 
       {
-
-        devShell = nh-nix-env.packages.${system}.holochainDevShell;
+        devShell = nh-nix-env.shells.${system}.holochainDevShell {
+          extraBuildInputs = with pkgs; [
+            nodePackages.rollup
+            wasm-pack
+          ];
+        };
 
         # packages.social_sensemaker-cargo2nix =
         #   let

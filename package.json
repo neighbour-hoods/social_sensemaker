@@ -11,7 +11,7 @@
   "scripts": {
     "fe:build": "cargo build -p frontend-tui",
     "fe:run": "cargo run --bin rlp",
-    "test": "cd test && npm test",
+    "hc:test": "cargo test",
     "hc:build": "cargo build -p social_sensemaker --release --target wasm32-unknown-unknown && cp $CARGO_TARGET_DIR/wasm32-unknown-unknown/release/social_sensemaker.wasm ./happs/social_sensemaker",
     "hc:pack": "hc dna pack happs/social_sensemaker && hc app pack happs/social_sensemaker",
     "hc:clean": "rm -rf .hc*",

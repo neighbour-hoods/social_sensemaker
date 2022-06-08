@@ -1,0 +1,46 @@
+name: "CI"
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+env:
+  RUST_BACKTRACE: 1
+
+jobs:
+
+  cargo_tests:
+    if: ${{ false }}  # disable for now
+    runs-on: ${{ matrix.os }}
+    strategy:
+        matrix:
+            os: [ubuntu-latest, macos-latest]
+        fail-fast: false
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - uses: cachix/install-nix-action@v15
+      with:
+        extra_nix_config: |
+          trusted-public-keys = cache.holo.host-1:lNXIXtJgS9Iuw4Cu6X0HINLu9sTfcjEntnrgwMQIMcE= cache.holo.host-2:ZJCkX3AUYZ8soxTLfTb60g+F3MkWD7hkH9y8CgqwhDQ= holochain-ci.cachix.org-1:5IUSkZc0aoRS53rfkvH9Kid40NpyjwCMCzwRTXy+QN8= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          substituters = https://cache.holo.host https://holochain-ci.cachix.org https://cache.nixos.org/
+    - uses: cachix/cachix-action@v10
+      with:
+        name: neighbourhoods
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - run: nix-shell --command "npm install && npm run hc:build && npm run hc:pack && npm run hc:test"
+
+  rustfmt:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.4.0
+    - uses: cachix/install-nix-action@v15
+      with:
+        extra_nix_config: |
+          trusted-public-keys = cache.holo.host-1:lNXIXtJgS9Iuw4Cu6X0HINLu9sTfcjEntnrgwMQIMcE= cache.holo.host-2:ZJCkX3AUYZ8soxTLfTb60g+F3MkWD7hkH9y8CgqwhDQ= holochain-ci.cachix.org-1:5IUSkZc0aoRS53rfkvH9Kid40NpyjwCMCzwRTXy+QN8= cache.nixos.org-1:6NCHdD59X431o0gWypbMrAURkbJ16ZPMQFGspcDShjY=
+          substituters = https://cache.holo.host https://holochain-ci.cachix.org https://cache.nixos.org/
+    - uses: cachix/cachix-action@v10
+      with:
+        name: neighbourhoods
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - run: nix-shell --command "cargo fmt -- --check"

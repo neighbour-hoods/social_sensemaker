@@ -28,6 +28,14 @@ jobs:
       with:
         name: neighbourhoods
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: ⚡ Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - run: nix-shell --command "npm install && npm run hc:build && npm run hc:pack && npm run hc:test"
 
   rustfmt:
@@ -43,4 +51,12 @@ jobs:
       with:
         name: neighbourhoods
         authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
+    - name: ⚡ Cache
+      uses: actions/cache@v2
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          target
+        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
     - run: nix-shell --command "cargo fmt -- --check"

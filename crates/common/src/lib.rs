@@ -25,6 +25,10 @@ use rep_lang_runtime::{
 pub mod util;
 
 pub const OWNER_TAG: &str = "sensemaker_owner";
+pub const SENSEMAKER_ZOME_NAME: &str = "sensemaker_main";
+pub const SM_COMP_TAG: &str = "sm_comp";
+pub const SM_INIT_TAG: &str = "sm_init";
+pub const SM_DATA_TAG: &str = "sm_data";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();
@@ -511,64 +515,59 @@ pub fn get_latest_linked_entry(
     }
 }
 
-// TODO rename hub to sensemaker
-pub const HUB_CELL_ID_TAG: &str = "hub_cell_id"; // merge this with OWNER_TAG
-pub const HUB_ZOME_NAME: &str = "hub_main";
-pub const SM_COMP_TAG: &str = "sm_comp";
-pub const SM_INIT_TAG: &str = "sm_init";
-pub const SM_DATA_TAG: &str = "sm_data";
-
 #[hdk_entry]
 #[derive(Clone)]
-pub struct HubCellId {
+pub struct SensemakerCellId {
     // must include extension
     pub dna_hash: DnaHash,
     // encoded file bytes payload
     pub agent_pubkey: AgentPubKey,
 }
 
-impl HubCellId {
+impl SensemakerCellId {
     pub fn to_cell_id(self) -> CellId {
         CellId::new(self.dna_hash, self.agent_pubkey)
     }
 }
 
-pub fn hub_cell_id_anchor() -> ExternResult<EntryHash> {
-    anchor("hub_cell_id".into(), "".into())
+pub fn sensemaker_cell_id_anchor() -> ExternResult<EntryHash> {
+    anchor("sensemaker_cell_id".into(), "".into())
 }
 
 #[macro_export]
-macro_rules! hub_cell_id_fns {
+macro_rules! sensemaker_cell_id_fns {
     () => {
         #[hdk_extern]
-        fn set_hub_cell_id(
+        fn set_sensemaker_cell_id(
             (dna_hash, agent_pubkey): (DnaHash, AgentPubKey),
         ) -> ExternResult<HeaderHash> {
-            let hub_cell_id: HubCellId = HubCellId {
+            let sensemaker_cell_id: SensemakerCellId = SensemakerCellId {
                 dna_hash,
                 agent_pubkey,
             };
-            let hub_cell_id_hh = create_entry(hub_cell_id.clone())?;
-            let hub_cell_id_eh = hash_entry(hub_cell_id)?;
+            let sensemaker_cell_id_hh = create_entry(sensemaker_cell_id.clone())?;
+            let sensemaker_cell_id_eh = hash_entry(sensemaker_cell_id)?;
             create_link(
-                hub_cell_id_anchor()?,
-                hub_cell_id_eh,
+                sensemaker_cell_id_anchor()?,
+                sensemaker_cell_id_eh,
                 LinkType(0),
-                LinkTag::new(HUB_CELL_ID_TAG),
+                LinkTag::new(OWNER_TAG),
             )?;
 
-            Ok(hub_cell_id_hh)
+            Ok(sensemaker_cell_id_hh)
         }
 
         #[hdk_extern]
-        fn get_hub_cell_id(_: ()) -> ExternResult<CellId> {
-            match get_latest_linked_entry(hub_cell_id_anchor()?, HUB_CELL_ID_TAG.into())? {
+        fn get_sensemaker_cell_id(_: ()) -> ExternResult<CellId> {
+            match get_latest_linked_entry(sensemaker_cell_id_anchor()?, OWNER_TAG.into())? {
                 Some(entryhash) => {
-                    let hub_cell_id_entry: HubCellId =
+                    let sensemaker_cell_id_entry: SensemakerCellId =
                         util::try_get_and_convert(entryhash.clone(), GetOptions::content())?;
-                    Ok(hub_cell_id_entry.to_cell_id())
+                    Ok(sensemaker_cell_id_entry.to_cell_id())
                 }
-                None => Err(WasmError::Guest("get_hub_cell_id: no cell_id".into())),
+                None => Err(WasmError::Guest(
+                    "get_sensemaker_cell_id: no cell_id".into(),
+                )),
             }
         }
     };

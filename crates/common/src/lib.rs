@@ -1,4 +1,7 @@
-use hdk::{entry::must_get_valid_element, prelude::{holo_hash::DnaHash, *}};
+use hdk::{
+    entry::must_get_valid_element,
+    prelude::{holo_hash::DnaHash, *},
+};
 
 use combine::{stream::position, EasyParser, StreamOnce};
 use pretty::RcDoc;
@@ -538,9 +541,10 @@ pub fn hub_cell_id_anchor() -> ExternResult<EntryHash> {
 #[macro_export]
 macro_rules! hub_cell_id_fns {
     () => {
-
         #[hdk_extern]
-        fn set_hub_cell_id((dna_hash, agent_pubkey): (DnaHash, AgentPubKey)) -> ExternResult<HeaderHash> {
+        fn set_hub_cell_id(
+            (dna_hash, agent_pubkey): (DnaHash, AgentPubKey),
+        ) -> ExternResult<HeaderHash> {
             let hub_cell_id: HubCellId = HubCellId {
                 dna_hash,
                 agent_pubkey,
@@ -568,6 +572,5 @@ macro_rules! hub_cell_id_fns {
                 None => Err(WasmError::Guest("get_hub_cell_id: no cell_id".into())),
             }
         }
-
     };
 }

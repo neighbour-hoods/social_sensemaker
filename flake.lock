@@ -116,11 +116,11 @@
     "holonix": {
       "flake": false,
       "locked": {
-        "lastModified": 1653981208,
-        "narHash": "sha256-BXhJWaBR6B1Ino52PLwVqucq+DJnUajiGY7XrGl2aOw=",
+        "lastModified": 1654758726,
+        "narHash": "sha256-m+FasCc2ea7ZiIkHbKf3V50RNvomUvnq8sCpSZ5XLa8=",
         "owner": "holochain",
         "repo": "holonix",
-        "rev": "569f0463c99d488db9016cec11834f6dd9d3f159",
+        "rev": "2b874668324ae5a7804066f61afbed913ac0cb9c",
         "type": "github"
       },
       "original": {
@@ -158,11 +158,11 @@
         "rust-overlay": "rust-overlay_2"
       },
       "locked": {
-        "lastModified": 1654036802,
-        "narHash": "sha256-cvaqydObwpqamxgInS86U1i+7OoTBXTlHC6aKeEitYs=",
+        "lastModified": 1654809271,
+        "narHash": "sha256-eJVvIhK+b78FVw3r6hFDBJoL/wktUx4BnNm9QF5yIxQ=",
         "owner": "neighbour-hoods",
         "repo": "nh-nix-env",
-        "rev": "80dd82f5b4a1896e70a8bc5454aefd54d18a943e",
+        "rev": "71cc7d68605a548be5d9262f00dc78ce8f4c7ca2",
         "type": "github"
       },
       "original": {

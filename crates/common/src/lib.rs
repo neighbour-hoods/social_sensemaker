@@ -203,8 +203,7 @@ pub fn get_linked_sensemaker_entries_which_unify(
     };
     filtered_scheme_entry_hashes
         .into_iter()
-        .map(|s_eh| get_links(s_eh, None))
-        .flatten()
+        .flat_map(|s_eh| get_links(s_eh, None))
         .flatten()
         .map(|lnk| {
             get_sensemaker_entry(

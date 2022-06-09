@@ -163,7 +163,7 @@ impl HcInfo {
         let cell_id = CellId::new(self.dna_hash.clone(), self.agent_pk.clone());
         let zc = ZomeCall {
             cell_id,
-            zome_name: "interpreter".into(),
+            zome_name: "sensemaker_main".into(),
             fn_name: "get_sensemaker_entries_which_unify".into(),
             payload,
             cap_secret: None,
@@ -178,7 +178,7 @@ impl HcInfo {
         let cell_id = CellId::new(self.dna_hash.clone(), self.agent_pk.clone());
         let zc = ZomeCall {
             cell_id,
-            zome_name: "interpreter".into(),
+            zome_name: "sensemaker_main".into(),
             fn_name: "create_sensemaker_entry".into(),
             payload,
             cap_secret: None,

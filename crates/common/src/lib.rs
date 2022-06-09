@@ -483,3 +483,27 @@ pub fn get_sensemaker_entry_by_headerhash(
         None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
     }
 }
+
+pub fn get_latest_path_entry(
+    path_string: String,
+    link_tag_string: String,
+) -> ExternResult<Option<EntryHash>> {
+    let path = Path::from(path_string);
+    get_latest_linked_entry(path.path_entry_hash()?, link_tag_string)
+}
+
+pub fn get_latest_linked_entry(
+    target: EntryHash,
+    link_tag_string: String,
+) -> ExternResult<Option<EntryHash>> {
+    let links = get_links(target, Some(LinkTag::new(link_tag_string)))?;
+    match links
+        .into_iter()
+        .max_by(|x, y| x.timestamp.cmp(&y.timestamp))
+    {
+        None => Ok(None),
+        Some(link) => Ok(Some(
+            link.target.into_entry_hash().expect("Should be an entry."),
+        )),
+    }
+}

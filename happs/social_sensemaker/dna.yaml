@@ -3,6 +3,6 @@ name: "social_sensemaker"
 uuid: ""
 properties: null
 zomes:
-  - name: interpreter
+  - name: sensemaker_main
     bundled: "./social_sensemaker.wasm"
     #    properties:

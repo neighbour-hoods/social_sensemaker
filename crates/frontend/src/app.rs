@@ -130,7 +130,7 @@ impl Component for Model {
                             let agent_pk = HoloHash::from_raw_36(agent_pk_bytes);
                             let call = Call::new(
                                 None,
-                                "interpreter".into(),
+                                "sensemaker_main".into(),
                                 "create_sensemaker_entry".into(),
                                 None,
                                 input_bytes,

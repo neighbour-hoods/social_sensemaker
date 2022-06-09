@@ -22,6 +22,7 @@ pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
         "set_sensemaker_entry_parse_rl_expr".into(),
     ));
     functions.insert((zome_info()?.name, "initialize_sm_data".into()));
+    functions.insert((zome_info()?.name, "step_sm".into()));
 
     let grant = ZomeCallCapGrant {
         access: CapAccess::Unrestricted,

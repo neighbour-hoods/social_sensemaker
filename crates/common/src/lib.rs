@@ -1,3 +1,5 @@
+#![crate_type = "proc-macro"]
+
 use hdk::{
     entry::must_get_valid_element,
     prelude::{holo_hash::DnaHash, *},
@@ -21,6 +23,7 @@ use rep_lang_runtime::{
     infer::{self, infer_expr_with_is, normalize, unifies, InferState},
     types::Scheme,
 };
+use social_sensemaker_macros::expand_remote_calls;
 
 pub mod util;
 
@@ -573,6 +576,7 @@ macro_rules! sensemaker_cell_id_fns {
     };
 }
 
+#[expand_remote_calls]
 #[hdk_extern]
 pub fn get_sensemaker_entry_by_path(
     (path_string, link_tag_string): (String, String),
@@ -603,6 +607,7 @@ pub fn set_sensemaker_entry(
     Ok(())
 }
 
+#[expand_remote_calls]
 #[hdk_extern]
 pub fn set_sensemaker_entry_parse_rl_expr(
     (path_string, link_tag_string, expr_str): (String, String, String),
@@ -616,6 +621,7 @@ pub fn set_sensemaker_entry_parse_rl_expr(
     set_sensemaker_entry((path_string, link_tag_string, sensemaker_entryhash))
 }
 
+#[expand_remote_calls]
 #[hdk_extern]
 pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
     let target_path_string = format!("{}.{}", path_string, target_eh);
@@ -625,6 +631,7 @@ pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> Exte
     }
 }
 
+#[expand_remote_calls]
 #[hdk_extern]
 pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
     let sm_data_path: String = format!("{}.{}", path_string, entry_hash);

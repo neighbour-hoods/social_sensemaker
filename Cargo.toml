@@ -3,4 +3,5 @@ members = [
   "crates/common",
   # "crates/frontend-tui",
   "crates/social_sensemaker",
+  "crates/social_sensemaker_macros",
 ]

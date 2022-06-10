@@ -14,3 +14,4 @@ serde = "1"
 rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
 rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
 rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
+social_sensemaker_macros = { path = "../social_sensemaker_macros" }

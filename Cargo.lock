@@ -630,6 +630,7 @@ dependencies = [
  "rep_lang_core",
  "rep_lang_runtime",
  "serde",
+ "social_sensemaker_macros",
 ]
 
 [[package]]
@@ -4895,6 +4896,15 @@ dependencies = [
  "rep_lang_runtime",
  "serde",
  "tokio",
+]
+
+[[package]]
+name = "social_sensemaker_macros"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]

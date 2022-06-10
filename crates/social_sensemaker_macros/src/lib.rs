@@ -26,7 +26,7 @@ pub fn expand_remote_calls(attrs: TokenStream, item: TokenStream) -> TokenStream
     (quote::quote! {
         #item_fn
 
-        #new_fn
+        // #new_fn
     })
     .into()
 

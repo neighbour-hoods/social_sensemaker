@@ -32,6 +32,7 @@ pub const SENSEMAKER_ZOME_NAME: &str = "sensemaker_main";
 pub const SM_COMP_TAG: &str = "sm_comp";
 pub const SM_INIT_TAG: &str = "sm_init";
 pub const SM_DATA_TAG: &str = "sm_data";
+pub const LINK_TYPE: LinkType = LinkType(0);
 
 // TODO think carefully on what this should be.
 pub type Marker = ();
@@ -450,7 +451,7 @@ pub fn create_sensemaker_entry_full(
             create_link(
                 hash_entry(SchemeRoot)?,
                 scheme_entry_hash.clone(),
-                LinkType::new(0),
+                LINK_TYPE,
                 LinkTag::new(OWNER_TAG),
             )?;
         }
@@ -465,7 +466,7 @@ pub fn create_sensemaker_entry_full(
             create_link(
                 scheme_entry_hash,
                 se_eh.clone(),
-                LinkType::new(0),
+                LINK_TYPE,
                 LinkTag::new(OWNER_TAG),
             )?;
             Ok((hh, se_eh, se))
@@ -506,7 +507,11 @@ pub fn get_latest_linked_entry(
     target: EntryHash,
     link_tag_string: String,
 ) -> ExternResult<Option<EntryHash>> {
+    debug!("get_latest_linked_entry: start");
+    debug!("get_latest_linked_entry: target: {}", target);
+    debug!("get_latest_linked_entry: link_tag_string: {}", link_tag_string);
     let links = get_links(target, Some(LinkTag::new(link_tag_string)))?;
+    debug!("get_latest_linked_entry: links: {:?}", links);
     match links
         .into_iter()
         .max_by(|x, y| x.timestamp.cmp(&y.timestamp))
@@ -553,7 +558,7 @@ macro_rules! sensemaker_cell_id_fns {
             create_link(
                 sensemaker_cell_id_anchor()?,
                 sensemaker_cell_id_eh,
-                LinkType(0),
+                LINK_TYPE,
                 LinkTag::new(OWNER_TAG),
             )?;
 
@@ -581,10 +586,14 @@ macro_rules! sensemaker_cell_id_fns {
 pub fn get_sensemaker_entry_by_path(
     (path_string, link_tag_string): (String, String),
 ) -> ExternResult<Option<(EntryHash, SensemakerEntry)>> {
+    debug!("get_sensemaker_entry_by_path: path_string: {}", path_string);
+    debug!("get_sensemaker_entry_by_path: link_tag_string: {}", link_tag_string);
     match get_latest_path_entry(path_string, link_tag_string)? {
         Some(entryhash) => {
+            debug!("get_sensemaker_entry_by_path: entryhash: {}", entryhash);
             let sensemaker_entry =
                 util::try_get_and_convert(entryhash.clone(), GetOptions::content())?;
+            debug!("get_sensemaker_entry_by_path: sensemaker_entry: {:?}", sensemaker_entry);
             Ok(Some((entryhash, sensemaker_entry)))
         }
         None => Ok(None),
@@ -595,13 +604,15 @@ pub fn get_sensemaker_entry_by_path(
 pub fn set_sensemaker_entry(
     (path_string, link_tag_string, target_eh): (String, String, EntryHash),
 ) -> ExternResult<()> {
+    debug!("set_sensemaker_entry: path_string: {:?}", path);
     let path = Path::try_from(path_string)?;
     path.ensure()?;
     let anchor_hash = path.path_entry_hash()?;
+    debug!("set_sensemaker_entry: anchor_hash: {}", anchor_hash);
     create_link(
         anchor_hash,
         target_eh,
-        LinkType(0),
+        LINK_TYPE,
         LinkTag::new(link_tag_string),
     )?;
     Ok(())
@@ -624,7 +635,7 @@ pub fn set_sensemaker_entry_parse_rl_expr(
 #[expand_remote_calls]
 #[hdk_extern]
 pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
-    let target_path_string = format!("{}.{}", path_string, target_eh);
+    let target_path_string = compose_sensemaker_path(&path_string, &target_eh);
     match get_latest_path_entry(path_string, SM_INIT_TAG.into())? {
         None => Err(WasmError::Guest("initialize_sm_data: no sm_init".into())),
         Some(init_eh) => set_sensemaker_entry((target_path_string, SM_DATA_TAG.into(), init_eh)),
@@ -633,19 +644,19 @@ pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> Exte
 
 #[expand_remote_calls]
 #[hdk_extern]
-pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
-    let sm_data_path: String = format!("{}.{}", path_string, entry_hash);
+pub fn step_sm((path_string, target_eh, act): (String, EntryHash, String)) -> ExternResult<()> {
+    let target_path_string = compose_sensemaker_path(&path_string, &target_eh);
 
     // fetch sm_data
     let (sm_data_eh, _sm_data_entry) =
-        match get_sensemaker_entry_by_path((sm_data_path.clone(), "sm_data".into()))? {
+        match get_sensemaker_entry_by_path((target_path_string.clone(), SM_DATA_TAG.into()))? {
             Some(pair) => Ok(pair),
             None => Err(WasmError::Guest("sm_data: invalid".into())),
         }?;
 
     // fetch sm_comp
     let (sm_comp_eh, _sm_comp_entry) =
-        match get_sensemaker_entry_by_path((path_string, "sm_comp".into()))? {
+        match get_sensemaker_entry_by_path((path_string, SM_COMP_TAG.into()))? {
             Some(pair) => Ok(pair),
             None => Err(WasmError::Guest("sm_comp: invalid".into())),
         }?;
@@ -666,16 +677,20 @@ pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> E
     let application_se_eh = hash_entry(&application_se)?;
     debug!("{:?}", application_se_eh);
     {
-        let path = Path::from(sm_data_path);
+        let path = Path::from(target_path_string);
         path.ensure()?;
         let path_hash = path.path_entry_hash()?;
         let hh = create_link(
             path_hash,
             application_se_eh,
-            LinkType(0),
-            LinkTag::new("sm_data"),
+            LINK_TYPE,
+            LinkTag::new(SM_DATA_TAG),
         );
         debug!("create_link hh : {:?}", hh);
     }
     Ok(())
+}
+
+pub fn compose_sensemaker_path(path_string: &String, target_eh: &EntryHash) -> String {
+    format!("{}.{}", path_string, target_eh)
 }

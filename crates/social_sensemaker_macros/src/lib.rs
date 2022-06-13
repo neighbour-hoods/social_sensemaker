@@ -5,6 +5,9 @@ use proc_macro2::{Ident, Span};
 use quote::{TokenStreamExt, ToTokens};
 use syn::{parse::{Parse, ParseStream, Result}, punctuated::Punctuated};
 
+// TODO think about hdk_extern and which zome/happ it goes into. will the widgets want
+// to invoke a macro, similar to `sensemaker_cell_id_fns`, s.t. the hdk_extern registers
+// in their wasm?
 #[proc_macro_attribute]
 pub fn expand_remote_calls(attrs: TokenStream, item: TokenStream) -> TokenStream {
     // expand_remote_calls is only valid for functions

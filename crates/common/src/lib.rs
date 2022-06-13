@@ -518,6 +518,10 @@ pub fn get_latest_linked_entry(
     }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+// "remote" code, to be imported-by / called-in widgets
+////////////////////////////////////////////////////////////////////////////////
+
 #[hdk_entry]
 #[derive(Clone)]
 pub struct SensemakerCellId {
@@ -591,6 +595,7 @@ pub fn get_sensemaker_entry_by_path(
     }
 }
 
+#[expand_remote_calls]
 #[hdk_extern]
 pub fn set_sensemaker_entry(
     (path_string, link_tag_string, target_eh): (String, String, EntryHash),

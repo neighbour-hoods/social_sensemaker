@@ -11,6 +11,6 @@ hdk = "0.0.132"
 pretty = "0.10.0"
 serde = "1"
 
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "bf44c3e80e0c98cfded6b7c1ba7caa38cb2449a8", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }

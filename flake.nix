@@ -70,6 +70,7 @@
               copyLibs = true;
               CARGO_BUILD_TARGET = wasmTarget;
               cargoBuildOptions = (opts: opts ++ ["--package=social_sensemaker"]);
+              gitAllRefs = true;
             };
 
           in

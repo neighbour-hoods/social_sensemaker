@@ -1,6 +1,9 @@
 [workspace]
 members = [
   "crates/common",
-  # "crates/frontend-tui",
   "crates/social_sensemaker",
+
+  # this keeps breaking due to not-so-actively maintained deps.
+  # letting it bitrot for now.
+  # "crates/frontend-tui",
 ]

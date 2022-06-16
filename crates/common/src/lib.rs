@@ -581,7 +581,6 @@ macro_rules! sensemaker_cell_id_fns {
 }
 
 #[expand_remote_calls]
-#[hdk_extern]
 pub fn get_sensemaker_entry_by_path(
     (path_string, link_tag_string): (String, String),
 ) -> ExternResult<Option<(EntryHash, SensemakerEntry)>> {
@@ -596,7 +595,6 @@ pub fn get_sensemaker_entry_by_path(
 }
 
 #[expand_remote_calls]
-#[hdk_extern]
 pub fn set_sensemaker_entry(
     (path_string, link_tag_string, target_eh): (String, String, EntryHash),
 ) -> ExternResult<()> {
@@ -613,7 +611,6 @@ pub fn set_sensemaker_entry(
 }
 
 #[expand_remote_calls]
-#[hdk_extern]
 pub fn set_sensemaker_entry_parse_rl_expr(
     (path_string, link_tag_string, expr_str): (String, String, String),
 ) -> ExternResult<()> {
@@ -627,7 +624,6 @@ pub fn set_sensemaker_entry_parse_rl_expr(
 }
 
 #[expand_remote_calls]
-#[hdk_extern]
 pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
     let target_path_string = format!("{}.{}", path_string, target_eh);
     match get_latest_path_entry(path_string, SM_INIT_TAG.into())? {
@@ -637,7 +633,6 @@ pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> Exte
 }
 
 #[expand_remote_calls]
-#[hdk_extern]
 pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
     let sm_data_path: String = format!("{}.{}", path_string, entry_hash);
 

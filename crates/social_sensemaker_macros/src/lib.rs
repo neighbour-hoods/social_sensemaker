@@ -66,10 +66,12 @@ pub fn expand_remote_calls(_attrs: TokenStream, item: TokenStream) -> TokenStrea
         new_fn.block = Box::new(fn_body);
     }
 
+    let doc_comment = format!("make a bridge call to `{}`", fn_name);
     (quote::quote! {
         #[hdk_extern]
         #item_fn
 
+        #[doc = #doc_comment]
         #[hdk_extern]
         #new_fn
     })

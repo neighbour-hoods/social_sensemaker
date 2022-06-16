@@ -2,8 +2,6 @@
 
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
-use quote;
-use syn;
 
 // TODO think about hdk_extern and which zome/happ it goes into. will the widgets want
 // to invoke a macro, similar to `sensemaker_cell_id_fns`, s.t. the hdk_extern registers
@@ -16,7 +14,7 @@ pub fn expand_remote_calls(_attrs: TokenStream, item: TokenStream) -> TokenStrea
 
     let mut new_fn = item_fn.clone();
 
-    new_fn.sig.ident = Ident::new(&format!("remote_{}", fn_name.clone()), Span::call_site());
+    new_fn.sig.ident = Ident::new(&format!("remote_{}", fn_name), Span::call_site());
 
     {
         let arg_pat_type = match item_fn

@@ -625,7 +625,7 @@ pub fn set_sensemaker_entry_parse_rl_expr(
 
 #[expand_remote_calls]
 pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
-    let target_path_string = format!("{}.{}", path_string, target_eh);
+    let target_path_string = compose_entry_hash_path(&path_string, target_eh);
     match get_latest_path_entry(path_string, SM_INIT_TAG.into())? {
         None => Err(WasmError::Guest("initialize_sm_data: no sm_init".into())),
         Some(init_eh) => set_sensemaker_entry((target_path_string, SM_DATA_TAG.into(), init_eh)),
@@ -634,7 +634,7 @@ pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> Exte
 
 #[expand_remote_calls]
 pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
-    let sm_data_path: String = format!("{}.{}", path_string, entry_hash);
+    let sm_data_path: String = compose_entry_hash_path(&path_string, entry_hash);
 
     // fetch sm_data
     let (sm_data_eh, _sm_data_entry) =
@@ -678,4 +678,9 @@ pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> E
         debug!("create_link hh : {:?}", hh);
     }
     Ok(())
+}
+
+pub fn compose_entry_hash_path(path_string: &String, target_eh: EntryHash) -> String {
+    let target_eh_bytes: Vec<u8> = target_eh.into_inner();
+    format!("{}.{}", path_string, base64::encode(&target_eh_bytes))
 }

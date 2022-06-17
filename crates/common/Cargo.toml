@@ -6,6 +6,7 @@ edition = "2018"
 license-file = "../../LICENSE"
 
 [dependencies]
+base64 = "0.13.0"
 combine = "4.5.2"
 hdk = "0.0.136"
 pretty = "0.10.0"

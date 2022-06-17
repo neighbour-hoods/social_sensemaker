@@ -32,14 +32,21 @@ pub fn expand_remote_calls(_attrs: TokenStream, item: TokenStream) -> TokenStrea
             _ => panic!("expand_remote_calls: invalid Receiver FnArg"),
         };
         let arg_pat_type_ty = &arg_pat_type.ty;
-        let token_stream = (quote::quote! {
-            (cell_id, cap_secret, payload): (CellId, Option<CapSecret>, #arg_pat_type_ty)
-        })
-        .into();
-        let tup_arg = syn::parse_macro_input!(token_stream as syn::FnArg);
+        let token_streams = vec![
+            (quote::quote! { cell_id: CellId }).into(),
+            (quote::quote! { cap_secret: Option<CapSecret> }).into(),
+            (quote::quote! { payload: #arg_pat_type_ty }).into(),
+        ];
+
+        // drain element from `inputs`
         assert!(new_fn.sig.inputs.pop().is_some());
         assert!(new_fn.sig.inputs.is_empty());
-        new_fn.sig.inputs.push(tup_arg);
+
+        // add our above 3 to `inputs`
+        for token_stream in token_streams {
+            let fn_arg = syn::parse_macro_input!(token_stream as syn::FnArg);
+            new_fn.sig.inputs.push(fn_arg);
+        }
     }
 
     // body with bridge call.
@@ -72,7 +79,6 @@ pub fn expand_remote_calls(_attrs: TokenStream, item: TokenStream) -> TokenStrea
         #item_fn
 
         #[doc = #doc_comment]
-        #[hdk_extern]
         #new_fn
     })
     .into()

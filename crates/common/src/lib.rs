@@ -1,5 +1,11 @@
+#![crate_type = "proc-macro"]
+
+use hdk::{
+    entry::must_get_valid_element,
+    prelude::{holo_hash::DnaHash, *},
+};
+
 use combine::{stream::position, EasyParser, StreamOnce};
-use hdk::{entry::must_get_valid_element, prelude::*};
 use pretty::RcDoc;
 use std::collections::HashMap;
 
@@ -17,10 +23,15 @@ use rep_lang_runtime::{
     infer::{self, infer_expr_with_is, normalize, unifies, InferState},
     types::Scheme,
 };
+use social_sensemaker_macros::expand_remote_calls;
 
 pub mod util;
 
 pub const OWNER_TAG: &str = "sensemaker_owner";
+pub const SENSEMAKER_ZOME_NAME: &str = "sensemaker_main";
+pub const SM_COMP_TAG: &str = "sm_comp";
+pub const SM_INIT_TAG: &str = "sm_init";
+pub const SM_DATA_TAG: &str = "sm_data";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();
@@ -199,8 +210,7 @@ pub fn get_linked_sensemaker_entries_which_unify(
     };
     filtered_scheme_entry_hashes
         .into_iter()
-        .map(|s_eh| get_links(s_eh, None))
-        .flatten()
+        .flat_map(|s_eh| get_links(s_eh, None))
         .flatten()
         .map(|lnk| {
             get_sensemaker_entry(
@@ -482,4 +492,195 @@ pub fn get_sensemaker_entry_by_headerhash(
         }
         None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
     }
+}
+
+pub fn get_latest_path_entry(
+    path_string: String,
+    link_tag_string: String,
+) -> ExternResult<Option<EntryHash>> {
+    let path = Path::from(path_string);
+    get_latest_linked_entry(path.path_entry_hash()?, link_tag_string)
+}
+
+pub fn get_latest_linked_entry(
+    target: EntryHash,
+    link_tag_string: String,
+) -> ExternResult<Option<EntryHash>> {
+    let links = get_links(target, Some(LinkTag::new(link_tag_string)))?;
+    match links
+        .into_iter()
+        .max_by(|x, y| x.timestamp.cmp(&y.timestamp))
+    {
+        None => Ok(None),
+        Some(link) => Ok(Some(
+            link.target.into_entry_hash().expect("Should be an entry."),
+        )),
+    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// "remote" code, to be imported-by / called-in widgets
+////////////////////////////////////////////////////////////////////////////////
+
+#[hdk_entry]
+#[derive(Clone)]
+pub struct SensemakerCellId {
+    // must include extension
+    pub dna_hash: DnaHash,
+    // encoded file bytes payload
+    pub agent_pubkey: AgentPubKey,
+}
+
+impl SensemakerCellId {
+    pub fn to_cell_id(self) -> CellId {
+        CellId::new(self.dna_hash, self.agent_pubkey)
+    }
+}
+
+pub fn sensemaker_cell_id_anchor() -> ExternResult<EntryHash> {
+    anchor("sensemaker_cell_id".into(), "".into())
+}
+
+#[macro_export]
+macro_rules! sensemaker_cell_id_fns {
+    () => {
+        #[hdk_extern]
+        fn set_sensemaker_cell_id(
+            (dna_hash, agent_pubkey): (DnaHash, AgentPubKey),
+        ) -> ExternResult<HeaderHash> {
+            let sensemaker_cell_id: SensemakerCellId = SensemakerCellId {
+                dna_hash,
+                agent_pubkey,
+            };
+            let sensemaker_cell_id_hh = create_entry(sensemaker_cell_id.clone())?;
+            let sensemaker_cell_id_eh = hash_entry(sensemaker_cell_id)?;
+            create_link(
+                sensemaker_cell_id_anchor()?,
+                sensemaker_cell_id_eh,
+                LinkType(0),
+                LinkTag::new(OWNER_TAG),
+            )?;
+
+            Ok(sensemaker_cell_id_hh)
+        }
+
+        #[hdk_extern]
+        fn get_sensemaker_cell_id(_: ()) -> ExternResult<CellId> {
+            match get_latest_linked_entry(sensemaker_cell_id_anchor()?, OWNER_TAG.into())? {
+                Some(entryhash) => {
+                    let sensemaker_cell_id_entry: SensemakerCellId =
+                        util::try_get_and_convert(entryhash.clone(), GetOptions::content())?;
+                    Ok(sensemaker_cell_id_entry.to_cell_id())
+                }
+                None => Err(WasmError::Guest(
+                    "get_sensemaker_cell_id: no cell_id".into(),
+                )),
+            }
+        }
+    };
+}
+
+#[expand_remote_calls]
+pub fn get_sensemaker_entry_by_path(
+    (path_string, link_tag_string): (String, String),
+) -> ExternResult<Option<(EntryHash, SensemakerEntry)>> {
+    match get_latest_path_entry(path_string, link_tag_string)? {
+        Some(entryhash) => {
+            let sensemaker_entry =
+                util::try_get_and_convert(entryhash.clone(), GetOptions::content())?;
+            Ok(Some((entryhash, sensemaker_entry)))
+        }
+        None => Ok(None),
+    }
+}
+
+#[expand_remote_calls]
+pub fn set_sensemaker_entry(
+    (path_string, link_tag_string, target_eh): (String, String, EntryHash),
+) -> ExternResult<()> {
+    let path = Path::try_from(path_string)?;
+    path.ensure()?;
+    let anchor_hash = path.path_entry_hash()?;
+    create_link(
+        anchor_hash,
+        target_eh,
+        LinkType(0),
+        LinkTag::new(link_tag_string),
+    )?;
+    Ok(())
+}
+
+#[expand_remote_calls]
+pub fn set_sensemaker_entry_parse_rl_expr(
+    (path_string, link_tag_string, expr_str): (String, String, String),
+) -> ExternResult<()> {
+    let (_, sensemaker_entry) = create_sensemaker_entry_parse(CreateSensemakerEntryInputParse {
+        expr: expr_str,
+        args: vec![],
+    })?;
+    let sensemaker_entryhash = hash_entry(sensemaker_entry)?;
+
+    set_sensemaker_entry((path_string, link_tag_string, sensemaker_entryhash))
+}
+
+#[expand_remote_calls]
+pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
+    let target_path_string = compose_entry_hash_path(&path_string, target_eh);
+    match get_latest_path_entry(path_string, SM_INIT_TAG.into())? {
+        None => Err(WasmError::Guest("initialize_sm_data: no sm_init".into())),
+        Some(init_eh) => set_sensemaker_entry((target_path_string, SM_DATA_TAG.into(), init_eh)),
+    }
+}
+
+#[expand_remote_calls]
+pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
+    let sm_data_path: String = compose_entry_hash_path(&path_string, entry_hash);
+
+    // fetch sm_data
+    let (sm_data_eh, _sm_data_entry) =
+        match get_sensemaker_entry_by_path((sm_data_path.clone(), "sm_data".into()))? {
+            Some(pair) => Ok(pair),
+            None => Err(WasmError::Guest("sm_data: invalid".into())),
+        }?;
+
+    // fetch sm_comp
+    let (sm_comp_eh, _sm_comp_entry) =
+        match get_sensemaker_entry_by_path((path_string, "sm_comp".into()))? {
+            Some(pair) => Ok(pair),
+            None => Err(WasmError::Guest("sm_comp: invalid".into())),
+        }?;
+
+    let sm_comp_hh = util::get_hh(sm_comp_eh, GetOptions::content())?;
+    let sm_data_hh = util::get_hh(sm_data_eh, GetOptions::content())?;
+
+    // create action SensemakerEntry
+    let (act_se_hh, _act_se) = create_sensemaker_entry_parse(CreateSensemakerEntryInputParse {
+        expr: act,
+        args: vec![],
+    })?;
+
+    // compose application SensemakerEntry & create it
+    let application_se = mk_application_se(vec![sm_comp_hh, sm_data_hh, act_se_hh])?;
+    debug!("{:?}", application_se);
+    let _application_se_hh = create_entry(&application_se)?;
+    let application_se_eh = hash_entry(&application_se)?;
+    debug!("{:?}", application_se_eh);
+    {
+        let path = Path::from(sm_data_path);
+        path.ensure()?;
+        let path_hash = path.path_entry_hash()?;
+        let hh = create_link(
+            path_hash,
+            application_se_eh,
+            LinkType(0),
+            LinkTag::new("sm_data"),
+        );
+        debug!("create_link hh : {:?}", hh);
+    }
+    Ok(())
+}
+
+pub fn compose_entry_hash_path(path_string: &String, target_eh: EntryHash) -> String {
+    let target_eh_bytes: Vec<u8> = target_eh.into_inner();
+    format!("{}.{}", path_string, base64::encode(&target_eh_bytes))
 }

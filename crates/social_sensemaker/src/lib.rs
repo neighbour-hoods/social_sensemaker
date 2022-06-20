@@ -1,46 +1,37 @@
-use combine::{stream::position, EasyParser, StreamOnce};
-
 use hdk::prelude::*;
 
 use common::{
     create_sensemaker_entry_full, mk_sensemaker_entry, CreateSensemakerEntryInput, SchemeEntry,
-    SensemakerEntry,
+    SchemeRoot, SensemakerEntry,
 };
-use rep_lang_concrete_syntax::parse::expr;
 
 entry_defs![
     Path::entry_def(),
+    PathEntry::entry_def(),
     SensemakerEntry::entry_def(),
-    SchemeEntry::entry_def()
+    SchemeEntry::entry_def(),
+    SchemeRoot::entry_def()
 ];
 
-#[derive(Debug, Serialize, Deserialize)]
-struct Params {
-    params_string: String,
-}
-
 #[hdk_extern]
-fn test_output(params: Params) -> ExternResult<bool> {
-    let Params {
-        params_string: p_str,
-    } = params;
-    debug!("received input: {}", p_str);
+pub fn init(_: ()) -> ExternResult<InitCallbackResult> {
+    let mut functions = GrantedFunctions::new();
+    functions.insert((zome_info()?.name, "get_sensemaker_entry_by_path".into()));
+    functions.insert((
+        zome_info()?.name,
+        "set_sensemaker_entry_parse_rl_expr".into(),
+    ));
+    functions.insert((zome_info()?.name, "initialize_sm_data".into()));
+    functions.insert((zome_info()?.name, "step_sm".into()));
 
-    match expr().easy_parse(position::Stream::new(&p_str[..])) {
-        Err(err) => {
-            debug!("parse error:\n\n{}\n", err);
-            Ok(false)
-        }
-        Ok((expr, extra_input)) => {
-            if extra_input.is_partial() {
-                debug!("error: unconsumed input: {:?}", extra_input);
-                Ok(false)
-            } else {
-                debug!("ast: {:?}\n", expr);
-                Ok(true)
-            }
-        }
-    }
+    let grant = ZomeCallCapGrant {
+        access: CapAccess::Unrestricted,
+        functions,
+        tag: "".into(),
+    };
+    create_cap_grant(grant)?;
+
+    Ok(InitCallbackResult::Pass)
 }
 
 #[hdk_extern]

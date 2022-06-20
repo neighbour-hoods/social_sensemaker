@@ -6,11 +6,13 @@ edition = "2018"
 license-file = "../../LICENSE"
 
 [dependencies]
+base64 = "0.13.0"
 combine = "4.5.2"
-hdk = "0.0.132"
+hdk = "0.0.136"
 pretty = "0.10.0"
 serde = "1"
 
 rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87" }
 rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
 rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
+social_sensemaker_macros = { path = "../social_sensemaker_macros" }

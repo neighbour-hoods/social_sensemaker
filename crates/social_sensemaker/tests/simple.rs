@@ -9,7 +9,7 @@ use holochain::sweettest::{SweetAppBatch, SweetConductorBatch, SweetDnaFile};
 use std::path::Path;
 
 const APP_ID: &str = "sensemaker";
-const ZOME_NAME: &str = "interpreter";
+const ZOME_NAME: &str = "sensemaker_main";
 
 #[tokio::test(flavor = "multi_thread")]
 pub async fn test_creation_retrieval_se() -> anyhow::Result<()> {

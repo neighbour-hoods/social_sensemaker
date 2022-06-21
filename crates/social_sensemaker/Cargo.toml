@@ -8,14 +8,15 @@ license-file = "../../LICENSE"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-combine = "4.5.2"
+combine = "4.6.4"
+getrandom = { version = "0.2", features = ["js"] }
 hdk = "0.0.136"
 serde = "1"
 
 common = { path = "../common" }
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "48ef57acf9304de1eb3e50dfead6e9ed99a0e2ab" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "48ef57acf9304de1eb3e50dfead6e9ed99a0e2ab", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "48ef57acf9304de1eb3e50dfead6e9ed99a0e2ab", features = ["hc"] }
 
 [dev-dependencies]
 anyhow = "1.0"

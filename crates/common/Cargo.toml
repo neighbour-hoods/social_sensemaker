@@ -7,12 +7,12 @@ license-file = "../../LICENSE"
 
 [dependencies]
 base64 = "0.13.0"
-combine = "4.5.2"
+combine = "4.6.4"
 hdk = "0.0.136"
-pretty = "0.10.0"
+pretty = "0.11.3"
 serde = "1"
 
-rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87" }
-rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
-rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "c321016c1d3d9fe548a1df1c47e1748d5bff6f87", features = ["hc"] }
+rep_lang_concrete_syntax = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "364213a6b1bca2f3ebdedb9a043c0b864e4d6a49" }
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "364213a6b1bca2f3ebdedb9a043c0b864e4d6a49", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "364213a6b1bca2f3ebdedb9a043c0b864e4d6a49", features = ["hc"] }
 social_sensemaker_macros = { path = "../social_sensemaker_macros" }

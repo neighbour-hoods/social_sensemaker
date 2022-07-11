@@ -8,7 +8,6 @@ license-file = "../../LICENSE"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-combine = "4.5.2"
 hdk = "0.0.136"
 serde = "1"
 

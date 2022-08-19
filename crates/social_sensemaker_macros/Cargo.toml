@@ -10,3 +10,5 @@ proc-macro = true
 syn = { version = "1", features = ["full", "extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
+
+social_sensemaker_core = { path = "../social_sensemaker_core" }

@@ -23,15 +23,10 @@ use rep_lang_runtime::{
     infer::{self, infer_expr_with_is, normalize, unifies, InferState},
     types::Scheme,
 };
+use social_sensemaker_core::{OWNER_TAG, SM_DATA_TAG, SM_INIT_TAG};
 use social_sensemaker_macros::expand_remote_calls;
 
 pub mod util;
-
-pub const OWNER_TAG: &str = "sensemaker_owner";
-pub const SENSEMAKER_ZOME_NAME: &str = "sensemaker_main";
-pub const SM_COMP_TAG: &str = "sm_comp";
-pub const SM_INIT_TAG: &str = "sm_init";
-pub const SM_DATA_TAG: &str = "sm_data";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();

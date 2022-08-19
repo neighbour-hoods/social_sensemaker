@@ -642,6 +642,7 @@ dependencies = [
  "rep_lang_core",
  "rep_lang_runtime",
  "serde",
+ "social_sensemaker_core",
  "social_sensemaker_macros",
 ]
 
@@ -4854,11 +4855,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "social_sensemaker_core"
+version = "0.1.0"
+
+[[package]]
 name = "social_sensemaker_macros"
 version = "0.1.0"
 dependencies = [
  "proc-macro2",
  "quote",
+ "social_sensemaker_core",
  "syn",
 ]
 

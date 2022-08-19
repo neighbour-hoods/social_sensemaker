@@ -3,8 +3,7 @@
 use proc_macro::TokenStream;
 use proc_macro2::{Ident, Span};
 
-// TODO consolidate this / collapse other consts into this crate
-const SENSEMAKER_ZOME_NAME: &str = "sensemaker_main";
+use social_sensemaker_core::SENSEMAKER_ZOME_NAME;
 
 // TODO think about hdk_extern and which zome/happ it goes into. will the widgets want
 // to invoke a macro, similar to `sensemaker_cell_id_fns`, s.t. the hdk_extern registers

@@ -2,6 +2,7 @@
 members = [
   "crates/common",
   "crates/social_sensemaker",
+  "crates/social_sensemaker_core",
   "crates/social_sensemaker_macros",
 
   # this keeps breaking due to not-so-actively maintained deps.

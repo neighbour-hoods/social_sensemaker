@@ -28,17 +28,6 @@ use social_sensemaker_macros::expand_remote_calls;
 
 pub mod util;
 
-// TODO think carefully on what this should be.
-pub type Marker = ();
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum SensemakerOperand {
-    // these dereference to `SensemakerEntry`
-    SensemakerOperand(HeaderHash),
-    // these dereference to `FlatThunk`??
-    OtherOperand(HeaderHash),
-}
-
 impl SensemakerOperand {
     pub fn ppr(&self) -> RcDoc<()> {
         match &self {
@@ -48,16 +37,6 @@ impl SensemakerOperand {
             SensemakerOperand::OtherOperand(hh) => RcDoc::text(format!("OtherOperand({})", hh)),
         }
     }
-}
-
-#[hdk_entry(id = "sensemaker_entry")]
-#[derive(Clone)]
-pub struct SensemakerEntry {
-    pub operator: Expr,
-    pub operands: Vec<SensemakerOperand>,
-    pub output_scheme: Scheme,
-    pub output_flat_value: FlatValue<Marker>,
-    pub start_gas: Gas,
 }
 
 impl SensemakerEntry {
@@ -130,14 +109,6 @@ impl SensemakerEntry {
 pub struct CreateSensemakerEntryInput {
     pub expr: Expr,
     pub args: Vec<SensemakerOperand>,
-}
-
-#[hdk_entry]
-pub struct SchemeRoot;
-
-#[hdk_entry]
-pub struct SchemeEntry {
-    pub sc: Scheme,
 }
 
 // functions
@@ -516,15 +487,6 @@ pub fn get_latest_linked_entry(
 ////////////////////////////////////////////////////////////////////////////////
 // "remote" code, to be imported-by / called-in widgets
 ////////////////////////////////////////////////////////////////////////////////
-
-#[hdk_entry]
-#[derive(Clone)]
-pub struct SensemakerCellId {
-    // must include extension
-    pub dna_hash: DnaHash,
-    // encoded file bytes payload
-    pub agent_pubkey: AgentPubKey,
-}
 
 impl SensemakerCellId {
     pub fn to_cell_id(self) -> CellId {

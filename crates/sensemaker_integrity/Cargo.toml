@@ -4,3 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+hdi = "0.0.19"
+serde = "1"
+
+rep_lang_core = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "b089ef063cf735d17bd93c92138a3d26ffb5e8bf", features = ["hc"] }
+rep_lang_runtime = { git = "https://github.com/neighbour-hoods/rep_lang.git", rev = "b089ef063cf735d17bd93c92138a3d26ffb5e8bf", features = ["hc"] }

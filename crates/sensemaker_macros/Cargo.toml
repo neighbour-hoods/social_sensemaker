@@ -1,5 +1,5 @@
 [package]
-name = "social_sensemaker_macros"
+name = "sensemaker_macros"
 version = "0.1.0"
 edition = "2021"
 
@@ -11,4 +11,4 @@ syn = { version = "1", features = ["full", "extra-traits"] }
 quote = "1"
 proc-macro2 = "1"
 
-social_sensemaker_core = { path = "../social_sensemaker_core" }
+sensemaker_core = { path = "../sensemaker_core" }

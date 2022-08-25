@@ -1466,6 +1466,9 @@ checksum = "93f6841e709003d68bb2deee8c343572bf446003ec20a583e76f7b15cebf3711"
 [[package]]
 name = "sensemaker_common"
 version = "0.1.0"
+dependencies = [
+ "hdk",
+]
 
 [[package]]
 name = "sensemaker_coordinator"

@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 use holochain_client_wrapper::{
     AdminWebsocket, AdminWsCmd, AdminWsCmdResponse, AppWebsocket, AppWsCmd, AppWsCmdResponse,
-    CellId, DeserializeFromJsObj, EntryHashRaw, EntryHeaderHashPairRaw,
+    CellId, DeserializeFromJsObj, EntryHashRaw, EntryHeaderHashPairRaw, HashRoleProof,
 };
 
 pub enum Msg {
@@ -12,6 +12,7 @@ pub enum Msg {
     AppWs(WsMsg<AppWsCmd, AppWsCmdResponse>),
     Log(String),
     Error(String),
+    WidgetsInstalled,
 }
 
 pub enum WsMsg<WSCMD, WSCMDRESP> {
@@ -44,13 +45,54 @@ impl Component for Model {
         let admin_ws: AdminWebsocket = props.admin_ws_js.clone().into();
         let admin_ws_ = admin_ws.clone();
         ctx.link().send_future(async move {
-            let resp = admin_ws_.call(AdminWsCmd::ListActiveApps).await;
-            match resp {
-                Ok(AdminWsCmdResponse::ListActiveApps(active_apps)) => {
-                    Msg::Log("TODO test-presence / install memez+paperz here".into())
+            let ret = async {
+                let active_apps = match admin_ws_.call(AdminWsCmd::ListActiveApps).await {
+                    Ok(AdminWsCmdResponse::ListActiveApps(x)) => Ok(x),
+                    Ok(resp) => Err(format!(
+                        "impossible: invalid response
+{:?}",
+                        resp
+                    )),
+                    Err(err) => Err(format!("err: {:?}", err)),
+                }?;
+
+                let target_dna_pairs: Vec<(String, String)> = vec![
+                    ("memez_main_zome", "../widgets_rs/happs/memez/memez.dna"),
+                    ("paperz_main_zome", "../widgets_rs/happs/paperz/paperz.dna"),
+                ]
+                .into_iter()
+                .map(|(x, y)| (x.into(), y.into()))
+                .collect();
+
+                let mut all_succeeded = true;
+                for (target_dna_pair_name, target_dna_pair_path) in target_dna_pairs {
+                    // TODO we could handle the cases of installed-but-not-enabled, etc, later.
+                    if active_apps.contains(&target_dna_pair_name) {
+                        console_log!(format!("dna {} is already active", target_dna_pair_name));
+                    } else {
+                        // TODO this error handling is a bit brittle
+                        match install_enable_dna(
+                            cell_id_.clone(),
+                            admin_ws_.clone(),
+                            target_dna_pair_name,
+                            target_dna_pair_path,
+                        )
+                        .await
+                        {
+                            Ok(()) => {}
+                            Err(err) => {
+                                console_error!(err);
+                                all_succeeded = false;
+                            }
+                        }
+                    }
                 }
-                Ok(resp) => Msg::Error(format!("impossible: invalid response: {:?}", resp)),
-                Err(err) => Msg::Error(format!("err: {:?}", err)),
+                Ok(all_succeeded)
+            };
+            match ret.await {
+                Err(err) => Msg::Error(err),
+                Ok(false) => Msg::Error("see console error log".into()),
+                Ok(true) => Msg::WidgetsInstalled,
             }
         });
         Self { admin_ws, app_ws }
@@ -111,6 +153,11 @@ impl Component for Model {
                 console_log!("Log: ", err);
                 false
             }
+
+            Msg::WidgetsInstalled => {
+                console_log!("widgets installed!");
+                false
+            }
         }
     }
 
@@ -121,4 +168,44 @@ impl Component for Model {
             </div>
         }
     }
+}
+async fn install_enable_dna(
+    cell_id: CellId,
+    ws: AdminWebsocket,
+    installed_app_id: String,
+    path: String,
+) -> Result<(), String> {
+    let cmd = AdminWsCmd::RegisterDna {
+        path,
+        uid: None,
+        properties: None,
+    };
+    let dna_hash = match ws.call(cmd).await {
+        Ok(AdminWsCmdResponse::RegisterDna(x)) => Ok(x),
+        Ok(resp) => Err(format!("impossible: invalid response: {:?}", resp)),
+        Err(err) => Err(format!("err: {:?}", err)),
+    }?;
+    let cmd = AdminWsCmd::InstallApp {
+        installed_app_id: installed_app_id.clone(),
+        agent_key: cell_id.1,
+        dnas: vec![HashRoleProof {
+            hash: dna_hash,
+            role_id: "thedna".into(),
+            membrane_proof: None,
+        }],
+    };
+    let install_app = match ws.call(cmd).await {
+        Ok(AdminWsCmdResponse::InstallApp(x)) => Ok(x),
+        Ok(resp) => Err(format!("impossible: invalid response: {:?}", resp)),
+        Err(err) => Err(format!("err: {:?}", err)),
+    }?;
+    console_log!(format!("install_app: {:?}", install_app));
+    let cmd = AdminWsCmd::EnableApp { installed_app_id };
+    let enable_app = match ws.call(cmd).await {
+        Ok(AdminWsCmdResponse::EnableApp(x)) => Ok(x),
+        Ok(resp) => Err(format!("impossible: invalid response: {:?}", resp)),
+        Err(err) => Err(format!("err: {:?}", err)),
+    }?;
+    console_log!(format!("enable_app: {:?}", enable_app));
+    Ok(())
 }

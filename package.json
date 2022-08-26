@@ -15,7 +15,5 @@
     "hc:pack": "hc dna pack happs/social_sensemaker && hc app pack happs/social_sensemaker",
     "hc:clean": "rm -rf .hc*",
     "hc:run": "hc sandbox -f=9000 generate happs/social_sensemaker -r=9999 network mdns"
-  },
-  "author": "",
-  "license": "SEE LICENSE IN LICENSE"
+  }
 }

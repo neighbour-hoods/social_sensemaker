@@ -15,7 +15,7 @@ or, after cloning:
 
 [source]
 ----
-git submodule update --init
+git submodule update --init --recursive
 ----
 
 == entering dev environment

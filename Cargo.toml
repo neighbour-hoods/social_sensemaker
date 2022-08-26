@@ -4,6 +4,7 @@ members = [
   "crates/social_sensemaker",
   "crates/social_sensemaker_core",
   "crates/social_sensemaker_macros",
+  "crates/sensemaker_ui",
 
   # this keeps breaking due to not-so-actively maintained deps.
   # letting it bitrot for now.

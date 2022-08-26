@@ -1,0 +1,23 @@
+[package]
+name = "sensemaker_ui"
+version = "0.1.0"
+edition = "2018"
+license-file = "../../LICENSE"
+
+[lib]
+path = "src/lib.rs"
+crate-type = ["rlib", "cdylib"]
+
+[dependencies]
+js-sys = "0.3.59"
+wasm-bindgen = "0.2"
+weblog = "0.3.0"
+yew = "0.19.3"
+
+holochain_client_wrapper = { path = "../holochain_client_wrapper/holochain_client_wrapper" }
+
+[dependencies.web-sys]
+version = "0.3"
+features = [
+  "HtmlInputElement",
+]

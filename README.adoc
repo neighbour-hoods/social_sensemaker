@@ -18,6 +18,14 @@ or, after cloning:
 git submodule update --init --recursive
 ----
 
+== holochain-client-js wrapper setup
+
+[source]
+----
+npm run hc-js-build:init
+npm run hc-js-build
+----
+
 == entering dev environment
 
 install a https://nixos.wiki/wiki/Flakes#Installing_flakes[Flakes] supporting https://nixos.org/download.html[`nix`].

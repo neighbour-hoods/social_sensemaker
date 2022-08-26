@@ -12,3 +12,6 @@ ui/pkg/
 
 # nix
 result*
+
+# unknown cause
+crates/LICENSE

@@ -54,6 +54,7 @@ impl Component for Model {
                     )),
                     Err(err) => Err(format!("err: {:?}", err)),
                 }?;
+                console_log!(format!("active_apps: {:?}", active_apps));
 
                 let target_dna_pairs: Vec<(String, String)> = vec![
                     ("memez_main_zome", "../widgets_rs/happs/memez/memez.dna"),

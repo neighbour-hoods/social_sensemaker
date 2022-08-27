@@ -292,6 +292,22 @@ pub fn get_sensemaker_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, Se
     }
 }
 
+pub fn mk_sensemaker_entry_parse(expr_str: String) -> ExternResult<SensemakerEntry> {
+    match expr().easy_parse(position::Stream::new(&expr_str[..])) {
+        Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
+        Ok((expr, extra_input)) => {
+            if extra_input.is_partial() {
+                Err(WasmError::Guest(format!(
+                    "error: unconsumed input: {:?}",
+                    extra_input
+                )))
+            } else {
+                mk_sensemaker_entry(expr, vec![])
+            }
+        }
+    }
+}
+
 pub fn mk_sensemaker_entry(
     expr: Expr,
     args: Vec<SensemakerOperand>,

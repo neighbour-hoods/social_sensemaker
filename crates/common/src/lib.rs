@@ -592,6 +592,20 @@ macro_rules! sensemaker_cell_id_fns {
 }
 
 #[expand_remote_calls]
+pub fn get_sensemaker_entry_by_path_with_hh(
+    (path_string, link_tag_string): (String, String),
+) -> ExternResult<Option<(EntryHash, HeaderHash, SensemakerEntry)>> {
+    match get_latest_path_entry(path_string, link_tag_string)? {
+        Some(entryhash) => {
+            let (sensemaker_entry, se_hh) =
+                util::try_get_and_convert_with_hh(entryhash.clone(), GetOptions::content())?;
+            Ok(Some((entryhash, se_hh, sensemaker_entry)))
+        }
+        None => Ok(None),
+    }
+}
+
+#[expand_remote_calls]
 pub fn get_sensemaker_entry_by_path(
     (path_string, link_tag_string): (String, String),
 ) -> ExternResult<Option<(EntryHash, SensemakerEntry)>> {

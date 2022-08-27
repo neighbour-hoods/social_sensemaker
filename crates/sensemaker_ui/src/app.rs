@@ -4,7 +4,7 @@ use yew::prelude::*;
 
 use holochain_client_wrapper::{
     AdminWebsocket, AdminWsCmd, AdminWsCmdResponse, AppWebsocket, AppWsCmd, AppWsCmdResponse,
-    CellId, DeserializeFromJsObj, HashRoleProof,
+    CellId, DeserializeFromJsObj, HashRoleProof, SerializeToJsObj,
 };
 
 pub enum Msg {
@@ -41,6 +41,7 @@ impl Component for Model {
         let cell_id = CellId::deserialize_from_js_obj(props.cell_id_js.clone());
         let cell_id_ = cell_id.clone();
         let app_ws: AppWebsocket = props.app_ws_js.clone().into();
+        let app_ws_ = app_ws.clone();
         let admin_ws: AdminWebsocket = props.admin_ws_js.clone().into();
         let admin_ws_ = admin_ws.clone();
         ctx.link().send_future(async move {
@@ -74,15 +75,40 @@ impl Component for Model {
                         match install_enable_dna(
                             cell_id_.clone(),
                             admin_ws_.clone(),
-                            target_dna_pair_name,
+                            target_dna_pair_name.clone(),
                             target_dna_pair_path,
                         )
                         .await
                         {
-                            Ok(()) => {}
                             Err(err) => {
                                 console_error!(err);
                                 all_succeeded = false;
+                            }
+                            Ok(widget_cell_id) => {
+                                // TODO call widget method to set the sensemaker cell_id for it
+                                let cmd = AppWsCmd::CallZome {
+                                    cell_id: widget_cell_id.clone(),
+                                    zome_name: target_dna_pair_name.into(),
+                                    fn_name: "set_sensemaker_cell_id".into(),
+                                    payload: cell_id_.clone().serialize_to_js_obj(),
+                                    provenance: widget_cell_id.1.clone(),
+                                    cap: "".into(),
+                                };
+                                let resp = app_ws_.call(cmd).await;
+                                match resp {
+                                    Ok(AppWsCmdResponse::CallZome(val)) => {
+                                        console_log!(format!("set_sensemaker_cell_id: {:?}", val))
+                                    }
+                                    Ok(resp) => {
+                                        console_error!(format!(
+                                            "impossible: invalid response: {:?}",
+                                            resp
+                                        ))
+                                    }
+                                    Err(err) => {
+                                        console_error!(format!("err: {:?}", err))
+                                    }
+                                }
                             }
                         }
                     }
@@ -174,7 +200,7 @@ async fn install_enable_dna(
     ws: AdminWebsocket,
     installed_app_id: String,
     path: String,
-) -> Result<(), String> {
+) -> Result<CellId, String> {
     let cmd = AdminWsCmd::RegisterDna {
         path,
         uid: None,
@@ -185,11 +211,12 @@ async fn install_enable_dna(
         Ok(resp) => Err(format!("impossible: invalid response: {:?}", resp)),
         Err(err) => Err(format!("err: {:?}", err)),
     }?;
+    let agent_key = cell_id.1;
     let cmd = AdminWsCmd::InstallApp {
         installed_app_id: installed_app_id.clone(),
-        agent_key: cell_id.1,
+        agent_key: agent_key.clone(),
         dnas: vec![HashRoleProof {
-            hash: dna_hash,
+            hash: dna_hash.clone(),
             role_id: "thedna".into(),
             membrane_proof: None,
         }],
@@ -207,5 +234,6 @@ async fn install_enable_dna(
         Err(err) => Err(format!("err: {:?}", err)),
     }?;
     console_log!(format!("enable_app: {:?}", enable_app));
-    Ok(())
+    let new_dna_cell_id = (dna_hash, agent_key);
+    Ok(new_dna_cell_id)
 }

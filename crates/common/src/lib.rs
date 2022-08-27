@@ -619,17 +619,24 @@ pub fn set_sensemaker_entry_parse_rl_expr(
 }
 
 #[expand_remote_calls]
-pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
-    let target_path_string = compose_entry_hash_path(&path_string, target_eh);
-    match get_latest_path_entry(path_string, SM_INIT_TAG.into())? {
+pub fn initialize_sm_data_path((path_prefix, path_suffix): (String, String)) -> ExternResult<()> {
+    let target_path_string = compose_paths(&path_prefix, &path_suffix);
+    match get_latest_path_entry(path_prefix, SM_INIT_TAG.into())? {
         None => Err(WasmError::Guest("initialize_sm_data: no sm_init".into())),
         Some(init_eh) => set_sensemaker_entry((target_path_string, SM_DATA_TAG.into(), init_eh)),
     }
 }
 
 #[expand_remote_calls]
-pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
-    let sm_data_path: String = compose_entry_hash_path(&path_string, entry_hash);
+pub fn initialize_sm_data((path_prefix, target_eh): (String, EntryHash)) -> ExternResult<()> {
+    let target_eh_bytes: Vec<u8> = target_eh.into_inner();
+    let path_suffix = vec_u8_b64_encode(&target_eh_bytes);
+    initialize_sm_data_path((path_prefix, path_suffix))
+}
+
+#[expand_remote_calls]
+pub fn step_sm_path((path_prefix, path_suffix, act): (String, String, String)) -> ExternResult<()> {
+    let sm_data_path = compose_paths(&path_prefix, &path_suffix);
 
     // fetch sm_data
     let (sm_data_eh, _sm_data_entry) =
@@ -640,7 +647,7 @@ pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> E
 
     // fetch sm_comp
     let (sm_comp_eh, _sm_comp_entry) =
-        match get_sensemaker_entry_by_path((path_string, "sm_comp".into()))? {
+        match get_sensemaker_entry_by_path((path_prefix, "sm_comp".into()))? {
             Some(pair) => Ok(pair),
             None => Err(WasmError::Guest("sm_comp: invalid".into())),
         }?;
@@ -675,7 +682,22 @@ pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> E
     Ok(())
 }
 
+#[expand_remote_calls]
+pub fn step_sm((path_prefix, target_eh, act): (String, EntryHash, String)) -> ExternResult<()> {
+    let target_eh_bytes: Vec<u8> = target_eh.into_inner();
+    let path_suffix = vec_u8_b64_encode(&target_eh_bytes);
+    step_sm_path((path_prefix, path_suffix, act))
+}
+
 pub fn compose_entry_hash_path(path_string: &String, target_eh: EntryHash) -> String {
     let target_eh_bytes: Vec<u8> = target_eh.into_inner();
-    format!("{}.{}", path_string, base64::encode(&target_eh_bytes))
+    format!("{}.{}", path_string, vec_u8_b64_encode(&target_eh_bytes))
+}
+
+pub fn compose_paths(path1: &String, path2: &String) -> String {
+    format!("{}.{}", path1, path2)
+}
+
+pub fn vec_u8_b64_encode(vec: &Vec<u8>) -> String {
+    base64::encode(vec)
 }

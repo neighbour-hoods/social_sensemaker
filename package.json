@@ -1,22 +1,19 @@
 {
   "name": "social_sensemaker",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "directories": {
-    "test": "test"
+  "dependencies": {
+    "@holochain/client": "^0.7.0",
+    "esbuild": "^0.14.54"
   },
-  "dependencies": {},
-  "devDependencies": {},
   "scripts": {
-    "fe:build": "cargo build -p frontend-tui",
-    "fe:run": "cargo run --bin rlp",
+    "hc-js-build:init": "npm install ./crates/holochain_client_wrapper/submodules/holochain-client-js",
+    "hc-js-build": "./node_modules/.bin/esbuild ./crates/holochain_client_wrapper/submodules/holochain-client-js/src/index.ts --format=esm --bundle --outfile=./crates/holochain_client_wrapper/holochain_client_wrapper/src/holochain_client_wrapper.js",
+    "ui:build": "wasm-pack build ./crates/sensemaker_ui --target web && ./node_modules/.bin/esbuild ./crates/sensemaker_ui/main.js --format=iife --bundle --outfile=./crates/sensemaker_ui/pkg/bundle.js",
+    "ui:serve": "miniserve -p 8080 ./crates/sensemaker_ui",
     "hc:test": "cargo test",
     "hc:build": "cargo build -p social_sensemaker --release --target wasm32-unknown-unknown && cp $CARGO_TARGET_DIR/wasm32-unknown-unknown/release/social_sensemaker.wasm ./happs/social_sensemaker",
     "hc:pack": "hc dna pack happs/social_sensemaker && hc app pack happs/social_sensemaker",
     "hc:clean": "rm -rf .hc*",
     "hc:run": "hc sandbox -f=9000 generate happs/social_sensemaker -r=9999 network mdns"
-  },
-  "author": "",
-  "license": "SEE LICENSE IN LICENSE"
+  }
 }

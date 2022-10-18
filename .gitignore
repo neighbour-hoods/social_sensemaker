@@ -1,4 +1,4 @@
-/target
+target/
 
 node_modules
 
@@ -12,3 +12,6 @@ ui/pkg/
 
 # nix
 result*
+
+# unknown cause
+crates/LICENSE

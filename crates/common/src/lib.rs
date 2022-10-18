@@ -23,15 +23,10 @@ use rep_lang_runtime::{
     infer::{self, infer_expr_with_is, normalize, unifies, InferState},
     types::Scheme,
 };
+use social_sensemaker_core::{OWNER_TAG, SM_DATA_TAG, SM_INIT_TAG};
 use social_sensemaker_macros::expand_remote_calls;
 
 pub mod util;
-
-pub const OWNER_TAG: &str = "sensemaker_owner";
-pub const SENSEMAKER_ZOME_NAME: &str = "sensemaker_main";
-pub const SM_COMP_TAG: &str = "sm_comp";
-pub const SM_INIT_TAG: &str = "sm_init";
-pub const SM_DATA_TAG: &str = "sm_data";
 
 // TODO think carefully on what this should be.
 pub type Marker = ();
@@ -294,6 +289,22 @@ pub fn get_sensemaker_entry(arg_hash: EntryHash) -> ExternResult<(HeaderHash, Se
     match element.into_inner().1.to_app_option()? {
         Some(se) => Ok((hh, se)),
         None => Err(WasmError::Guest(format!("non-present arg: {}", arg_hash))),
+    }
+}
+
+pub fn mk_sensemaker_entry_parse(expr_str: String) -> ExternResult<SensemakerEntry> {
+    match expr().easy_parse(position::Stream::new(&expr_str[..])) {
+        Err(err) => Err(WasmError::Guest(format!("parse error:\n\n{}\n", err))),
+        Ok((expr, extra_input)) => {
+            if extra_input.is_partial() {
+                Err(WasmError::Guest(format!(
+                    "error: unconsumed input: {:?}",
+                    extra_input
+                )))
+            } else {
+                mk_sensemaker_entry(expr, vec![])
+            }
+        }
     }
 }
 
@@ -581,6 +592,20 @@ macro_rules! sensemaker_cell_id_fns {
 }
 
 #[expand_remote_calls]
+pub fn get_sensemaker_entry_by_path_with_hh(
+    (path_string, link_tag_string): (String, String),
+) -> ExternResult<Option<(EntryHash, HeaderHash, SensemakerEntry)>> {
+    match get_latest_path_entry(path_string, link_tag_string)? {
+        Some(entryhash) => {
+            let (sensemaker_entry, se_hh) =
+                util::try_get_and_convert_with_hh(entryhash.clone(), GetOptions::content())?;
+            Ok(Some((entryhash, se_hh, sensemaker_entry)))
+        }
+        None => Ok(None),
+    }
+}
+
+#[expand_remote_calls]
 pub fn get_sensemaker_entry_by_path(
     (path_string, link_tag_string): (String, String),
 ) -> ExternResult<Option<(EntryHash, SensemakerEntry)>> {
@@ -624,17 +649,24 @@ pub fn set_sensemaker_entry_parse_rl_expr(
 }
 
 #[expand_remote_calls]
-pub fn initialize_sm_data((path_string, target_eh): (String, EntryHash)) -> ExternResult<()> {
-    let target_path_string = compose_entry_hash_path(&path_string, target_eh);
-    match get_latest_path_entry(path_string, SM_INIT_TAG.into())? {
+pub fn initialize_sm_data_path((path_prefix, path_suffix): (String, String)) -> ExternResult<()> {
+    let target_path_string = compose_paths(&path_prefix, &path_suffix);
+    match get_latest_path_entry(path_prefix, SM_INIT_TAG.into())? {
         None => Err(WasmError::Guest("initialize_sm_data: no sm_init".into())),
         Some(init_eh) => set_sensemaker_entry((target_path_string, SM_DATA_TAG.into(), init_eh)),
     }
 }
 
 #[expand_remote_calls]
-pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> ExternResult<()> {
-    let sm_data_path: String = compose_entry_hash_path(&path_string, entry_hash);
+pub fn initialize_sm_data((path_prefix, target_eh): (String, EntryHash)) -> ExternResult<()> {
+    let target_eh_bytes: Vec<u8> = target_eh.into_inner();
+    let path_suffix = vec_u8_b64_encode(&target_eh_bytes);
+    initialize_sm_data_path((path_prefix, path_suffix))
+}
+
+#[expand_remote_calls]
+pub fn step_sm_path((path_prefix, path_suffix, act): (String, String, String)) -> ExternResult<()> {
+    let sm_data_path = compose_paths(&path_prefix, &path_suffix);
 
     // fetch sm_data
     let (sm_data_eh, _sm_data_entry) =
@@ -645,7 +677,7 @@ pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> E
 
     // fetch sm_comp
     let (sm_comp_eh, _sm_comp_entry) =
-        match get_sensemaker_entry_by_path((path_string, "sm_comp".into()))? {
+        match get_sensemaker_entry_by_path((path_prefix, "sm_comp".into()))? {
             Some(pair) => Ok(pair),
             None => Err(WasmError::Guest("sm_comp: invalid".into())),
         }?;
@@ -680,7 +712,22 @@ pub fn step_sm((path_string, entry_hash, act): (String, EntryHash, String)) -> E
     Ok(())
 }
 
+#[expand_remote_calls]
+pub fn step_sm((path_prefix, target_eh, act): (String, EntryHash, String)) -> ExternResult<()> {
+    let target_eh_bytes: Vec<u8> = target_eh.into_inner();
+    let path_suffix = vec_u8_b64_encode(&target_eh_bytes);
+    step_sm_path((path_prefix, path_suffix, act))
+}
+
 pub fn compose_entry_hash_path(path_string: &String, target_eh: EntryHash) -> String {
     let target_eh_bytes: Vec<u8> = target_eh.into_inner();
-    format!("{}.{}", path_string, base64::encode(&target_eh_bytes))
+    format!("{}.{}", path_string, vec_u8_b64_encode(&target_eh_bytes))
+}
+
+pub fn compose_paths(path1: &String, path2: &String) -> String {
+    format!("{}.{}", path1, path2)
+}
+
+pub fn vec_u8_b64_encode(vec: &Vec<u8>) -> String {
+    base64::encode(vec)
 }

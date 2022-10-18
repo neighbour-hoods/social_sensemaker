@@ -15,7 +15,15 @@ or, after cloning:
 
 [source]
 ----
-git submodule update --init
+git submodule update --init --recursive
+----
+
+== holochain-client-js wrapper setup
+
+[source]
+----
+npm run hc-js-build:init
+npm run hc-js-build
 ----
 
 == entering dev environment
